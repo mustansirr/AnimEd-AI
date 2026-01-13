@@ -1,3 +1,5 @@
+import { signInWithGoogle } from "@/app/auth/actions";
+
 export default function Hero() {
   return (
     <section className="flex flex-col items-center justify-center px-4 py-24 text-center bg-white">
@@ -9,9 +11,14 @@ export default function Hero() {
           Transform your lesson plans into engaging visual content in minutes. Designed specifically for educators.
         </p>
         <div className="flex items-center justify-center gap-x-6">
-          <button className="rounded-md bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-            Get Started with Google
-          </button>
+          <form action={signInWithGoogle}>
+            <button
+              type="submit"
+              className="rounded-md bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Get Started with Google
+            </button>
+          </form>
         </div>
       </div>
     </section>
