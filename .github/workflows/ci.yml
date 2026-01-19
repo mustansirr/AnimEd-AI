@@ -84,5 +84,5 @@ jobs:
 
     - name: Test with pytest
       run: |
-        # Just run discovery for now as we don't have tests yet
-        pytest --collect-only
+        export PYTHONPATH=$PYTHONPATH:.
+        pytest
