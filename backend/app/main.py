@@ -6,6 +6,7 @@ Agentic AI Educational Video Generation Backend.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes import upload
 from app.config import get_settings
 
 # Get application settings
@@ -30,11 +31,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# TODO: Include API routers (Phase 4)
-# from app.api.routes import videos, upload, webhooks
-# app.include_router(videos.router, prefix="/api", tags=["videos"])
-# app.include_router(upload.router, prefix="/api", tags=["upload"])
-# app.include_router(webhooks.router, prefix="/api", tags=["webhooks"])
+# Phase 3: Upload and RAG endpoints
+app.include_router(upload.router, prefix="/api")
+
+# TODO: Include remaining routers in Phase 4
+# from app.api.routes import videos, webhooks
+# app.include_router(videos.router, prefix="/api")
+# app.include_router(webhooks.router, prefix="/api")
 
 
 @app.get("/")
