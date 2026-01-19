@@ -142,7 +142,13 @@ def chunk_text(
         # Move start position, accounting for overlap
         if end >= len(text):
             break
-        start = end - overlap
+            
+        new_start = end - overlap
+        if new_start <= start:
+            # Prevent infinite loop if overlap is too large relative to chunk size and sentence splitting
+            new_start = start + 1
+            
+        start = new_start
 
     return chunks
 
