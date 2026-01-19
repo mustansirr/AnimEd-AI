@@ -66,19 +66,19 @@ def _clean_text(text: str) -> str:
     """Clean and normalize extracted text."""
     # Split into lines to handle vertical whitespace separately
     lines = text.split('\n')
-    
+
     cleaned_lines = []
     for line in lines:
         # Normalize horizontal whitespace within the line
         cleaned_line = re.sub(r'[ \t]+', ' ', line.strip())
         cleaned_lines.append(cleaned_line)
-    
+
     # Rejoin with newlines
     text = '\n'.join(cleaned_lines)
-    
+
     # Replace multiple newlines (3 or more) with double newline (paragraph break)
     text = re.sub(r'\n{3,}', '\n\n', text)
-    
+
     return text.strip()
 
 
