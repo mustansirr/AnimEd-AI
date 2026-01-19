@@ -147,7 +147,7 @@ def chunk_text(
         if new_start <= start:
             # Prevent infinite loop if overlap is too large relative to chunk size and sentence splitting
             new_start = start + 1
-            
+
         start = new_start
 
     return chunks
