@@ -5,6 +5,12 @@
 
 # Dependencies
 node_modules/
+venv/
+.venv/
+*-env/
+__pycache__/
+*.py[cod]
+*$py.class
 
 # System
 .DS_Store
