@@ -7,7 +7,7 @@
 -- Stores text chunks from uploaded PDFs with their embeddings
 -- ============================================================================
 create table if not exists public.document_chunks (
-    id uuid primary key default uuid_generate_v4(),
+    id uuid primary key default gen_random_uuid(),
     video_id uuid references public.videos(id) on delete cascade not null,
     chunk_index int not null,
     content text not null,
