@@ -1,206 +1,120 @@
-# 🎓 Agentic AI for Curriculum-Aligned Educational Video Generation
+# 🎬 Manima
 
-A web application that enables educators to **generate curriculum-aligned educational videos** from simple text prompts or uploaded study materials.  
-Built using **Next.js**, **FastAPI**, **Supabase**, and an **Agentic AI orchestration pipeline** powered by open-source LLMs and **Manim** for animation rendering.
+**Agentic AI for Curriculum-Aligned Educational Video Generation**
+
+Manima is a web application that enables educators to generate curriculum-aligned educational videos from simple text prompts or uploaded study materials (PDFs). It uses a sophisticated **Agentic AI** pipeline powered by **LangGraph** to orchestrate multiple specialized agents that plan, script, code, and review animations using **Manim**.
 
 ---
 
 ## 🚀 Overview
 
-The platform automates the creation of **animated educational videos** using Agentic AI — where multiple specialized AI agents (Planner, Script, CodeGen, Reviewer) work together to generate scripts, animation code, and rendered videos.
-
-Educators can log in, provide a topic prompt or upload documents, and receive an **auto-generated video** aligned with their course material.
+The platform automates the creation of high-quality educational content by simulating a production studio:
+- **Planner Agent:** Breaks down topics into structured learning segments.
+- **Script Agent:** Writes clear, engaging narration and visual descriptions.
+- **CodeGen Agent:** Generates Python code for **Manim** animations.
+- **Reviewer Agent:** Validates code and ensures quality.
+- **Engine:** Executes code in a sandboxed Docker environment to render videos.
 
 ---
 
 ## 🧩 Tech Stack
 
-### Frontend
-- **Next.js** — React-based framework for the web app interface  
-- **Tailwind CSS** — for styling and responsive design  
-- **Supabase Auth** — for user authentication and session management  
-- **Video.js / React Player** — for video playback  
+### 🧠 AI & Brain
+- **LangGraph**: For stateful, multi-agent orchestration.
+- **LangChain**: For LLM interactions.
+- **LLMs**: LLaMA 3.1 70B / Mistral 8x7B (via Groq/OpenRouter).
+- **RAG**: Supabase Vector (pgvector) + local embeddings.
 
-### Backend
-- **FastAPI** — REST API service handling orchestration and job management  
-- **Python 3.10+**  
-- **Manim** — for animation generation  
-- **FFmpeg** — for video post-processing and stitching  
-- **Docker** — for containerized backend deployment  
+### ⚙️ Backend (The Engine)
+- **FastAPI**: REST API for orchestration and job management.
+- **Python 3.10+**: Core language.
+- **Manim**: Mathematical Animation Engine.
+- **Docker**: Sandboxed execution environment for rendering.
+- **FFmpeg**: Video stitching and post-processing.
+- **Supabase**: Database (PostgreSQL) and Storage.
 
-### AI Layer
-- **Open-source LLMs** (LLaMA, Mistral, DeepSeek) via local inference  
-- **LangChain / AutoGen** — for agent orchestration  
-- **RAG (Retrieval-Augmented Generation)** — for extracting relevant curriculum content  
-- **Sentence Transformers / Chroma DB** — for embeddings and semantic search  
-
-### Database & Storage
-- **PostgreSQL (Supabase)** — for structured data  
-- **Supabase Storage / S3** — for video file storage  
-
-### Deployment
-- **Frontend:** Vercel  
-- **Backend:** Docker container (Render / local server)  
+### 🖥️ Frontend
+- **Next.js**: React framework for the UI.
+- **Tailwind CSS**: Styling and responsive design.
+- **Supabase Auth**: User authentication.
 
 ---
 
-## 🧠 Agentic AI Architecture
+## 🏗️ Architecture
 
-The **Agentic AI Orchestrator** coordinates multiple agents:
+The backend follows a **3-layer architecture**:
 
-1. **Planner Agent** – Breaks the topic into structured learning segments.  
-2. **Script Agent** – Generates clear explanations and narration.  
-3. **CodeGen Agent** – Converts descriptions into Manim Python code.  
-4. **Reviewer Agent** – Validates and corrects code before rendering.  
-5. **Tool Adapter** – Handles LLM calls, RAG context retrieval, and rendering tasks.
-
-Agents communicate using structured **JSON artifacts** for reliable processing.
+```mermaid
+flowchart LR
+    User[User] -->|Prompt/PDF| API[FastAPI Layer]
+    API -->|Trigger| Brain[LangGraph Brain]
+    
+    subgraph Agents
+        Planner --> Scripter
+        Scripter --> Reviewer
+        Reviewer --> Coder
+    end
+    
+    Brain --> Agents
+    Coder -->|Manim Code| Engine[Docker Engine]
+    Engine -->|Video Segments| Storage[Supabase Storage]
+    Storage -->|Final Video| User
+```
 
 ---
 
-## ⚙️ Project Setup
+## 🛠️ Project Setup
 
-### 1. Clone the Repository
+For a detailed, step-by-step setup guide for Mac and Windows, please refer to [SETUP.md](./SETUP.md).
 
+### Quick Start (Mac/Linux)
+
+**1. Prerequisites**
+- Node.js & pnpm
+- Python 3.10+
+- Docker Desktop
+- Supabase CLI
+
+**2. Clone the Repo**
 ```bash
-git clone https://github.com/<your-org>/<repo-name>.git
-cd <repo-name>
+git clone https://github.com/mustansirr/manima.git
+cd manima
 ```
 
----
-
-## 📁 Folder Structure
-
-```
-/project-root
-│
-├── frontend/          # Next.js + Tailwind + Supabase
-├── backend/           # FastAPI + Agentic AI pipeline + Manim
-├── docs/              # Architecture diagrams, SRS, reports
-└── README.md
+**3. Start Database**
+```bash
+supabase start
 ```
 
----
-
-## 🖥️ Frontend Setup
-
+**4. Frontend Setup**
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm install
+# Configure .env.local with Supabase URL & Anon Key
+pnpm dev
 ```
 
-Create `.env.local`:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=<your_supabase_url>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<your_supabase_anon_key>
-```
-
----
-
-## 🖧 Backend Setup
-
+**5. Backend Setup**
 ```bash
 cd backend
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+# Configure .env with Supabase URL & Service Role Key
 uvicorn main:app --reload
 ```
 
-`.env`:
-
-```
-SUPABASE_URL=<supabase_url>
-SUPABASE_SERVICE_KEY=<service_key>
-DATABASE_URL=<postgres_url>
-```
-
 ---
 
-## 🐳 Running Backend with Docker
+## 👥 Team
 
-```bash
-docker build -t manim-backend .
-docker run -p 8000:8000 manim-backend
-```
-
----
-
-## 🧱 Development Standards
-
-### 1. Branching Strategy
-
-- `main` → stable
-- `dev` → active development
-- `feature/<name>` → for new features
-- `fix/<issue>` → bug fixes
-
-### 2. Commit Message Convention
-
-| Type | Example |
-|------|---------|
-| `feat:` | feat: add login UI |
-| `fix:` | fix: incorrect API path |
-| `docs:` | docs: update README |
-| `chore:` | chore: remove unused files |
-
----
-
-## 👨‍💻 Coding Conventions
-
-### Frontend
-- Use **TypeScript** and React hooks  
-- Tailwind CSS for styling  
-- Run ESLint before committing  
-
-### Backend
-- Follow **PEP8**  
-- Use `black` + `flake8`  
-- Add docstrings for all endpoints  
-
----
-
-## 📦 AI & RAG Integration
-
-### RAG Pipeline
-- Uses Supabase Vector or Chroma DB  
-- Embeddings with `all-MiniLM-L6-v2`  
-- Retrieves top-k chunks for grounding  
-
-### Manim Rendering Flow
-- CodeGen agent creates Manim scripts  
-- Docker sandbox executes them safely  
-- FFmpeg merges scenes + audio  
-
----
-
-## 📈 Long-Term Roadmap
-
-| Phase | Goal | Timeline |
-|-------|------|----------|
-| Phase 1 | Basic text → video pipeline | Oct–Dec 2024 |
-| Phase 2 | Add voiceovers, polished UX | Jan 2025 |
-| Phase 3 | Mobile app + interactive learning | Feb–Mar 2025 |
+- **Mustansir Rangwala** — Team Lead & Architect (API Layer, Supabase, RAG)
+- **Mayank Salunkhe** — The Director (LangGraph Workflow, Planner/Scripter Agents)
+- **Samruddhi Kadam** — The Engine (Docker execution, Rendering, FFmpeg)
+- **Sanika Shinde** — The Animator (CodeGen Agent, Manim Snippets, Self-Correction)
 
 ---
 
 ## 🧾 License
 
 This project is open-source under the **MIT License**.
-
----
-
-## 👥 Team
-
-- **Mayank Salunkhe | Mustansir Rangwala** — Frontend & Supabase  
-- **Samruddhi Kadam | Mustansir Rangwala** — Backend & AI Pipeline
-- **Sanika Shinde | Mustansir Rangwala** — Agent Design
-
----
-
-## 💬 Support
-
-If you face any setup issues, please open an issue in the repository.
-
