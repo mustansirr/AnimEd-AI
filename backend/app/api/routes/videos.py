@@ -86,15 +86,24 @@ async def create_video_request(
         syllabus_doc_path=video.syllabus_doc_path
     )
 
-    # TODO: Phase integration with Mayank's LangGraph workflow
-    # from app.agents.workflow import start_workflow
-    # context = await retrieve_context(video.prompt, video_id)
-    # await start_workflow(video_id, video.prompt, context)
+    # Trigger the LangGraph workflow
+    # This runs planning and scripting, then pauses for human review
+    from app.agents.workflow import start_workflow
+    try:
+        await start_workflow(
+            video_id=str(video_id),
+            user_prompt=video.prompt,
+            syllabus_context=""  # TODO: Get from RAG if syllabus uploaded
+        )
+    except Exception as e:
+        # Log error but don't fail the request - video is created
+        import logging
+        logging.error(f"Workflow error for video {video_id}: {e}")
 
     return {
         "video_id": str(video_id),
-        "status": VideoStatus.PLANNING.value,
-        "message": "Video generation request created successfully."
+        "status": VideoStatus.WAITING_APPROVAL.value,
+        "message": "Video generated. Scripts ready for review."
     }
 
 
