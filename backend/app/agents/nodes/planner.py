@@ -44,7 +44,7 @@ async def plan_scenes(state: AgentState) -> dict:
     """
     Plan video scenes using LLM.
 
-    Uses Groq's free tier with llama-3.1-70b-versatile model
+    Uses Groq's free tier with llama-3.3-70b-versatile model
     to generate a structured video plan.
 
     Args:
@@ -61,7 +61,7 @@ async def plan_scenes(state: AgentState) -> dict:
 
     # Initialize Groq LLM
     llm = ChatGroq(
-        model="llama-3.1-70b-versatile",
+        model="llama-3.3-70b-versatile",
         temperature=0.7,
         api_key=settings.groq_api_key,
     )

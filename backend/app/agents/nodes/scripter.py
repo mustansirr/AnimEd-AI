@@ -67,7 +67,7 @@ async def write_scripts(state: AgentState) -> dict:
 
     # Initialize LLM
     llm = ChatGroq(
-        model="llama-3.1-70b-versatile",
+        model="llama-3.3-70b-versatile",
         temperature=0.7,
         api_key=settings.groq_api_key,
     )
