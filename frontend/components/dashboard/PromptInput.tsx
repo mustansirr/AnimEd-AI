@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, Sparkles, Link, Loader2, Check, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { createVideo, uploadPdf, ApiError } from "@/lib/api";
+import { useVideo } from "./VideoContext";
 
 interface UploadState {
   file: File | null;
@@ -15,6 +16,7 @@ interface UploadState {
 }
 
 export function PromptInput() {
+  const { setCurrentVideoId } = useVideo();
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -111,6 +113,9 @@ export function PromptInput() {
         message: result.message,
         videoId: result.video_id,
       });
+
+      // Set video ID in context to trigger pipeline polling
+      setCurrentVideoId(result.video_id);
     } catch (error) {
       const errorMsg = error instanceof ApiError 
         ? error.message 

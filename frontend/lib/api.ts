@@ -118,3 +118,71 @@ export async function getVideoStatus(videoId: string): Promise<VideoStatusRespon
 
   return response.json();
 }
+
+/**
+ * Scene data from the backend.
+ */
+export interface SceneResponse {
+  id: string;
+  video_id: string;
+  scene_order: number;
+  narration_script: string | null;
+  visual_plan: string | null;
+  manim_code: string | null;
+  is_rendered: boolean;
+  error_log: string | null;
+  video_segment_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Get all scenes for a video.
+ */
+export async function getScenes(videoId: string): Promise<SceneResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/scenes`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Unknown error" }));
+    throw new ApiError(response.status, error.detail || "Failed to get scenes");
+  }
+
+  return response.json();
+}
+
+/**
+ * Response from script approval endpoint.
+ */
+export interface ApprovalResponse {
+  video_id: string;
+  status: string;
+  message: string;
+  feedback?: string;
+}
+
+/**
+ * Approve or reject scripts for a video.
+ */
+export async function approveScripts(
+  videoId: string,
+  approved: boolean,
+  feedback?: string
+): Promise<ApprovalResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/approve`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      approved,
+      feedback,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Unknown error" }));
+    throw new ApiError(response.status, error.detail || "Failed to submit approval");
+  }
+
+  return response.json();
+}
