@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, Loader2, FileSearch } from "lucide-react";
+import { CheckCircle2, Circle, Loader2, FileSearch, Play, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useVideo, VideoStatus } from "./VideoContext";
 import { ScriptReview } from "./ScriptReview";
+import { VideoPlayer } from "./VideoPlayer";
 
 // Pipeline step definitions
 const STEPS = [
@@ -55,11 +56,14 @@ function getStepStatus(
 }
 
 export function Pipeline() {
-  const { currentVideoId, videoStatus, isPolling } = useVideo();
+  const { currentVideoId, videoStatus, videoData, isPolling } = useVideo();
   const [showReview, setShowReview] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   const isActive = currentVideoId && videoStatus !== "idle";
   const isWaitingApproval = videoStatus === "waiting_approval";
+  const isCompleted = videoStatus === "completed";
+  const videoUrl = videoData?.final_video_url;
 
   return (
     <div className="space-y-4 h-full flex flex-col">
@@ -88,6 +92,7 @@ export function Pipeline() {
               ? getStepStatus(step, videoStatus)
               : "pending";
             const isScriptStep = step.id === 2;
+            const isRenderStep = step.id === 4;
 
             return (
               <div key={step.id} className="flex items-start gap-4 relative">
@@ -134,6 +139,17 @@ export function Pipeline() {
                         Review Scripts
                       </Button>
                     )}
+                    {/* Show watch video button on render step when completed */}
+                    {isRenderStep && isCompleted && (
+                      <Button
+                        size="sm"
+                        className="h-6 text-[10px] gap-1 bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => setShowPlayer(true)}
+                      >
+                        <Play className="w-3 h-3" />
+                        Watch Video
+                      </Button>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {step.description}
@@ -145,7 +161,7 @@ export function Pipeline() {
         </CardContent>
       </Card>
 
-      {/* Script Review Modal/Panel */}
+      {/* Script Review Modal */}
       {showReview && isWaitingApproval && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-2xl">
@@ -161,6 +177,31 @@ export function Pipeline() {
           </div>
         </div>
       )}
+
+      {/* Video Player Modal */}
+      {showPlayer && isCompleted && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-4xl">
+            <div className="bg-gray-900 rounded-lg overflow-hidden">
+              <div className="flex justify-between items-center p-3 border-b border-gray-800">
+                <h3 className="text-white font-medium text-sm">Generated Video</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-800"
+                  onClick={() => setShowPlayer(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="aspect-video">
+                <VideoPlayer videoUrl={videoUrl} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
