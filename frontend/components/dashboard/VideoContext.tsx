@@ -64,8 +64,25 @@ export function VideoProvider({ children }: VideoProviderProps) {
   const [videoStatus, setVideoStatus] = useState<VideoStatus>("idle");
   const [videoData, setVideoData] = useState<VideoStatusResponse | null>(null);
   const [scenes, setScenes] = useState<SceneResponse[]>([]);
-  const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Status values that indicate processing is complete
+  const terminalStatuses: VideoStatus[] = ["completed", "failed", "idle"];
+  
+  // Derived state
+  const isPolling = !!currentVideoId && !terminalStatuses.includes(videoStatus);
+
+  const handleSetCurrentVideoId = (id: string | null) => {
+    setCurrentVideoId(id);
+    if (id) {
+      setVideoStatus("planning");
+      setScenes([]);
+      setError(null);
+    } else {
+      setVideoStatus("idle");
+      setVideoData(null);
+      setScenes([]);
+    }
+  };
 
   const refreshStatus = useCallback(async () => {
     if (!currentVideoId) return;
@@ -95,23 +112,11 @@ export function VideoProvider({ children }: VideoProviderProps) {
 
   // Poll for status updates while video is processing
   useEffect(() => {
-    if (!currentVideoId) {
-      setIsPolling(false);
-      return;
-    }
-
-    // Status values that indicate processing is complete
-    const terminalStatuses: VideoStatus[] = ["completed", "failed", "idle"];
-    
-    if (terminalStatuses.includes(videoStatus)) {
-      setIsPolling(false);
-      return;
-    }
+    if (!isPolling) return;
 
     // Special case: waiting_approval - poll less frequently
     const pollInterval = videoStatus === "waiting_approval" ? 5000 : 2000;
 
-    setIsPolling(true);
     const interval = setInterval(() => {
       refreshStatus();
       // Also refresh scenes when we hit waiting_approval
@@ -121,26 +126,13 @@ export function VideoProvider({ children }: VideoProviderProps) {
     }, pollInterval);
 
     // Initial fetch
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshStatus();
 
     return () => {
       clearInterval(interval);
-      setIsPolling(false);
     };
-  }, [currentVideoId, videoStatus, refreshStatus, refreshScenes]);
-
-  // Reset state when video ID changes
-  useEffect(() => {
-    if (currentVideoId) {
-      setVideoStatus("planning");
-      setScenes([]);
-      setError(null);
-    } else {
-      setVideoStatus("idle");
-      setVideoData(null);
-      setScenes([]);
-    }
-  }, [currentVideoId]);
+  }, [isPolling, videoStatus, refreshStatus, refreshScenes]);
 
   return (
     <VideoContext.Provider
@@ -151,7 +143,7 @@ export function VideoProvider({ children }: VideoProviderProps) {
         scenes,
         isPolling,
         error,
-        setCurrentVideoId,
+        setCurrentVideoId: handleSetCurrentVideoId,
         refreshStatus,
         refreshScenes,
       }}
