@@ -5,6 +5,7 @@ This node uses an LLM to generate Manim code from scene scripts
 created by the scripter node.
 """
 
+import asyncio
 import logging
 from typing import Optional
 from uuid import UUID
@@ -26,6 +27,10 @@ from app.services.supabase_client import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Constants for rate limiting
+MAX_RETRIES = 3
+INITIAL_DELAY = 2  # seconds
 
 
 async def generate_code(state: AgentState) -> dict:
@@ -56,13 +61,11 @@ async def generate_code(state: AgentState) -> dict:
     # Check if all scenes are done
     if scene_index >= len(scripts):
         logger.info(f"All scenes generated for video {video_id}")
+        # Now that all code is generated, update status to rendering
+        await update_video_status(UUID(video_id), VideoStatus.RENDERING)
         return {
             "all_scenes_done": True,
         }
-
-    # Update status to rendering on first scene
-    if scene_index == 0:
-        await update_video_status(UUID(video_id), VideoStatus.RENDERING)
 
     # Get current scene script
     scene = scripts[scene_index]
@@ -88,41 +91,69 @@ async def generate_code(state: AgentState) -> dict:
         include_examples=True,
     )
 
-    try:
-        # Call LLM
-        response = await llm.ainvoke([
-            {"role": "system", "content": CODER_SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-        ])
+    # Retry loop with exponential backoff for rate limits
+    last_error = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            # Add delay between scenes to avoid rate limits
+            if scene_index > 0 or attempt > 0:
+                delay = INITIAL_DELAY * (2 ** attempt)
+                logger.info(f"Waiting {delay}s before LLM call (attempt {attempt + 1})")
+                await asyncio.sleep(delay)
 
-        # Clean response
-        code = clean_code_response(response.content)
+            # Call LLM
+            response = await llm.ainvoke([
+                {"role": "system", "content": CODER_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ])
 
-        # Get scene ID from Supabase
-        scene_order = scene.get("scene_order", scene_index + 1)
-        scene_id = await get_scene_id_by_order(UUID(video_id), scene_order)
+            # Clean response
+            code = clean_code_response(response.content)
 
-        if scene_id:
-            # Update scene with generated code
-            await update_scene_code(scene_id, code)
-            logger.info(
-                f"Updated scene {scene_id} with generated code "
-                f"({len(code)} chars)"
-            )
+            # Get scene ID from Supabase
+            scene_order = scene.get("scene_order", scene_index + 1)
+            scene_id = await get_scene_id_by_order(UUID(video_id), scene_order)
 
-        # Update state
-        generated_codes = state.get("generated_codes", []).copy()
-        generated_codes.append(code)
+            if scene_id:
+                # Update scene with generated code
+                await update_scene_code(scene_id, code)
+                logger.info(
+                    f"Updated scene {scene_id} with generated code "
+                    f"({len(code)} chars)"
+                )
 
-        return {
-            "generated_codes": generated_codes,
-            "current_scene_index": scene_index + 1,
-            "last_render_error": None,
-        }
+            # Update state
+            generated_codes = state.get("generated_codes", []).copy()
+            generated_codes.append(code)
 
-    except Exception as e:
-        logger.error(f"Code generation failed for scene {scene_index}: {e}")
-        raise
+            return {
+                "generated_codes": generated_codes,
+                "current_scene_index": scene_index + 1,
+                "last_render_error": None,
+            }
+
+        except Exception as e:
+            last_error = e
+            error_str = str(e).lower()
+            
+            # Check if it's a rate limit error
+            if "rate" in error_str or "limit" in error_str or "429" in error_str:
+                logger.warning(
+                    f"Rate limit hit for scene {scene_index}, "
+                    f"attempt {attempt + 1}/{MAX_RETRIES}"
+                )
+                continue
+            else:
+                # Non-rate-limit error, fail immediately
+                logger.error(f"Code generation failed for scene {scene_index}: {e}")
+                raise
+
+    # All retries exhausted
+    logger.error(
+        f"Code generation failed after {MAX_RETRIES} attempts "
+        f"for scene {scene_index}: {last_error}"
+    )
+    raise last_error
 
 
 async def get_scene_for_index(

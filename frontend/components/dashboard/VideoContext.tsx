@@ -65,8 +65,8 @@ export function VideoProvider({ children }: VideoProviderProps) {
   const [videoData, setVideoData] = useState<VideoStatusResponse | null>(null);
   const [scenes, setScenes] = useState<SceneResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
-  // Status values that indicate processing is complete
-  const terminalStatuses: VideoStatus[] = ["completed", "failed", "idle"];
+  // Status values that indicate processing is paused or complete (no polling needed)
+  const terminalStatuses: VideoStatus[] = ["completed", "failed", "idle", "waiting_approval"];
   
   // Derived state
   const isPolling = !!currentVideoId && !terminalStatuses.includes(videoStatus);
@@ -114,13 +114,12 @@ export function VideoProvider({ children }: VideoProviderProps) {
   useEffect(() => {
     if (!isPolling) return;
 
-    // Special case: waiting_approval - poll less frequently
-    const pollInterval = videoStatus === "waiting_approval" ? 5000 : 2000;
+    const pollInterval = 2000;
 
     const interval = setInterval(() => {
       refreshStatus();
-      // Also refresh scenes when we hit waiting_approval
-      if (videoStatus === "scripting" || videoStatus === "waiting_approval") {
+      // Also refresh scenes when scripting is in progress
+      if (videoStatus === "scripting") {
         refreshScenes();
       }
     }, pollInterval);
@@ -133,6 +132,14 @@ export function VideoProvider({ children }: VideoProviderProps) {
       clearInterval(interval);
     };
   }, [isPolling, videoStatus, refreshStatus, refreshScenes]);
+
+  // Fetch scenes when status transitions to waiting_approval
+  // This is separate from polling since we stop polling during waiting_approval
+  useEffect(() => {
+    if (videoStatus === "waiting_approval" && currentVideoId) {
+      refreshScenes();
+    }
+  }, [videoStatus, currentVideoId, refreshScenes]);
 
   return (
     <VideoContext.Provider
