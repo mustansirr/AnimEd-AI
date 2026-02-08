@@ -84,13 +84,32 @@ async def approve_scripts(video_id: str, request: ApprovalRequest):
         # Update status to generating
         await update_video_status(video_uuid, VideoStatus.GENERATING)
 
-        # TODO: Phase integration with Mayank's LangGraph workflow
-        # from app.agents.workflow import resume_workflow
-        # await resume_workflow(
-        #     video_id=str(video_uuid),
-        #     approved=True,
-        #     feedback=request.feedback
-        # )
+        # Resume the LangGraph workflow to continue with code generation
+        from app.agents.workflow import resume_workflow
+        import asyncio
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        async def run_workflow_with_error_handling():
+            """Wrapper to handle errors in background task."""
+            try:
+                await resume_workflow(
+                    video_id=str(video_uuid),
+                    approved=True,
+                    feedback=request.feedback
+                )
+                logger.info(f"Workflow completed successfully for video {video_uuid}")
+            except Exception as e:
+                logger.error(f"Workflow failed for video {video_uuid}: {e}")
+                # Update video status to failed
+                try:
+                    await update_video_status(video_uuid, VideoStatus.FAILED)
+                except Exception as status_err:
+                    logger.error(f"Failed to update status: {status_err}")
+
+        # Run workflow resumption in the background (non-blocking)
+        asyncio.create_task(run_workflow_with_error_handling())
 
         return {
             "video_id": video_id,
