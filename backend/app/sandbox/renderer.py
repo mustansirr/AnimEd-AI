@@ -115,9 +115,11 @@ async def execute_and_check(state: AgentState) -> AgentState:
             f"No code at index {scene_index}, "
             f"only {len(generated_codes)} codes available"
         )
+        # Mark as done to prevent infinite loop - no more code to render
         return {
             **state,
-            "last_render_error": f"No code available for scene {scene_index}",
+            "all_scenes_done": True,
+            "last_render_error": None,  # Clear error to go to finalize
         }
 
     code = generated_codes[scene_index]
