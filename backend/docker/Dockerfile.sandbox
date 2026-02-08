@@ -19,8 +19,9 @@ RUN apt-get update && apt-get install -y \
     texlive-full \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Manim
-RUN pip install --no-cache-dir manim==0.18.0
+# Upgrade pip and install Manim with retry/timeout for slow networks
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir --timeout=300 --retries=5 manim==0.18.0
 
 # Create working directory
 WORKDIR /render
