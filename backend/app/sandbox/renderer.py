@@ -95,7 +95,7 @@ async def execute_and_check(state: AgentState) -> AgentState:
     Execute Manim code and check the result.
 
     This is a LangGraph node that:
-    1. Gets the current code from generated_codes
+    1. Gets the most recently generated code from generated_codes
     2. Executes it via the Docker sandbox
     3. On success: uploads video and marks scene as rendered
     4. On failure: stores error for reflector node
@@ -106,22 +106,20 @@ async def execute_and_check(state: AgentState) -> AgentState:
     Returns:
         Updated AgentState with render results.
     """
-    scene_index = state.get("current_scene_index", 0)
     generated_codes = state.get("generated_codes", [])
 
     # Validate we have code to execute
-    if scene_index >= len(generated_codes):
-        logger.error(
-            f"No code at index {scene_index}, "
-            f"only {len(generated_codes)} codes available"
-        )
-        # Mark as done to prevent infinite loop - no more code to render
+    if not generated_codes:
+        logger.error("No generated codes available to render")
         return {
             **state,
             "all_scenes_done": True,
-            "last_render_error": None,  # Clear error to go to finalize
+            "last_render_error": None,
         }
 
+    # Render the most recently generated code
+    # This is the last item in generated_codes list
+    scene_index = len(generated_codes) - 1
     code = generated_codes[scene_index]
     video_id = state["video_id"]
 
