@@ -4,11 +4,15 @@
 FROM python:3.10-slim
 
 # Install system dependencies for Manim
+# - build-essential: C compiler for pycairo build
+# - pkg-config: Library configuration for building native extensions
 # - ffmpeg: Video encoding/decoding
 # - libcairo2-dev: 2D graphics library for rendering
 # - libpango1.0-dev: Text layout and rendering
 # - texlive-full: Full LaTeX support for mathematical equations
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    pkg-config \
     ffmpeg \
     libcairo2-dev \
     libpango1.0-dev \
