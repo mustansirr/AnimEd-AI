@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     llm_provider: Literal["groq", "openrouter"] = "groq"
 
     # Storage Configuration
-    storage_path: str = "./storage"  # Local path for video files
+    storage_path: str = "/tmp/manima-storage"  # Outside backend dir to avoid hot-reload
     storage_bucket: str = "video-segments"  # Supabase Storage bucket
 
     # Application Settings
