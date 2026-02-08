@@ -1,0 +1,33 @@
+# Manim Execution Sandbox
+# This Dockerfile creates a secure, isolated environment for running Manim code
+
+FROM python:3.10-slim
+
+# Install system dependencies for Manim
+# - ffmpeg: Video encoding/decoding
+# - libcairo2-dev: 2D graphics library for rendering
+# - libpango1.0-dev: Text layout and rendering
+# - texlive-full: Full LaTeX support for mathematical equations
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    libcairo2-dev \
+    libpango1.0-dev \
+    texlive-full \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Manim
+RUN pip install --no-cache-dir manim==0.18.0
+
+# Create working directory
+WORKDIR /render
+
+# Configure for 480p low quality (fast rendering)
+ENV MANIM_QUALITY=low_quality
+
+# The container expects:
+# - Code file mounted at /render/scene.py
+# - Output written to /render/media/
+
+# Default command renders at 480p15 (low quality, fast)
+# -ql = --quality low (480p at 15fps)
+CMD ["manim", "render", "-ql", "scene.py"]
