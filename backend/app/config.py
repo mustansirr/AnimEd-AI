@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     openrouter_api_key: str = ""
     llm_provider: Literal["groq", "openrouter"] = "groq"
 
+    # Storage Configuration
+    storage_path: str = "./storage"  # Local path for video files
+    storage_bucket: str = "video-segments"  # Supabase Storage bucket
+
     # Application Settings
     debug: bool = False
 
