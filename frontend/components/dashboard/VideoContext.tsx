@@ -137,6 +137,7 @@ export function VideoProvider({ children }: VideoProviderProps) {
   // This is separate from polling since we stop polling during waiting_approval
   useEffect(() => {
     if (videoStatus === "waiting_approval" && currentVideoId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       refreshScenes();
     }
   }, [videoStatus, currentVideoId, refreshScenes]);
