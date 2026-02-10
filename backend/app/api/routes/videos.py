@@ -103,7 +103,7 @@ async def create_video_request(
     return {
         "video_id": str(video_id),
         "status": VideoStatus.WAITING_APPROVAL.value,
-        "message": "Video generated. Scripts ready for review."
+        "message": "Scripts ready for review"
     }
 
 

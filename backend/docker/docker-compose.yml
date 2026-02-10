@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # Redis for task queue (optional, for scaling)
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # The main API (built separately)
+  api:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ../storage:/app/storage  # Shared storage for videos
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Manim sandbox (built from Dockerfile.sandbox)
+  # Note: This is not run as a long-lived service
+  # Instead, it's used for one-off render jobs
+  # See executor.py for how this container is invoked
+  manim-sandbox:
+    build:
+      context: ./
+      dockerfile: Dockerfile.sandbox
+    profiles:
+      - sandbox  # Only built when explicitly requested
+    volumes:
+      - ../storage:/render

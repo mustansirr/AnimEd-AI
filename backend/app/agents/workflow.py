@@ -17,6 +17,8 @@ from app.agents.nodes.planner import plan_scenes
 from app.agents.nodes.scripter import write_scripts
 from app.agents.nodes.human_review import wait_for_approval
 from app.agents.nodes.coder import generate_code
+from app.sandbox.renderer import execute_and_check
+from app.sandbox.stitcher import finalize_video
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +45,8 @@ def create_workflow():
     3. scripter - Generate narration and visual descriptions
     4. human_review - Wait for user approval (INTERRUPT POINT)
     5. coder - Generate Manim code for each scene
-
-    After coder, the workflow continues to rendering
-    (implemented by Samruddhi).
+    6. renderer - Execute code and render video segments
+    7. finalize - Stitch all segments into final video
 
     Returns:
         Compiled StateGraph with checkpointing enabled.
@@ -58,6 +59,8 @@ def create_workflow():
     workflow.add_node("scripter", write_scripts)
     workflow.add_node("human_review", wait_for_approval)
     workflow.add_node("coder", generate_code)
+    workflow.add_node("renderer", execute_and_check)
+    workflow.add_node("finalize", finalize_video)
 
     # Define edges (linear flow for now)
     workflow.set_entry_point("retrieve_info")
@@ -75,15 +78,22 @@ def create_workflow():
         }
     )
 
-    # After coder, route based on scene completion
+    # After coder, go to renderer
+    workflow.add_edge("coder", "renderer")
+
+    # After renderer, route based on result
     workflow.add_conditional_edges(
-        "coder",
-        route_after_coder,
+        "renderer",
+        route_after_render,
         {
-            "next_scene": "coder",  # More scenes to generate
-            "complete": END,  # All scenes done (will go to renderer later)
+            "retry": "coder",      # Error occurred, retry with reflector
+            "next_scene": "coder", # Move to next scene
+            "finalize": "finalize", # All scenes done
         }
     )
+
+    # After finalize, end
+    workflow.add_edge("finalize", END)
 
     # Compile with checkpointer for state persistence
     memory = MemorySaver()
@@ -108,28 +118,44 @@ def route_after_review(state: AgentState) -> Literal["approved", "rejected"]:
     return "rejected"
 
 
-def route_after_coder(state: AgentState) -> Literal["next_scene", "complete"]:
+def route_after_render(
+    state: AgentState
+) -> Literal["retry", "next_scene", "finalize"]:
     """
-    Route workflow after code generation.
+    Route workflow after rendering a scene.
 
-    Determines whether to continue generating code for more scenes
-    or complete the code generation phase.
+    Determines whether to:
+    - Retry code generation (if error and retries remaining)
+    - Continue to next scene
+    - Finalize the video (all scenes done)
 
     Args:
         state: Current agent state.
 
     Returns:
-        "next_scene" if more scenes to process, "complete" otherwise.
+        Routing decision string.
     """
-    if state.get("all_scenes_done", False):
-        return "complete"
+    # Check for render error with retries remaining
+    if state.get("last_render_error") and state.get("retry_count", 0) < 3:
+        logger.info(
+            f"Render error, retrying. Attempt {state.get('retry_count', 0) + 1}/3"
+        )
+        return "retry"
 
+    # Check if all scenes are done
+    if state.get("all_scenes_done", False):
+        logger.info("All scenes rendered, moving to finalize")
+        return "finalize"
+
+    # More scenes to process
     scripts = state.get("scripts", [])
     current_index = state.get("current_scene_index", 0)
 
     if current_index >= len(scripts):
-        return "complete"
+        logger.info("No more scenes, moving to finalize")
+        return "finalize"
 
+    logger.info(f"Moving to next scene: {current_index}")
     return "next_scene"
 
 
