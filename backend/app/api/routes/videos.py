@@ -169,3 +169,29 @@ async def list_user_videos(
     )
 
     return [VideoResponse(**video) for video in result.data]
+
+
+@router.delete(
+    "/{video_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a video",
+    description="Delete a video and all its associated scenes.",
+)
+async def delete_video(video_id: str):
+    """Delete a video and its scenes."""
+    from app.services.supabase_client import get_supabase_client
+
+    video_uuid = validate_uuid(video_id, "video_id")
+
+    # Verify video exists
+    await get_video_or_404(video_uuid)
+
+    client = get_supabase_client()
+
+    # Delete associated scenes first (foreign key dependency)
+    client.table("scenes").delete().eq("video_id", str(video_uuid)).execute()
+
+    # Delete the video record
+    client.table("videos").delete().eq("id", str(video_uuid)).execute()
+
+    return None
