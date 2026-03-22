@@ -186,3 +186,34 @@ export async function approveScripts(
 
   return response.json();
 }
+
+/**
+ * List all videos for a user.
+ */
+export async function listUserVideos(userId: string): Promise<VideoStatusResponse[]> {
+  const url = new URL(`${API_BASE_URL}/api/videos`);
+  url.searchParams.set("user_id", userId);
+
+  const response = await fetch(url.toString());
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Unknown error" }));
+    throw new ApiError(response.status, error.detail || "Failed to list videos");
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete a video and all its associated scenes.
+ */
+export async function deleteVideo(videoId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Unknown error" }));
+    throw new ApiError(response.status, error.detail || "Failed to delete video");
+  }
+}
