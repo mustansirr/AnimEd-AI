@@ -17,7 +17,7 @@ export function Header() {
   return (
     <header className="flex h-16 items-center gap-4 border-b bg-white px-6 w-full justify-between">
       <div className="flex items-center gap-2 font-semibold text-lg text-gray-800">
-        Dashboard
+        Welcome back, Scholar
       </div>
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" className="text-gray-500">

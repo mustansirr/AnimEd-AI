@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
+import { VideoDetailModal } from "./VideoDetailModal";
 
 // =============================================================================
 // Types
@@ -84,11 +85,13 @@ function VideoCard({
   video,
   onPlay,
   onDelete,
+  onSelect,
   isDeleting,
 }: {
   video: VideoItem;
   onPlay: (video: VideoItem) => void;
   onDelete: (videoId: string) => void;
+  onSelect: (video: VideoItem) => void;
   isDeleting: boolean;
 }) {
   const hasVideo = !!video.final_video_url;
@@ -99,11 +102,10 @@ function VideoCard({
   });
 
   return (
-    <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect(video)}>
       {/* Thumbnail / Preview */}
       <div
-        className="relative aspect-video bg-gradient-to-br from-indigo-950 to-gray-900 cursor-pointer"
-        onClick={() => hasVideo && onPlay(video)}
+        className="relative aspect-video bg-gradient-to-br from-indigo-950 to-gray-900"
       >
         {hasVideo ? (
           <>
@@ -114,7 +116,13 @@ function VideoCard({
               muted
             />
             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+              <div
+                className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPlay(video);
+                }}
+              >
                 <Play className="h-6 w-6 ml-0.5 text-white fill-white" />
               </div>
             </div>
@@ -150,7 +158,10 @@ function VideoCard({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
-            onClick={() => onDelete(video.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(video.id);
+            }}
             disabled={isDeleting}
           >
             {isDeleting ? (
@@ -307,6 +318,7 @@ export function VideoGrid() {
   const [playingVideo, setPlayingVideo] = useState<VideoItem | null>(null);
   const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -408,6 +420,7 @@ export function VideoGrid() {
             video={video}
             onPlay={setPlayingVideo}
             onDelete={setConfirmDeleteId}
+            onSelect={setSelectedVideo}
             isDeleting={deletingVideoId === video.id}
           />
         ))}
@@ -427,6 +440,20 @@ export function VideoGrid() {
           onConfirm={handleDelete}
           onCancel={() => setConfirmDeleteId(null)}
           isDeleting={!!deletingVideoId}
+        />
+      )}
+
+      {/* Video Detail Modal */}
+      {selectedVideo && (
+        <VideoDetailModal
+          videoId={selectedVideo.id}
+          videoStatus={selectedVideo.status}
+          videoPrompt={selectedVideo.prompt}
+          onClose={() => {
+            setSelectedVideo(null);
+            // Refresh the list in case status changed (e.g. approved scripts)
+            fetchVideos();
+          }}
         />
       )}
     </>

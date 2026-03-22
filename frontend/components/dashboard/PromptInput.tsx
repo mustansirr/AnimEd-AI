@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Sparkles, Link, Loader2, Check, X } from "lucide-react";
+import { Paperclip, Sparkles, Loader2, Check, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { createVideo, uploadPdf, ApiError } from "@/lib/api";
 import { useVideo } from "./VideoContext";
@@ -45,12 +44,6 @@ export function PromptInput() {
 
   // Validation: Generate is enabled only if prompt has content
   const canGenerate = prompt.trim().length > 0 && !isGenerating;
-
-  const handleClear = () => {
-    setPrompt("");
-    setUploadState({ file: null, status: "idle", message: "" });
-    setGenerationResult({ status: "idle", message: "" });
-  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -130,53 +123,19 @@ export function PromptInput() {
   };
 
   return (
-    <Card className="h-full border shadow-sm bg-white">
-      <CardContent className="p-4 space-y-4">
-        {/* Header/Title Area */}
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-indigo-500" />
-            What&apos;s today&apos;s lesson or concept?
-          </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-[10px] text-muted-foreground hover:text-red-500"
-            onClick={handleClear}
-          >
-            Clear
-          </Button>
-        </div>
-
-        {/* Text Area */}
+    <div className="w-full max-w-3xl mx-auto">
+      {/* Prompt box with inline actions */}
+      <div className="relative rounded-xl border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-300 transition-all">
         <Textarea
           id="prompt"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder={`Topic: Introduction to Gravity for high school students.\nTone: Engaging, slightly humorous but educational.\nKey points to cover:\n1. Newton's Apple myth vs reality.\n...`}
-          className="min-h-[120px] resize-none border-gray-100 bg-gray-50/50 focus-visible:ring-1 focus-visible:ring-indigo-500 font-mono text-sm"
+          placeholder="e.g., Explain Quantum Entanglement using a soccer metaphor..."
+          className="min-h-[140px] max-h-[240px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base px-5 pt-5 pb-14"
         />
 
-        {/* Status Messages */}
-        {generationResult.status !== "idle" && (
-          <div
-            className={`text-xs p-2 rounded-md flex items-center gap-2 ${
-              generationResult.status === "success"
-                ? "bg-green-50 text-green-700 border border-green-100"
-                : "bg-red-50 text-red-700 border border-red-100"
-            }`}
-          >
-            {generationResult.status === "success" ? (
-              <Check className="w-3 h-3" />
-            ) : (
-              <X className="w-3 h-3" />
-            )}
-            {generationResult.message}
-          </div>
-        )}
-
-        {/* Action Footer */}
-        <div className="flex items-center justify-between pt-2">
+        {/* Bottom bar inside the textarea box */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 py-2">
           <div className="flex items-center gap-2">
             {/* Hidden file input */}
             <input
@@ -186,42 +145,35 @@ export function PromptInput() {
               onChange={handleFileChange}
               className="hidden"
             />
-            <Button
-              variant="outline"
-              size="sm"
-              className={`h-8 text-xs gap-2 ${
-                uploadState.status === "success"
-                  ? "bg-green-50 border-green-200 text-green-700"
-                  : uploadState.status === "error"
-                  ? "bg-red-50 border-red-200 text-red-700"
-                  : "bg-gray-50"
+            <button
+              type="button"
+              className={`p-1.5 rounded-md transition-colors ${
+                uploadState.file
+                  ? "text-indigo-600 bg-indigo-50"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               }`}
               onClick={handleUploadClick}
               disabled={isGenerating}
+              title={uploadState.file ? uploadState.file.name : "Attach PDF"}
             >
               {uploadState.status === "uploading" ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : uploadState.status === "success" ? (
-                <Check className="w-3 h-3" />
+                <Check className="w-4 h-4 text-green-600" />
               ) : (
-                <Upload className="w-3 h-3" />
+                <Paperclip className="w-4 h-4" />
               )}
-              {uploadState.file ? uploadState.file.name.slice(0, 20) : "Upload PDF"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs gap-2 bg-gray-50"
-              disabled
-            >
-              <Link className="w-3 h-3" />
-              Add URL
-            </Button>
+            </button>
+            {uploadState.file && (
+              <span className="text-[11px] text-gray-500 truncate max-w-[150px]">
+                {uploadState.file.name}
+              </span>
+            )}
           </div>
 
           <Button
             size="sm"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all gap-2 text-xs h-8 disabled:opacity-50"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all gap-1.5 text-xs h-8 px-4 rounded-lg disabled:opacity-50"
             onClick={handleGenerate}
             disabled={!canGenerate}
           >
@@ -235,18 +187,32 @@ export function PromptInput() {
             )}
           </Button>
         </div>
+      </div>
 
-        {/* Upload status message */}
-        {uploadState.message && uploadState.status !== "idle" && (
-          <p
-            className={`text-[10px] ${
-              uploadState.status === "error" ? "text-red-500" : "text-muted-foreground"
-            }`}
-          >
-            {uploadState.message}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      {/* Status Messages */}
+      {generationResult.status !== "idle" && (
+        <div
+          className={`mt-3 text-xs p-2.5 rounded-lg flex items-center gap-2 ${
+            generationResult.status === "success"
+              ? "bg-green-50 text-green-700 border border-green-100"
+              : "bg-red-50 text-red-700 border border-red-100"
+          }`}
+        >
+          {generationResult.status === "success" ? (
+            <Check className="w-3 h-3 flex-shrink-0" />
+          ) : (
+            <X className="w-3 h-3 flex-shrink-0" />
+          )}
+          {generationResult.message}
+        </div>
+      )}
+
+      {/* Upload status message */}
+      {uploadState.message && uploadState.status === "error" && (
+        <p className="mt-2 text-[11px] text-red-500 text-center">
+          {uploadState.message}
+        </p>
+      )}
+    </div>
   );
 }
