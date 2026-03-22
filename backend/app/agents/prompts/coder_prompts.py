@@ -5,6 +5,7 @@ This module provides prompts and utilities for the CodeGen agent
 that generates Manim animation code from visual descriptions.
 """
 
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -20,6 +21,24 @@ RULES:
 4. Keep animations smooth - use appropriate run_time
 5. End each major section with self.wait(1)
 
+CRITICAL COORDINATE RULES:
+1. The screen center is (0,0).
+2. The visible X-range is [-7, 7].
+3. The visible Y-range is [-4, 4].
+4. To place objects, visualize a 3x3 grid:
+   - TOP-LEFT=(-4, 2.5), TOP-CENTER=(0, 2.5), TOP-RIGHT=(4, 2.5)
+   - MID-LEFT=(-4, 0),   CENTER=(0, 0),       MID-RIGHT=(4, 0)
+   - BOT-LEFT=(-4,-2.5), BOT-CENTER=(0,-2.5), BOT-RIGHT=(4,-2.5)
+5. PREVENT OVERLAP: Always use `.next_to(object, DIRECTION, buff=0.5)` \
+instead of absolute coordinates when stacking items.
+6. When using `UP`, `DOWN`, `LEFT`, `RIGHT`, treat them as unit vectors \
+of length 1.
+7. Use `.to_edge(DIRECTION, buff=0.5)` to place items at screen edges.
+8. Use `VGroup(...).arrange(DOWN, buff=0.4)` for vertical lists and \
+`VGroup(...).arrange(RIGHT, buff=0.5)` for horizontal layouts.
+9. Never place two objects at the same absolute coordinate.
+10. Always scale text with `font_size=` to keep it within the visible frame.
+
 COMMON PATTERNS:
 - Text: Text("content", font_size=36)
 - Math: MathTex("latex_equation")
@@ -34,14 +53,14 @@ ANIMATION METHODS:
 - FadeIn/FadeOut - opacity transitions
 - MoveTo(position) - move objects
 
-POSITIONING:
-- Use UP, DOWN, LEFT, RIGHT, ORIGIN constants
-- Combine with shifts: obj.shift(UP * 2 + LEFT)
-- Use .to_edge(UP), .next_to(other, DOWN)
-
-OUTPUT FORMAT:
-Return ONLY valid Python code. No markdown, no explanations.
-Start with imports, define one Scene class.
+OUTPUT RULES:
+1. RETURN ONLY CODE.
+2. DO NOT write "Here is the code", "In this scene", or any other \
+conversational text.
+3. DO NOT use markdown code blocks (```python). Just the raw code.
+4. DO NOT import anything other than `from manim import *`.
+5. IF you feel the need to explain, use Python comments `#` inside the code.
+6. Start with imports, define one Scene class.
 """
 
 
@@ -108,21 +127,29 @@ def create_coder_prompt(
 
 def clean_code_response(response: str) -> str:
     """
-    Remove markdown code blocks if present in LLM response.
+    Extract clean Manim Python code from an LLM response.
+
+    Uses a multi-step approach:
+    1. Try to extract code from markdown ```python fences.
+    2. Fall back to finding the first `from manim import` line.
+    3. Return the raw response as a last resort.
 
     Args:
-        response: Raw LLM response that may contain markdown formatting.
+        response: Raw LLM response that may contain markdown formatting
+                  or conversational text.
 
     Returns:
         Clean Python code string.
     """
-    # Remove markdown code fences
-    if response.startswith("```python"):
-        response = response[9:]
-    elif response.startswith("```"):
-        response = response[3:]
+    # Step 1: Try to extract code inside markdown fences
+    pattern = r"```(?:python)?\n(.*?)```"
+    match = re.search(pattern, response, re.DOTALL)
+    if match:
+        return match.group(1).strip()
 
-    if response.endswith("```"):
-        response = response[:-3]
+    # Step 2: Find the first 'from manim import' and take everything after
+    if "from manim import" in response:
+        return response[response.find("from manim import"):].strip()
 
+    # Step 3: Fallback — return as-is after stripping whitespace
     return response.strip()
