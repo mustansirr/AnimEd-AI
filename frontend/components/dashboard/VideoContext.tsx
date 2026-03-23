@@ -32,7 +32,7 @@ interface VideoContextType {
   scenes: SceneResponse[];
   isPolling: boolean;
   error: string | null;
-  setCurrentVideoId: (id: string | null) => void;
+  setCurrentVideoId: (id: string | null, initialStatus?: VideoStatus) => void;
   refreshStatus: () => Promise<void>;
   refreshScenes: () => Promise<void>;
 }
@@ -71,10 +71,10 @@ export function VideoProvider({ children }: VideoProviderProps) {
   // Derived state
   const isPolling = !!currentVideoId && !terminalStatuses.includes(videoStatus);
 
-  const handleSetCurrentVideoId = (id: string | null) => {
+  const handleSetCurrentVideoId = (id: string | null, initialStatus?: VideoStatus) => {
     setCurrentVideoId(id);
     if (id) {
-      setVideoStatus("planning");
+      setVideoStatus(initialStatus || "planning");
       setScenes([]);
       setError(null);
     } else {
