@@ -30,11 +30,16 @@ export default function Demo() {
   // Simulated progress animation
   useEffect(() => {
     if (isPlaying && progress < 65) {
-      const timer = setTimeout(() => setProgress((p) => p + 0.5), 50);
+      const timer = setTimeout(() => {
+        setProgress((p) => {
+          const nextProgress = p + 0.5;
+          if (nextProgress >= 65) {
+            setIsPlaying(false);
+          }
+          return nextProgress;
+        });
+      }, 50);
       return () => clearTimeout(timer);
-    }
-    if (progress >= 65) {
-      setIsPlaying(false);
     }
   }, [isPlaying, progress]);
 
