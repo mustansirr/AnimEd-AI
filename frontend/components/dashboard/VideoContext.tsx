@@ -133,10 +133,11 @@ export function VideoProvider({ children }: VideoProviderProps) {
     };
   }, [isPolling, videoStatus, refreshStatus, refreshScenes]);
 
-  // Fetch scenes when status transitions to waiting_approval
+  // Fetch scenes when status transitions to waiting_approval or when opening a completed/later stage video
   // This is separate from polling since we stop polling during waiting_approval
   useEffect(() => {
-    if (videoStatus === "waiting_approval" && currentVideoId) {
+    const statusesWithScripts = ["waiting_approval", "generating", "rendering", "stitching", "completed"];
+    if (currentVideoId && statusesWithScripts.includes(videoStatus)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       refreshScenes();
     }

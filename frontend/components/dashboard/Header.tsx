@@ -15,7 +15,7 @@ import { signOut } from "@/app/auth/actions";
 
 export function Header() {
   return (
-    <header className="flex h-16 items-center gap-4 border-b bg-white px-6 w-full justify-between">
+    <header className="flex h-16 items-center gap-4 border-b border-slate-200 bg-white/70 backdrop-blur-md px-6 w-full justify-between sticky top-0 z-50">
       <div className="flex items-center gap-2 font-semibold text-lg text-gray-800">
         Welcome back, Scholar
       </div>

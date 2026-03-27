@@ -43,7 +43,7 @@ function StatusBadge({ status }: { status: string }) {
     },
     scripting: {
       label: "Scripting",
-      className: "bg-purple-100 text-purple-700",
+      className: "bg-[#FFDFDF] text-[#e8609a]",
     },
     waiting_approval: {
       label: "Awaiting Approval",
@@ -51,7 +51,7 @@ function StatusBadge({ status }: { status: string }) {
     },
     generating: {
       label: "Generating",
-      className: "bg-indigo-100 text-indigo-700",
+      className: "bg-[#FFDFDF] text-[#e8609a]",
     },
     rendering: {
       label: "Rendering",
@@ -105,23 +105,25 @@ function VideoCard({
     <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect(video)}>
       {/* Thumbnail / Preview */}
       <div
-        className="relative aspect-video bg-gradient-to-br from-indigo-950 to-gray-900"
+        className="relative aspect-video bg-gradient-to-br from-[#F875AA]/20 to-gray-900"
       >
         {hasVideo ? (
           <>
             <video
-              src={video.final_video_url}
+              src={`${video.final_video_url}#t=2.0`}
               className="w-full h-full object-cover"
               preload="metadata"
               muted
             />
-            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div 
+              className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPlay(video);
+              }}
+            >
               <div
                 className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPlay(video);
-                }}
               >
                 <Play className="h-6 w-6 ml-0.5 text-white fill-white" />
               </div>

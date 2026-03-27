@@ -27,7 +27,7 @@ export function VideoPlayer({ videoUrl }: VideoPlayerProps) {
   return (
     <div className="w-full h-full relative group">
       {/* Placeholder Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 to-black opacity-100" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#F875AA]/20 to-black opacity-100" />
       
       {/* Grid Pattern */}
       <div

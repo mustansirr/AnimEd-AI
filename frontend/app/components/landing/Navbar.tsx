@@ -19,7 +19,7 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#F875AA] to-[#AEDEFC] flex items-center justify-center">
               <span className="text-white font-bold text-sm">M</span>
             </div>
             <span className="text-xl font-bold gradient-text font-[family-name:var(--font-inter)]">
@@ -41,7 +41,7 @@ export default function Navbar() {
             <form action={signInWithGoogle}>
               <button
                 type="submit"
-                className="rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2 text-sm font-medium text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-500/20"
+                className="rounded-full bg-gradient-to-r from-[#F875AA] to-[#e8609a] px-5 py-2 text-sm font-medium text-white hover:from-[#f56da0] hover:to-[#d4558a] transition-all duration-200 shadow-lg shadow-[#F875AA]/20"
               >
                 Get Started
               </button>
@@ -75,7 +75,7 @@ export default function Navbar() {
               <form action={signInWithGoogle}>
                 <button
                   type="submit"
-                  className="w-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-200"
+                  className="w-full rounded-full bg-gradient-to-r from-[#F875AA] to-[#e8609a] px-5 py-2.5 text-sm font-medium text-white hover:from-[#f56da0] hover:to-[#d4558a] transition-all duration-200"
                 >
                   Get Started
                 </button>

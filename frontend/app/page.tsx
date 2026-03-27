@@ -21,7 +21,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fafbff] text-gray-900 overflow-x-hidden">
+    <main className="min-h-screen bg-[#FFF6F6] text-gray-900 overflow-x-hidden">
       <Navbar />
       <Hero />
       <Features />

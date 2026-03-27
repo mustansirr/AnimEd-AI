@@ -125,7 +125,7 @@ export function PromptInput() {
   return (
     <div className="w-full max-w-3xl mx-auto">
       {/* Prompt box with inline actions */}
-      <div className="relative rounded-xl border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-300 transition-all">
+      <div className="relative rounded-xl border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#F875AA]/20 focus-within:border-[#F875AA]/40 transition-all">
         <Textarea
           id="prompt"
           value={prompt}
@@ -149,7 +149,7 @@ export function PromptInput() {
               type="button"
               className={`p-1.5 rounded-md transition-colors ${
                 uploadState.file
-                  ? "text-indigo-600 bg-indigo-50"
+                  ? "text-[#e8609a] bg-[#FFF6F6]"
                   : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               }`}
               onClick={handleUploadClick}
@@ -173,7 +173,7 @@ export function PromptInput() {
 
           <Button
             size="sm"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all gap-1.5 text-xs h-8 px-4 rounded-lg disabled:opacity-50"
+            className="bg-[#F875AA] hover:bg-[#e8609a] text-white shadow-sm transition-all gap-1.5 text-xs h-8 px-4 rounded-lg disabled:opacity-50"
             onClick={handleGenerate}
             disabled={!canGenerate}
           >

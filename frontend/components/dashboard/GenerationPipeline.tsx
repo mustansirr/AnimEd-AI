@@ -147,7 +147,7 @@ export function GenerationPipeline() {
                         state === "completed"
                           ? "bg-green-200"
                           : state === "active"
-                          ? "bg-indigo-200"
+                          ? "bg-[#F875AA]/30"
                           : "bg-gray-100"
                       )}
                     />
@@ -159,7 +159,7 @@ export function GenerationPipeline() {
                       <CheckCircle2 className="h-6 w-6 text-green-500" />
                     )}
                     {state === "active" && (
-                      <Loader2 className="h-5 w-5 text-indigo-600 animate-spin" />
+                      <Loader2 className="h-5 w-5 text-[#F875AA] animate-spin" />
                     )}
                     {state === "pending" && (
                       <Circle className="h-5 w-5 text-gray-200" />
@@ -174,7 +174,7 @@ export function GenerationPipeline() {
                         className={cn(
                           "text-sm font-medium",
                           state === "active"
-                            ? "text-indigo-700"
+                            ? "text-[#e8609a]"
                             : state === "completed"
                             ? "text-gray-700"
                             : "text-gray-400"
@@ -184,8 +184,8 @@ export function GenerationPipeline() {
                       </p>
                     </div>
 
-                    {/* HITL: Inline script review when waiting_approval */}
-                    {step.isHITL && state === "active" && (
+                    {/* HITL: Inline script review when waiting_approval or completed */}
+                    {step.isHITL && (state === "active" || state === "completed") && (
                       <div className="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
                         <ScriptReview />
                       </div>

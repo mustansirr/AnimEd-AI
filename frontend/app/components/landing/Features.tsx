@@ -17,8 +17,8 @@ const features = [
     title: "AI-Powered Explanations",
     description:
       "Multiple AI agents collaborate to plan, script, and code animated explanations that make complex topics simple.",
-    gradient: "from-violet-500 to-purple-600",
-    glow: "rgba(139, 92, 246, 0.08)",
+    gradient: "from-[#F875AA] to-[#e8609a]",
+    glow: "rgba(248, 117, 170, 0.08)",
   },
   {
     icon: Eye,
@@ -66,12 +66,12 @@ export default function Features() {
       className="relative py-32 overflow-hidden"
     >
       {/* Subtle background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full bg-violet-100/40 blur-[150px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full bg-[#FFDFDF]/40 blur-[150px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
         {/* Section header */}
         <div className="reveal mx-auto max-w-2xl text-center mb-20">
-          <span className="inline-block mb-4 text-sm font-medium text-violet-600 tracking-wider uppercase">
+          <span className="inline-block mb-4 text-sm font-medium text-[#F875AA] tracking-wider uppercase">
             Features
           </span>
           <h2 className="font-[family-name:var(--font-inter)] text-4xl font-bold text-gray-900 sm:text-5xl tracking-tight">

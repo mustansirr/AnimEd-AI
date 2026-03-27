@@ -9,17 +9,17 @@ export default function Hero() {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Animated background blobs — soft pastels for light theme */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-violet-200/40 blur-[120px] animate-blob-float" />
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-[#F875AA]/30 blur-[120px] animate-blob-float" />
         <div
-          className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-indigo-200/30 blur-[120px] animate-blob-float"
+          className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-[#FFDFDF]/40 blur-[120px] animate-blob-float"
           style={{ animationDelay: "2s" }}
         />
         <div
-          className="absolute bottom-0 left-1/3 w-[400px] h-[400px] rounded-full bg-blue-200/30 blur-[120px] animate-blob-float"
+          className="absolute bottom-0 left-1/3 w-[400px] h-[400px] rounded-full bg-[#AEDEFC]/30 blur-[120px] animate-blob-float"
           style={{ animationDelay: "4s" }}
         />
         <div
-          className="absolute top-10 right-1/4 w-64 h-64 rounded-full bg-purple-200/20 blur-[100px] animate-blob-float"
+          className="absolute top-10 right-1/4 w-64 h-64 rounded-full bg-[#FFDFDF]/30 blur-[100px] animate-blob-float"
           style={{ animationDelay: "6s" }}
         />
       </div>
@@ -37,8 +37,8 @@ export default function Hero() {
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
         {/* Badge */}
-        <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-1.5 text-sm text-violet-700 backdrop-blur-sm">
-          <Sparkles size={14} className="text-violet-500" />
+        <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-[#F875AA]/30 bg-[#FFF6F6] px-4 py-1.5 text-sm text-[#e8609a] backdrop-blur-sm">
+          <Sparkles size={14} className="text-[#F875AA]" />
           <span>Powered by AI Agents</span>
         </div>
 
@@ -60,14 +60,14 @@ export default function Hero() {
           <div className="glass-card p-2 flex items-center gap-2 sm:flex-row flex-col">
             <div className="flex-1 w-full">
               <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-5 py-4">
-                <Sparkles size={18} className="text-violet-500 shrink-0" />
+                <Sparkles size={18} className="text-[#F875AA] shrink-0" />
                 <TypingPlaceholder />
               </div>
             </div>
             <form action={signInWithGoogle}>
               <button
                 type="submit"
-                className="glow-button whitespace-nowrap rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-4 text-sm font-semibold text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-300 cursor-pointer sm:w-auto w-full"
+                className="glow-button whitespace-nowrap rounded-xl bg-gradient-to-r from-[#F875AA] to-[#e8609a] px-8 py-4 text-sm font-semibold text-white hover:from-[#f56da0] hover:to-[#d4558a] transition-all duration-300 cursor-pointer sm:w-auto w-full"
               >
                 Generate Video →
               </button>
@@ -144,7 +144,7 @@ function TypingAnimation({ prompts }: { prompts: string[] }) {
   return (
     <span className="text-gray-400 text-left block">
       {displayText}
-      <span className="animate-cursor-blink text-violet-500 ml-0.5">|</span>
+      <span className="animate-cursor-blink text-[#F875AA] ml-0.5">|</span>
     </span>
   );
 }
