@@ -50,12 +50,12 @@ export default function Demo() {
       className="relative py-32 overflow-hidden"
     >
       {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] rounded-full bg-indigo-100/30 blur-[150px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] rounded-full bg-[#FFDFDF]/40 blur-[150px]" />
 
       <div className="relative z-10 mx-auto max-w-5xl px-6 lg:px-8">
         {/* Section header */}
         <div className="reveal mx-auto max-w-2xl text-center mb-16">
-          <span className="inline-block mb-4 text-sm font-medium text-indigo-600 tracking-wider uppercase">
+          <span className="inline-block mb-4 text-sm font-medium text-[#F875AA] tracking-wider uppercase">
             Preview
           </span>
           <h2 className="font-[family-name:var(--font-inter)] text-4xl font-bold text-gray-900 sm:text-5xl tracking-tight">
@@ -69,9 +69,9 @@ export default function Demo() {
 
         {/* Video player mock */}
         <div className="reveal">
-          <div className="relative group rounded-3xl overflow-hidden shadow-2xl shadow-indigo-200/30 border border-gray-200/60 bg-white p-1">
+          <div className="relative group rounded-3xl overflow-hidden shadow-2xl shadow-[#FFDFDF]/40 border border-gray-200/60 bg-white p-1">
             {/* Gradient border glow on hover */}
-            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-violet-400/10 via-indigo-400/10 to-blue-400/10 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#F875AA]/10 via-[#FFDFDF]/10 to-[#AEDEFC]/10 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
             <div className="relative rounded-[1.25rem] overflow-hidden bg-gray-950">
               {/* Top bar */}
@@ -120,7 +120,7 @@ export default function Demo() {
                 {/* Progress bar */}
                 <div className="mb-3 h-1 w-full rounded-full bg-gray-700 overflow-hidden cursor-pointer">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-100"
+                    className="h-full rounded-full bg-gradient-to-r from-[#F875AA] to-[#AEDEFC] transition-all duration-100"
                     style={{ width: `${progress}%` }}
                   />
                 </div>

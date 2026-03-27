@@ -111,7 +111,7 @@ export function Pipeline() {
                     <CheckCircle2 className="h-6 w-6 text-green-500" />
                   )}
                   {status === "processing" && (
-                    <Loader2 className="h-6 w-6 text-indigo-600 animate-spin" />
+                    <Loader2 className="h-6 w-6 text-[#F875AA] animate-spin" />
                   )}
                   {status === "pending" && (
                     <Circle className="h-6 w-6 text-gray-200" />

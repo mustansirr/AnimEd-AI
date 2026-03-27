@@ -159,8 +159,8 @@ html {
 
 /* Pulse glow animation */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.2); }
-  50% { box-shadow: 0 0 40px rgba(124, 58, 237, 0.4), 0 0 80px rgba(124, 58, 237, 0.1); }
+  0%, 100% { box-shadow: 0 0 20px rgba(248, 117, 170, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(248, 117, 170, 0.4), 0 0 80px rgba(248, 117, 170, 0.1); }
 }
 
 /* Shimmer animation */
@@ -275,7 +275,7 @@ html {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #7c3aed, #6366f1, #4f46e5, #8b5cf6);
+  background: linear-gradient(135deg, #F875AA, #AEDEFC, #F875AA, #AEDEFC);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -292,7 +292,7 @@ html {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.3));
+  background: linear-gradient(135deg, rgba(248, 117, 170, 0.3), rgba(174, 222, 252, 0.1), rgba(248, 117, 170, 0.3));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -309,7 +309,7 @@ html {
   content: '';
   position: absolute;
   inset: -2px;
-  background: linear-gradient(135deg, #7c3aed, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #F875AA, #e8609a, #AEDEFC);
   border-radius: inherit;
   z-index: -1;
   filter: blur(15px);

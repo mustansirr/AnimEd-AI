@@ -94,7 +94,7 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
       <CardHeader className="pb-3 border-b bg-gray-50/50 flex-shrink-0">
         <CardTitle className="text-base font-semibold flex justify-between items-center">
           <span className="flex items-center gap-2">
-            <Eye className="w-4 h-4 text-indigo-500" />
+            <Eye className="w-4 h-4 text-[#F875AA]" />
             Review Generated Scripts
           </span>
           <span className="text-xs font-normal text-muted-foreground">

@@ -10,7 +10,7 @@ export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
 
   return (
-    <div className={cn("pb-12 w-64 border-r bg-gray-50/50 min-h-screen hidden md:block", className)}>
+    <div className={cn("pb-12 w-64 border-r border-slate-200 bg-white/60 backdrop-blur-xl min-h-screen hidden md:block", className)}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <h2 className="mb-2 px-4 text-xl font-bold tracking-tight text-primary">
@@ -24,8 +24,13 @@ export function Sidebar({ className }: { className?: string }) {
           <div className="space-y-1">
             <Link href="/dashboard">
               <Button
-                variant={pathname === "/dashboard" ? "secondary" : "ghost"}
-                className="w-full justify-start"
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start font-medium transition-colors",
+                  pathname === "/dashboard" 
+                    ? "bg-slate-200/80 hover:bg-slate-300/80 text-slate-900" 
+                    : "text-slate-600 hover:bg-slate-200/60 hover:text-slate-900"
+                )}
               >
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 Dashboard
@@ -33,8 +38,13 @@ export function Sidebar({ className }: { className?: string }) {
             </Link>
             <Link href="/library">
               <Button
-                variant={pathname === "/library" ? "secondary" : "ghost"}
-                className="w-full justify-start"
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start font-medium transition-colors",
+                  pathname === "/library" 
+                    ? "bg-slate-200/80 hover:bg-slate-300/80 text-slate-900" 
+                    : "text-slate-600 hover:bg-slate-200/60 hover:text-slate-900"
+                )}
               >
                 <Library className="mr-2 h-4 w-4" />
                 Library

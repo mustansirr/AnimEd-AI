@@ -19,7 +19,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-12">
           <div className="max-w-xs">
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#F875AA] to-[#AEDEFC] flex items-center justify-center">
                 <span className="text-white font-bold text-sm">M</span>
               </div>
               <span className="text-xl font-bold gradient-text font-[family-name:var(--font-inter)]">Manima</span>

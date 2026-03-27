@@ -16,7 +16,7 @@ const testimonials = [
     quote:
       "Manima transformed my lecture prep. What used to take hours of animation work now takes minutes. My students love the visual explanations.",
     avatar: "SC",
-    gradient: "from-violet-500 to-purple-600",
+    gradient: "from-[#F875AA] to-[#e8609a]",
   },
   {
     name: "Rahul Patel",
@@ -24,7 +24,7 @@ const testimonials = [
     quote:
       "The quality of animations is incredible. It feels like having a professional animation studio at my fingertips. Game changer for STEM education.",
     avatar: "RP",
-    gradient: "from-indigo-500 to-blue-600",
+    gradient: "from-[#AEDEFC] to-[#8dcef5]",
   },
   {
     name: "Emily Rodriguez",
@@ -32,7 +32,7 @@ const testimonials = [
     quote:
       "I've tried many tools, but Manima's AI agents create explanations that actually make sense. The curriculum alignment feature is brilliant.",
     avatar: "ER",
-    gradient: "from-blue-500 to-cyan-600",
+    gradient: "from-[#F875AA]/80 to-[#AEDEFC]",
   },
 ];
 
@@ -60,12 +60,12 @@ export default function SocialProof() {
   return (
     <section ref={sectionRef} className="relative py-32 overflow-hidden bg-gray-50/50">
       {/* Background glow */}
-      <div className="absolute bottom-0 left-1/4 w-[600px] h-[400px] rounded-full bg-purple-100/30 blur-[150px]" />
+      <div className="absolute bottom-0 left-1/4 w-[600px] h-[400px] rounded-full bg-[#FFDFDF]/30 blur-[150px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
         {/* Section header */}
         <div className="reveal mx-auto max-w-2xl text-center mb-16">
-          <span className="inline-block mb-4 text-sm font-medium text-purple-600 tracking-wider uppercase">
+          <span className="inline-block mb-4 text-sm font-medium text-[#F875AA] tracking-wider uppercase">
             Trusted by Educators
           </span>
           <h2 className="font-[family-name:var(--font-inter)] text-4xl font-bold text-gray-900 sm:text-5xl tracking-tight">
@@ -80,7 +80,7 @@ export default function SocialProof() {
               key={stat.label}
               className="glass-card flex flex-col items-center p-8 text-center transition-all duration-300 hover:-translate-y-1"
             >
-              <stat.icon size={24} className="text-violet-500 mb-4" />
+              <stat.icon size={24} className="text-[#F875AA] mb-4" />
               <span className="text-4xl font-bold text-gray-900 mb-2 font-[family-name:var(--font-inter)]">
                 {stat.value}
               </span>
