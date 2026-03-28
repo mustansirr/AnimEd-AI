@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Manima — AI-Powered Educational Video Generation",
+  title: "AnimEd AI — AI-Powered Educational Video Generation",
   description:
-    "Transform your ideas into stunning educational videos instantly. Manima uses agentic AI to generate curriculum-aligned animated content from simple text prompts.",
+    "Transform your ideas into stunning educational videos instantly. AnimEd AI uses agentic AI to generate curriculum-aligned animated content from simple text prompts.",
   keywords: [
     "AI video generation",
     "educational videos",

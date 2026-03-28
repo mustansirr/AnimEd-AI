@@ -1,4 +1,5 @@
 import { Github, Twitter } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   const links = [
@@ -19,10 +20,13 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-12">
           <div className="max-w-xs">
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#F875AA] to-[#AEDEFC] flex items-center justify-center">
-                <span className="text-white font-bold text-sm">M</span>
-              </div>
-              <span className="text-xl font-bold gradient-text font-[family-name:var(--font-inter)]">Manima</span>
+              <Image
+                src="/animed-logo.png"
+                alt="AnimEd AI Logo"
+                width={120}
+                height={32}
+                className="h-8 w-auto"
+              />
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
               AI-powered educational video generation. Transform any topic into engaging animated content.
@@ -60,7 +64,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Manima. Made with ❤️ by Team Manima.</p>
+          <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} AnimEd AI. Made with ❤️ by Team AnimEd AI.</p>
           <p className="text-xs text-gray-400">Academic project — For educational use only.</p>
         </div>
       </div>

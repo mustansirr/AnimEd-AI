@@ -36,9 +36,6 @@ export default async function DashboardPage() {
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                   What&apos;s today&apos;s lesson or concept?
                 </h1>
-                <p className="text-gray-500 text-sm md:text-base max-w-lg mx-auto">
-                  Transform complex topics into engaging AI-driven educational animations in seconds.
-                </p>
               </div>
 
               {/* Centered Prompt Input */}

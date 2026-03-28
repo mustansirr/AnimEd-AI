@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signInWithGoogle } from "@/app/auth/actions";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -19,12 +20,14 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#F875AA] to-[#AEDEFC] flex items-center justify-center">
-              <span className="text-white font-bold text-sm">M</span>
-            </div>
-            <span className="text-xl font-bold gradient-text font-[family-name:var(--font-inter)]">
-              Manima
-            </span>
+            <Image
+              src="/animed-logo.png"
+              alt="AnimEd AI Logo"
+              width={120}
+              height={32}
+              className="h-8 w-auto"
+              priority
+            />
           </a>
 
           {/* Desktop Nav */}
