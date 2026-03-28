@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Library, LayoutDashboard } from "lucide-react";
@@ -13,9 +14,15 @@ export function Sidebar({ className }: { className?: string }) {
     <div className={cn("pb-12 w-64 border-r border-slate-200 bg-white/60 backdrop-blur-xl min-h-screen hidden md:block", className)}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-xl font-bold tracking-tight text-primary">
-            AnimEd AI
-          </h2>
+          <div className="mb-2 px-4">
+            <Image
+              src="/animed-logo.png"
+              alt="AnimEd AI Logo"
+              width={120}
+              height={32}
+              className="h-8 w-auto"
+            />
+          </div>
         </div>
         <div className="px-3 py-2">
           <h2 className="mb-2 px-4 text-xs font-semibold tracking-tight uppercase text-gray-500">

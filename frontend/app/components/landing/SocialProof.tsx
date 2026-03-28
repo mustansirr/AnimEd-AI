@@ -14,7 +14,7 @@ const testimonials = [
     name: "Dr. Sarah Chen",
     role: "Chemistry Professor",
     quote:
-      "Manima transformed my lecture prep. What used to take hours of animation work now takes minutes. My students love the visual explanations.",
+      "AnimEd AI transformed my lecture prep. What used to take hours of animation work now takes minutes. My students love the visual explanations.",
     avatar: "SC",
     gradient: "from-[#F875AA] to-[#e8609a]",
   },
@@ -30,7 +30,7 @@ const testimonials = [
     name: "Emily Rodriguez",
     role: "EdTech Content Creator",
     quote:
-      "I've tried many tools, but Manima's AI agents create explanations that actually make sense. The curriculum alignment feature is brilliant.",
+      "I've tried many tools, but AnimEd AI's agents create explanations that actually make sense. The curriculum alignment feature is brilliant.",
     avatar: "ER",
     gradient: "from-[#F875AA]/80 to-[#AEDEFC]",
   },
