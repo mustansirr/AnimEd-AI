@@ -3,6 +3,8 @@ FastAPI application entry point.
 Agentic AI Educational Video Generation Backend.
 """
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,12 +22,18 @@ app = FastAPI(
 )
 
 # Configure CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+# Filter out empty strings to avoid CORS issues when FRONTEND_URL is not set
+allowed_origins = [
+    origin for origin in [
         "http://localhost:3000",  # Next.js dev server
         "http://127.0.0.1:3000",
-    ],
+        os.environ.get("FRONTEND_URL", ""),  # Production frontend (e.g. https://animed-ai.vercel.app)
+    ] if origin
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
