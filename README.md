@@ -106,15 +106,6 @@ uvicorn main:app --reload
 
 ---
 
-## 👥 Team
-
-- **Mustansir Rangwala** — Team Lead & Architect (API Layer, Supabase, RAG)
-- **Mayank Salunkhe** — The Director (LangGraph Workflow, Planner/Scripter Agents)
-- **Samruddhi Kadam** — The Engine (Docker execution, Rendering, FFmpeg)
-- **Sanika Shinde** — The Animator (CodeGen Agent, Manim Snippets, Self-Correction)
-
----
-
 ## 🧾 License
 
 This project is open-source under the **MIT License**.
