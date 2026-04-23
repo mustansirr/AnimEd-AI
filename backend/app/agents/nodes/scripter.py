@@ -10,14 +10,13 @@ import logging
 from typing import Any
 from uuid import UUID
 
-from langchain_groq import ChatGroq
+from app.services.llm_factory import create_llm
 
 from app.agents.state import AgentState, SceneScript
 from app.agents.prompts.scripter_prompts import (
     SCRIPTER_SYSTEM_PROMPT,
     create_scripter_prompt,
 )
-from app.config import get_settings
 from app.models.schemas import VideoStatus
 from app.services.supabase_client import (
     create_scene,
@@ -56,7 +55,6 @@ async def write_scripts(state: AgentState) -> dict:
     Returns:
         Updated state dict with scripts list.
     """
-    settings = get_settings()
     video_id = state["video_id"]
     scene_plans = state.get("scene_plans", [])
     video_title = state.get("video_title", "Educational Video")
@@ -65,12 +63,8 @@ async def write_scripts(state: AgentState) -> dict:
         logger.warning(f"No scene plans found for video {video_id}")
         return {"scripts": []}
 
-    # Initialize LLM
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0.7,
-        api_key=settings.groq_api_key,
-    )
+    # Initialize LLM for script writing (provider configured via env vars)
+    llm = create_llm("scripter", temperature=0.7)
 
     scripts: list[SceneScript] = []
 

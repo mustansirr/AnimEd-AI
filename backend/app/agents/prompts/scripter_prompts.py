@@ -17,6 +17,10 @@ Visual descriptions should be specific enough for Manim animation:
 - "Draw a right triangle, then animate the Pythagorean squares on each side"
 - "Display a number line from -5 to 5, highlight the integers"
 
+IMPORTANT: Visuals can ONLY use Manim's built-in primitives (shapes, text, math, arrows, lines).
+Do NOT describe visuals that require external images, SVG files, or pre-made assets.
+Instead of "Show an image of X", describe how to build it from basic shapes and text.
+
 Keep narration conversational but educational. Match the duration estimate.
 
 Output your response as valid JSON with this exact format:

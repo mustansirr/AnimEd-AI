@@ -10,7 +10,7 @@ import logging
 from typing import Optional
 from uuid import UUID
 
-from langchain_groq import ChatGroq
+from app.services.llm_factory import create_llm
 
 from app.agents.state import AgentState
 from app.agents.prompts.coder_prompts import (
@@ -18,7 +18,6 @@ from app.agents.prompts.coder_prompts import (
     create_coder_prompt,
     clean_code_response,
 )
-from app.config import get_settings
 from app.models.schemas import VideoStatus
 from app.services.supabase_client import (
     get_scene_id_by_order,
@@ -28,17 +27,52 @@ from app.services.supabase_client import (
 
 logger = logging.getLogger(__name__)
 
-# Constants for rate limiting
-MAX_RETRIES = 3
-INITIAL_DELAY = 2  # seconds
+# Constants for retry logic
+MAX_RETRIES = 5
+INITIAL_DELAY = 3  # seconds
+
+# Error patterns that indicate a retryable provider/transient error
+_RETRYABLE_PATTERNS = [
+    "rate",
+    "limit",
+    "429",
+    "timeout",
+    "timed out",
+    "524",                          # Cloudflare / OpenRouter edge timeout
+    "502",                          # Bad gateway
+    "503",                          # Service unavailable
+    "529",                          # Provider overloaded
+    "overloaded",
+    "provider returned",            # OpenRouter "Provider returned error"
+    "provider overloaded",
+    "response validation failed",   # SDK Unmarshaller error on error body
+    "unmarshaller",                 # Pydantic unmarshal failure
+    "validation error",
+    "connection",
+    "server error",
+    "internal server",
+    "edge network",
+]
+
+
+def _is_retryable_error(error: Exception) -> bool:
+    """
+    Determine whether an LLM call error is transient and worth retrying.
+
+    Covers rate-limits, provider timeouts (524), SDK Unmarshaller/Pydantic
+    validation failures (when OpenRouter returns 200 with an error body),
+    and general connection errors.
+    """
+    error_str = str(error).lower()
+    return any(pattern in error_str for pattern in _RETRYABLE_PATTERNS)
 
 
 async def generate_code(state: AgentState) -> dict:
     """
     Generate Manim code for the current scene.
 
-    Uses Groq's free tier with llama-3.3-70b-versatile model
-    to generate Manim animation code based on scene scripts.
+    Uses the configured LLM provider (Groq or OpenRouter) to generate
+    Manim animation code based on scene scripts.
 
     Args:
         state: Current agent state with scripts and current_scene_index.
@@ -46,7 +80,6 @@ async def generate_code(state: AgentState) -> dict:
     Returns:
         Updated state dict with generated_codes and incremented scene index.
     """
-    settings = get_settings()
     video_id = state["video_id"]
     scene_index = state["current_scene_index"]
     scripts = state.get("scripts", [])
@@ -77,12 +110,8 @@ async def generate_code(state: AgentState) -> dict:
         f"scene {scene_index + 1}/{len(scripts)}"
     )
 
-    # Initialize Groq LLM with lower temperature for code
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0.2,
-        api_key=settings.groq_api_key,
-    )
+    # Initialize LLM for code generation (provider configured via env vars)
+    llm = create_llm("coder", temperature=0.2)
 
     # Create prompt with few-shot examples
     prompt = create_coder_prompt(
@@ -91,11 +120,11 @@ async def generate_code(state: AgentState) -> dict:
         include_examples=True,
     )
 
-    # Retry loop with exponential backoff for rate limits
+    # Retry loop with exponential backoff for transient errors
     last_error = None
     for attempt in range(MAX_RETRIES):
         try:
-            # Add delay between scenes to avoid rate limits
+            # Add delay between scenes / retries to avoid rate limits
             if scene_index > 0 or attempt > 0:
                 delay = INITIAL_DELAY * (2 ** attempt)
                 logger.info(f"Waiting {delay}s before LLM call (attempt {attempt + 1})")
@@ -134,18 +163,20 @@ async def generate_code(state: AgentState) -> dict:
 
         except Exception as e:
             last_error = e
-            error_str = str(e).lower()
-            
-            # Check if it's a rate limit error
-            if "rate" in error_str or "limit" in error_str or "429" in error_str:
+
+            if _is_retryable_error(e):
                 logger.warning(
-                    f"Rate limit hit for scene {scene_index}, "
-                    f"attempt {attempt + 1}/{MAX_RETRIES}"
+                    f"Retryable error for scene {scene_index}, "
+                    f"attempt {attempt + 1}/{MAX_RETRIES}: "
+                    f"{type(e).__name__}: {e}"
                 )
                 continue
             else:
-                # Non-rate-limit error, fail immediately
-                logger.error(f"Code generation failed for scene {scene_index}: {e}")
+                # Non-retryable error, fail immediately
+                logger.error(
+                    f"Code generation failed for scene {scene_index} "
+                    f"(non-retryable): {type(e).__name__}: {e}"
+                )
                 raise
 
     # All retries exhausted

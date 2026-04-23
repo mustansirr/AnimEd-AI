@@ -4,7 +4,7 @@ Loads environment variables and provides typed access to settings.
 """
 
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -26,10 +26,21 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_key: str = ""
 
-    # LLM Provider Configuration
+    # LLM Provider Configuration — Global Defaults
     groq_api_key: str = ""
     openrouter_api_key: str = ""
     llm_provider: Literal["groq", "openrouter"] = "groq"
+    llm_model: str = "llama-3.3-70b-versatile"
+
+    # Per-node LLM overrides (None = use global defaults above)
+    planner_llm_provider: Optional[Literal["groq", "openrouter"]] = None
+    planner_llm_model: Optional[str] = None
+    scripter_llm_provider: Optional[Literal["groq", "openrouter"]] = None
+    scripter_llm_model: Optional[str] = None
+    coder_llm_provider: Optional[Literal["groq", "openrouter"]] = None
+    coder_llm_model: Optional[str] = None
+    reflector_llm_provider: Optional[Literal["groq", "openrouter"]] = None
+    reflector_llm_model: Optional[str] = None
 
     # Storage Configuration
     storage_path: str = "/tmp/manima-storage"  # Outside backend dir to avoid hot-reload

@@ -8,11 +8,10 @@ then generates corrected code.
 import logging
 from uuid import UUID
 
-from langchain_groq import ChatGroq
+from app.services.llm_factory import create_llm
 
 from app.agents.state import AgentState
 from app.agents.prompts.coder_prompts import clean_code_response
-from app.config import get_settings
 from app.services.supabase_client import (
     get_scene_id_by_order,
     update_scene_code,
@@ -61,7 +60,6 @@ async def reflect_and_fix(state: AgentState) -> dict:
     Returns:
         Updated state dict with fixed code and incremented retry_count.
     """
-    settings = get_settings()
     video_id = state["video_id"]
     scene_index = state["current_scene_index"]
     retry_count = state.get("retry_count", 0)
@@ -91,12 +89,8 @@ async def reflect_and_fix(state: AgentState) -> dict:
         if scene_id:
             await log_scene_error(scene_id, error)
 
-    # Initialize Groq LLM with very low temperature for deterministic fixes
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0.1,
-        api_key=settings.groq_api_key,
-    )
+    # Initialize LLM for code reflection (provider configured via env vars)
+    llm = create_llm("reflector", temperature=0.1)
 
     # Create prompt with broken code and error
     prompt = f"""\
