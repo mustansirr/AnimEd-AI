@@ -38,13 +38,28 @@ of length 1.
 `VGroup(...).arrange(RIGHT, buff=0.5)` for horizontal layouts.
 9. Never place two objects at the same absolute coordinate.
 10. Always scale text with `font_size=` to keep it within the visible frame.
+11. Call `.next_to()` ONLY on Mobjects (like `MathTex`), NEVER on Animations (like `Write`).
+    WRONG: `self.play(Write(MathTex("...")).next_to(...))`
+    CORRECT: `obj = MathTex("...").next_to(...)` then `self.play(Write(obj))`
+
+FORBIDDEN — DO NOT USE:
+1. SVGMobject() — no SVG files exist in the render environment.
+2. ImageMobject() — no image files exist in the render environment.
+3. Do NOT reference any external files (SVGs, PNGs, JPGs, audio, etc.).
+4. Do NOT use file paths or filenames anywhere in the code.
+5. Build ALL visuals using ONLY Manim's built-in primitives listed below.
+6. If a scene calls for a complex diagram (e.g., an ant, a human body, a logo),
+   approximate it using combinations of Circle, Ellipse, Rectangle, Line,
+   Arc, Polygon, Arrow, Dot, CurvedArrow, and other built-in shapes.
 
 COMMON PATTERNS:
 - Text: Text("content", font_size=36)
 - Math: MathTex("latex_equation")
-- Shapes: Circle(), Square(), Triangle()
-- Arrows: Arrow(start, end)
+- Shapes: Circle(), Square(), Triangle(), Ellipse(), Polygon(), Dot()
+- Lines: Line(start, end), DashedLine(start, end), Arc()
+- Arrows: Arrow(start, end), CurvedArrow(start, end)
 - Groups: VGroup(obj1, obj2)
+- Labels: BraceLabel(obj, "text"), Brace(obj, direction)
 
 ANIMATION METHODS:
 - Write(text) - for text appearing
@@ -54,13 +69,12 @@ ANIMATION METHODS:
 - MoveTo(position) - move objects
 
 OUTPUT RULES:
-1. RETURN ONLY CODE.
-2. DO NOT write "Here is the code", "In this scene", or any other \
-conversational text.
-3. DO NOT use markdown code blocks (```python). Just the raw code.
-4. DO NOT import anything other than `from manim import *`.
-5. IF you feel the need to explain, use Python comments `#` inside the code.
-6. Start with imports, define one Scene class.
+1. You may think and plan step-by-step before writing code, but your final python code MUST be enclosed in a single ```python ... ``` markdown block.
+2. DO NOT split the code into multiple blocks. Provide the complete code in one block.
+3. DO NOT import anything other than `from manim import *`.
+4. IF you feel the need to explain inside the code, use Python comments `#`.
+5. Inside the code block, start with imports, and define EXACTLY ONE Scene class.
+6. Do not include markdown code blocks of anything else, except the generated code.
 """
 
 
@@ -142,14 +156,17 @@ def clean_code_response(response: str) -> str:
         Clean Python code string.
     """
     # Step 1: Try to extract code inside markdown fences
-    pattern = r"```(?:python)?\n(.*?)```"
-    match = re.search(pattern, response, re.DOTALL)
+    pattern = r"```[ \t]*(?:python|py)?[ \t]*\n(.*?)```"
+    match = re.search(pattern, response, re.DOTALL | re.IGNORECASE)
     if match:
         return match.group(1).strip()
 
     # Step 2: Find the first 'from manim import' and take everything after
     if "from manim import" in response:
-        return response[response.find("from manim import"):].strip()
+        code_part = response[response.find("from manim import"):].strip()
+        if "```" in code_part:
+            code_part = code_part[:code_part.find("```")]
+        return code_part.strip()
 
     # Step 3: Fallback — return as-is after stripping whitespace
     return response.strip()

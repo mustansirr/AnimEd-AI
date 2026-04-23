@@ -10,14 +10,13 @@ import logging
 from typing import Any
 from uuid import UUID
 
-from langchain_groq import ChatGroq
+from app.services.llm_factory import create_llm
 
 from app.agents.state import AgentState, ScenePlan
 from app.agents.prompts.planner_prompts import (
     PLANNER_SYSTEM_PROMPT,
     create_planner_prompt,
 )
-from app.config import get_settings
 from app.models.schemas import VideoStatus
 from app.services.supabase_client import update_video_status
 
@@ -53,18 +52,13 @@ async def plan_scenes(state: AgentState) -> dict:
     Returns:
         Updated state dict with video_title, topic_breakdown, scene_plans.
     """
-    settings = get_settings()
     video_id = state["video_id"]
 
     # Update status to planning
     await update_video_status(UUID(video_id), VideoStatus.PLANNING)
 
-    # Initialize Groq LLM
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0.7,
-        api_key=settings.groq_api_key,
-    )
+    # Initialize LLM for planning (provider configured via env vars)
+    llm = create_llm("planner", temperature=0.7)
 
     # Create prompt
     prompt = create_planner_prompt(

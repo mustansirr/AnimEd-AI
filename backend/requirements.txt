@@ -9,10 +9,11 @@ pydantic-settings>=2.1.0
 supabase>=2.3.4
 vecs>=0.4.3
 
-# LLM & Agents (Using Groq for free models)
+# LLM & Agents
 langchain>=0.1.4
 langgraph>=0.0.26
 langchain-groq>=0.0.3
+langchain-openrouter>=0.1.0
 tiktoken>=0.5.2
 
 # PDF & RAG
