@@ -106,6 +106,29 @@ export async function uploadPdf(
 }
 
 /**
+ * Start the video generation workflow.
+ * Call this AFTER uploading any PDF context so the planner
+ * can use the RAG embeddings.
+ */
+export async function startWorkflow(
+  videoId: string
+): Promise<CreateVideoResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}/start`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Unknown error" }));
+    throw new ApiError(response.status, error.detail || "Failed to start workflow");
+  }
+
+  return response.json();
+}
+
+/**
  * Get the current status of a video request.
  */
 export async function getVideoStatus(videoId: string): Promise<VideoStatusResponse> {

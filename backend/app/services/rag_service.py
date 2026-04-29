@@ -1,19 +1,27 @@
 """
 RAG (Retrieval Augmented Generation) Service.
 
-Handles PDF parsing, text chunking, embedding generation via Supabase Edge Functions,
-and semantic similarity search for context retrieval.
+Handles PDF parsing, text chunking, embedding generation, and semantic
+similarity search for context retrieval.
+
+Embedding strategy:
+- Local development (localhost URL): Uses fastembed library directly in Python
+  to avoid Supabase Edge Runtime CPU limits.
+- Production: Calls the Supabase Edge Function (gte-small model).
 """
 
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 import io
+import logging
 import re
 
 import httpx
 from PyPDF2 import PdfReader
 
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -157,9 +165,39 @@ def chunk_text(
 # Embedding Generation
 # =============================================================================
 
+# Cached local embedding model instance (lazy-loaded)
+_local_embed_model: Optional[object] = None
+
+
+def _is_local_supabase() -> bool:
+    """Check if we're using a local Supabase instance."""
+    settings = get_settings()
+    url = settings.supabase_url.lower()
+    return "localhost" in url or "127.0.0.1" in url
+
+
+def _get_local_model():
+    """
+    Get or initialize the local fastembed model.
+
+    Uses BAAI/bge-small-en-v1.5 which produces 384-dim embeddings,
+    same dimensionality as the gte-small model in the Edge Function.
+    """
+    global _local_embed_model
+    if _local_embed_model is None:
+        from fastembed import TextEmbedding
+        logger.info("Loading local embedding model (BAAI/bge-small-en-v1.5)...")
+        _local_embed_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+        logger.info("Local embedding model loaded.")
+    return _local_embed_model
+
+
 async def generate_embedding(text: str) -> List[float]:
     """
-    Generate embedding for a single text using Supabase Edge Function.
+    Generate embedding for a single text.
+
+    Uses local fastembed when running against local Supabase,
+    otherwise calls the Supabase Edge Function.
 
     Args:
         text: The text to generate embedding for.
@@ -170,11 +208,68 @@ async def generate_embedding(text: str) -> List[float]:
     Raises:
         RuntimeError: If embedding generation fails.
     """
-    settings = get_settings()
+    if _is_local_supabase():
+        return _generate_embedding_local(text)
 
-    # Construct the Edge Function URL
-    # For local development: http://localhost:54321/functions/v1/embed
-    # For production: {supabase_url}/functions/v1/embed
+    return await _generate_embedding_remote(text)
+
+
+async def generate_embeddings_batch(texts: List[str]) -> List[List[float]]:
+    """
+    Generate embeddings for multiple texts.
+
+    Uses local fastembed when running against local Supabase,
+    otherwise calls the Supabase Edge Function.
+
+    Args:
+        texts: List of texts to generate embeddings for.
+
+    Returns:
+        List of 384-dimensional embedding vectors.
+
+    Raises:
+        RuntimeError: If embedding generation fails.
+    """
+    if not texts:
+        return []
+
+    if _is_local_supabase():
+        return _generate_embeddings_batch_local(texts)
+
+    return await _generate_embeddings_batch_remote(texts)
+
+
+# -----------------------------------------------------------------------------
+# Local embedding (fastembed) — used for local development
+# -----------------------------------------------------------------------------
+
+def _generate_embedding_local(text: str) -> List[float]:
+    """Generate a single embedding using the local fastembed model."""
+    try:
+        model = _get_local_model()
+        embeddings = list(model.embed([text]))
+        return embeddings[0].tolist()
+    except Exception as e:
+        raise RuntimeError(f"Local embedding generation failed: {e}")
+
+
+def _generate_embeddings_batch_local(texts: List[str]) -> List[List[float]]:
+    """Generate batch embeddings using the local fastembed model."""
+    try:
+        model = _get_local_model()
+        embeddings = list(model.embed(texts))
+        return [emb.tolist() for emb in embeddings]
+    except Exception as e:
+        raise RuntimeError(f"Local batch embedding generation failed: {e}")
+
+
+# -----------------------------------------------------------------------------
+# Remote embedding (Supabase Edge Function) — used for production
+# -----------------------------------------------------------------------------
+
+async def _generate_embedding_remote(text: str) -> List[float]:
+    """Generate a single embedding via the Supabase Edge Function."""
+    settings = get_settings()
     base_url = settings.supabase_url.rstrip('/')
     embed_url = f"{base_url}/functions/v1/embed"
 
@@ -208,24 +303,9 @@ async def generate_embedding(text: str) -> List[float]:
             raise RuntimeError(f"Failed to connect to Edge Function: {str(e)}")
 
 
-async def generate_embeddings_batch(texts: List[str]) -> List[List[float]]:
-    """
-    Generate embeddings for multiple texts in a single request.
-
-    Args:
-        texts: List of texts to generate embeddings for.
-
-    Returns:
-        List of 384-dimensional embedding vectors.
-
-    Raises:
-        RuntimeError: If embedding generation fails.
-    """
-    if not texts:
-        return []
-
+async def _generate_embeddings_batch_remote(texts: List[str]) -> List[List[float]]:
+    """Generate batch embeddings via the Supabase Edge Function."""
     settings = get_settings()
-
     base_url = settings.supabase_url.rstrip('/')
     embed_url = f"{base_url}/functions/v1/embed"
 
