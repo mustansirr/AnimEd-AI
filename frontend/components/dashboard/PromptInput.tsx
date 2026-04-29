@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Paperclip, Sparkles, Loader2, Check, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
-import { createVideo, uploadPdf, ApiError } from "@/lib/api";
+import { createVideo, uploadPdf, startWorkflow, ApiError } from "@/lib/api";
 import { useVideo } from "./VideoContext";
 
 interface UploadState {
@@ -75,9 +75,9 @@ export function PromptInput() {
     setGenerationResult({ status: "idle", message: "" });
 
     try {
-      // Step 1: Create video request (triggers workflow)
+      // Step 1: Create video record (does NOT start workflow yet)
       const result = await createVideo(prompt, userId);
-      
+
       // Step 2: If PDF is selected, upload it for RAG context
       if (uploadState.file && result.video_id) {
         setUploadState((prev) => ({ ...prev, status: "uploading" }));
@@ -101,9 +101,13 @@ export function PromptInput() {
         }
       }
 
+      // Step 3: Start the workflow AFTER PDF embeddings are stored
+      // This ensures the planner agent has RAG context available
+      const workflowResult = await startWorkflow(result.video_id);
+
       setGenerationResult({
         status: "success",
-        message: result.message,
+        message: workflowResult.message,
         videoId: result.video_id,
       });
 

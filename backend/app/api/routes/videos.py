@@ -63,13 +63,9 @@ async def get_video_or_404(video_id: UUID) -> VideoResponse:
     description="""
     Create a new video generation request.
 
-    This endpoint:
-    1. Creates a new video record with status 'planning'
-    2. Returns the video ID for tracking
-
-    Note: In a future phase, this will trigger the LangGraph workflow
-    via `start_workflow(video_id, prompt, context)`.
-    """
+    This endpoint only creates the video record. To start the workflow,
+    call POST /api/videos/{id}/start after uploading any PDF context.
+    """,
 )
 async def create_video_request(
     video: VideoCreate,
@@ -79,29 +75,57 @@ async def create_video_request(
     # Validate user_id
     user_uuid = validate_uuid(user_id, "user_id")
 
-    # Create video record
+    # Create video record (workflow is NOT started yet)
     video_id = await create_video(
         user_id=user_uuid,
         prompt=video.prompt,
         syllabus_doc_path=video.syllabus_doc_path
     )
 
-    # Trigger the LangGraph workflow
-    # This runs planning and scripting, then pauses for human review
+    return {
+        "video_id": str(video_id),
+        "status": VideoStatus.PLANNING.value,
+        "message": "Video created. Upload PDF context, then start the workflow."
+    }
+
+
+@router.post(
+    "/{video_id}/start",
+    response_model=dict,
+    summary="Start video generation workflow",
+    description="""
+    Start the LangGraph workflow for a video.
+
+    Call this AFTER uploading any PDF context so the planner
+    can use the RAG embeddings. The workflow will run planning
+    and scripting, then pause for human review.
+    """,
+)
+async def start_video_workflow(video_id: str):
+    """Start the generation workflow for a video."""
+    video_uuid = validate_uuid(video_id, "video_id")
+
+    # Verify video exists
+    video = await get_video_or_404(video_uuid)
+
+    # Start the LangGraph workflow
     from app.agents.workflow import start_workflow
     try:
         await start_workflow(
-            video_id=str(video_id),
+            video_id=str(video_uuid),
             user_prompt=video.prompt,
-            syllabus_context=""  # TODO: Get from RAG if syllabus uploaded
+            syllabus_context=""  # retrieve_context_node will fetch from RAG
         )
     except Exception as e:
-        # Log error but don't fail the request - video is created
         import logging
         logging.error(f"Workflow error for video {video_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Workflow failed to start: {str(e)}"
+        )
 
     return {
-        "video_id": str(video_id),
+        "video_id": str(video_uuid),
         "status": VideoStatus.WAITING_APPROVAL.value,
         "message": "Scripts ready for review"
     }

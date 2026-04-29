@@ -19,6 +19,7 @@ tiktoken>=0.5.2
 # PDF & RAG
 pypdf2>=3.0.1
 langchain-community>=0.0.16
+fastembed>=0.6.1
 
 # Utilities
 python-dotenv>=1.0.0
