@@ -117,21 +117,62 @@ async def approve_scripts(video_id: str, request: ApprovalRequest):
             "message": "Scripts approved. Video generation will begin."
         }
     else:
-        # Handle rejection - store feedback and mark as failed
+        # Handle rejection with feedback → re-generate scripts with user's suggestions.
+        # If no feedback is provided, mark as permanently failed.
+        import asyncio
+        import logging
+
+        logger = logging.getLogger(__name__)
         client = get_supabase_client()
-        client.table("videos").update({
-            "status": VideoStatus.FAILED.value,
-        }).eq("id", video_id).execute()
 
-        # Store feedback in a way that can be retrieved later
-        # For now, we'll log it. In production, consider a separate feedback table
         if request.feedback:
-            # Could store in video metadata or separate table
-            pass
+            # Clear old scenes so fresh ones are written by the workflow
+            client.table("scenes").delete().eq("video_id", str(video_uuid)).execute()
 
-        return {
-            "video_id": video_id,
-            "status": VideoStatus.FAILED.value,
-            "message": "Scripts rejected.",
-            "feedback": request.feedback
-        }
+            # Reset video status to planning so the workflow can start fresh
+            await update_video_status(video_uuid, VideoStatus.PLANNING)
+
+            # Build a combined prompt: original prompt + user's suggestions as context
+            combined_prompt = (
+                f"{video.prompt}\n\n"
+                f"[User suggestions for revision]\n{request.feedback}"
+            )
+
+            async def run_regeneration():
+                """Re-run the full script-generation workflow with user feedback."""
+                from app.agents.workflow import start_workflow
+                try:
+                    await start_workflow(
+                        video_id=str(video_uuid),
+                        user_prompt=combined_prompt,
+                        syllabus_context="",
+                    )
+                    logger.info(f"Script regeneration completed for video {video_uuid}")
+                except Exception as e:
+                    logger.error(f"Script regeneration failed for video {video_uuid}: {e}")
+                    try:
+                        await update_video_status(video_uuid, VideoStatus.FAILED)
+                    except Exception as status_err:
+                        logger.error(f"Failed to update status: {status_err}")
+
+            # Run regeneration in background so the HTTP response returns immediately
+            asyncio.create_task(run_regeneration())
+
+            return {
+                "video_id": video_id,
+                "status": VideoStatus.PLANNING.value,
+                "message": "Suggestions received. Scripts will be regenerated.",
+                "feedback": request.feedback,
+            }
+        else:
+            # No feedback → hard reject, mark as failed permanently
+            client.table("videos").update({
+                "status": VideoStatus.FAILED.value,
+            }).eq("id", video_id).execute()
+
+            return {
+                "video_id": video_id,
+                "status": VideoStatus.FAILED.value,
+                "message": "Scripts rejected.",
+                "feedback": request.feedback,
+            }
