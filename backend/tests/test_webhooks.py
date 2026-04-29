@@ -106,15 +106,17 @@ def test_approve_success(
     assert "approved" in data["message"].lower()
 
 
+@patch("app.api.routes.webhooks.update_video_status")
 @patch("app.api.routes.webhooks.get_supabase_client")
 @patch("app.api.routes.webhooks.get_video")
 def test_reject_success(
-    mock_get_video, mock_supabase, mock_video_waiting_approval
+    mock_get_video, mock_supabase, mock_update_status, mock_video_waiting_approval
 ):
-    """Test successful rejection updates status to failed."""
+    """Test successful rejection with feedback updates status to planning."""
     mock_get_video.return_value = mock_video_waiting_approval
+    mock_update_status.return_value = True
     mock_client = mock_supabase.return_value
-    mock_client.table.return_value.update.return_value.eq.return_value.execute.return_value = None  # noqa: E501
+    mock_client.table.return_value.delete.return_value.eq.return_value.execute.return_value = None  # noqa: E501
 
     response = client.post(
         "/api/videos/12345678-1234-1234-1234-123456789012/approve",
@@ -122,7 +124,7 @@ def test_reject_success(
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "failed"
+    assert data["status"] == "planning"
     assert data["feedback"] == "Need more detail in scene 2"
 
 
