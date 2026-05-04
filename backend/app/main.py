@@ -11,6 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import upload, videos, webhooks
 from app.config import get_settings
 
+from dotenv import load_dotenv
+load_dotenv(".env.local")
+
 # Get application settings
 settings = get_settings()
 
