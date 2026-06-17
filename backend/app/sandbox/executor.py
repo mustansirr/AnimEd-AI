@@ -111,7 +111,7 @@ class ManimExecutor:
 
         # Write code to scene.py
         code_file = render_dir / "scene.py"
-        code_file.write_text(code)
+        code_file.write_text(code, encoding="utf-8")
 
         logger.info(
             f"Executing Manim (subprocess) for video {video_id}, "
@@ -133,6 +133,8 @@ class ManimExecutor:
                     manim_cmd,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     timeout=self.timeout_seconds,
                 ),
             )
@@ -188,7 +190,7 @@ class ManimExecutor:
 
         # Write code to scene.py
         code_file = render_dir / "scene.py"
-        code_file.write_text(code)
+        code_file.write_text(code, encoding="utf-8")
 
         logger.info(
             f"Executing Manim (docker) for video {video_id}, "
@@ -213,6 +215,8 @@ class ManimExecutor:
                     docker_cmd,
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     timeout=self.timeout_seconds,
                 ),
             )
@@ -220,8 +224,12 @@ class ManimExecutor:
             if result.returncode == 0:
                 return self._find_video_result(render_dir, video_id, result.stdout)
             else:
+                with open("manim_debug_stderr.log", "w", encoding="utf-8") as f:
+                    f.write(result.stderr)
+                with open("manim_debug_stdout.log", "w", encoding="utf-8") as f:
+                    f.write(result.stdout)
                 logger.error(
-                    f"Render failed (docker) for video {video_id}: {result.stderr}"
+                    f"Render failed (docker) for video {video_id}. Stderr dumped to manim_debug_stderr.log"
                 )
                 return ExecutionResult(
                     success=False,

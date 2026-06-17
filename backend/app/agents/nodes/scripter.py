@@ -26,20 +26,23 @@ from app.services.supabase_client import (
 logger = logging.getLogger(__name__)
 
 
+import re
+
 def _parse_json_response(content: str) -> dict[str, Any]:
     """Parse JSON from LLM response, handling markdown code blocks."""
     content = content.strip()
 
-    # Remove markdown code blocks if present
-    if content.startswith("```json"):
-        content = content[7:]
-    elif content.startswith("```"):
-        content = content[3:]
+    # Try to extract JSON object if there's conversational filler
+    match = re.search(r'\{.*\}', content, re.DOTALL)
+    if match:
+        content = match.group(0)
 
-    if content.endswith("```"):
-        content = content[:-3]
+    # Fix unescaped backslashes often generated in LaTeX (e.g. \frac -> \\frac)
+    # We replace any single \ that is NOT followed by " or \ with \\
+    content = re.sub(r'(?<!\\)\\(?=[^"\\])', r'\\\\', content)
 
-    return json.loads(content.strip())
+    # strict=False allows unescaped literal control characters like newlines
+    return json.loads(content, strict=False)
 
 
 async def write_scripts(state: AgentState) -> dict:
@@ -110,12 +113,21 @@ async def write_scripts(state: AgentState) -> dict:
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse scripter response for scene {i}: {e}")
             # Create a placeholder script
-            scripts.append(SceneScript(
+            placeholder = SceneScript(
                 scene_order=i + 1,
                 narration=f"Scene {i + 1}: {scene_plan.get('title', '')}",
                 visual_description="Display title text",
                 duration_estimate=60,
-            ))
+            )
+            scripts.append(placeholder)
+            
+            # Save to Supabase to prevent missing scene errors downstream
+            await create_scene(
+                video_id=UUID(video_id),
+                scene_order=placeholder["scene_order"],
+                narration_script=placeholder["narration"],
+                visual_plan=placeholder["visual_description"],
+            )
         except Exception as e:
             logger.error(f"Scripter failed for scene {i}: {e}")
             raise

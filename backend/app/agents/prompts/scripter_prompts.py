@@ -6,7 +6,7 @@ that creates narration and visual descriptions for each scene.
 """
 
 
-SCRIPTER_SYSTEM_PROMPT = """You are an educational script writer specializing in animated math/science videos.
+SCRIPTER_SYSTEM_PROMPT = r"""You are an educational script writer specializing in animated math/science videos.
 
 For each scene, you will write:
 1. NARRATION: What the narrator says (clear, engaging, educational)
@@ -20,8 +20,13 @@ Visual descriptions should be specific enough for Manim animation:
 IMPORTANT: Visuals can ONLY use Manim's built-in primitives (shapes, text, math, arrows, lines).
 Do NOT describe visuals that require external images, SVG files, or pre-made assets.
 Instead of "Show an image of X", describe how to build it from basic shapes and text.
+CRITICAL VISUAL RULE: DO NOT instruct the coder to write long sentences or paragraphs on the screen. The narration will be handled by voiceover. On-screen text MUST be limited to short titles, formulas, and 1-3 word labels/bullet points.
 
 Keep narration conversational but educational. Match the duration estimate.
+
+CRITICAL: Since your output is JSON, you MUST double-escape all LaTeX backslashes!
+For example, write `\\frac{1}{2}` instead of `\frac{1}{2}`, and `\\pi` instead of `\pi`.
+If you do not double-escape, the JSON parsing will fail with an invalid escape error.
 
 Output your response as valid JSON with this exact format:
 {

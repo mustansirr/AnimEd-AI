@@ -12,7 +12,7 @@ from app.api.routes import upload, videos, webhooks
 from app.config import get_settings
 
 from dotenv import load_dotenv
-load_dotenv(".env.local")
+load_dotenv(".env")
 
 # Get application settings
 settings = get_settings()

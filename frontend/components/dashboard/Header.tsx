@@ -26,10 +26,12 @@ export function Header() {
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
-              <AvatarImage src="" alt="@user" />
-              <AvatarFallback className="bg-primary/10 text-primary">U</AvatarFallback>
-            </Avatar>
+            <button className="outline-none">
+              <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
+                <AvatarImage src="" alt="@user" />
+                <AvatarFallback className="bg-primary/10 text-primary">U</AvatarFallback>
+              </Avatar>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>

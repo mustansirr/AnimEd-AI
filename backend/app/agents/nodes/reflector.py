@@ -61,17 +61,18 @@ async def reflect_and_fix(state: AgentState) -> dict:
         Updated state dict with fixed code and incremented retry_count.
     """
     video_id = state["video_id"]
-    scene_index = state["current_scene_index"]
     retry_count = state.get("retry_count", 0)
-
-    # Get the broken code and error
+    
     generated_codes = state.get("generated_codes", [])
-    if scene_index >= len(generated_codes):
-        logger.error(f"No code found for scene {scene_index}")
+    if not generated_codes:
+        logger.error("No code found to reflect on.")
         return {
             "retry_count": retry_count + 1,
             "last_render_error": "No code to fix",
         }
+        
+    # The coder already incremented current_scene_index, so the failing code is the last one in the list.
+    scene_index = len(generated_codes) - 1
 
     broken_code = generated_codes[scene_index]
     error = state.get("last_render_error", "Unknown error")
@@ -82,9 +83,9 @@ async def reflect_and_fix(state: AgentState) -> dict:
     )
 
     # Log error to Supabase
-    scripts = state.get("scripts", [])
-    if scripts and scene_index < len(scripts):
-        scene_order = scripts[scene_index].get("scene_order", scene_index + 1)
+    storyboards = state.get("storyboards", [])
+    if storyboards and scene_index < len(storyboards):
+        scene_order = storyboards[scene_index].get("scene_number", scene_index + 1)
         scene_id = await get_scene_id_by_order(UUID(video_id), scene_order)
         if scene_id:
             await log_scene_error(scene_id, error)
@@ -105,6 +106,36 @@ ERROR MESSAGE:
 Fix the code to resolve this error. Return only the corrected Python code.
 """
 
+    import tiktoken
+    try:
+        encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    except Exception:
+        encoding = tiktoken.get_encoding("cl100k_base")
+        
+    sys_tokens = len(encoding.encode(REFLECTOR_SYSTEM_PROMPT))
+    user_tokens = len(encoding.encode(prompt))
+    total_estimated = sys_tokens + user_tokens
+    
+    if total_estimated > 5000:
+        logger.warning(f"[DIAGNOSTIC] Reflector prompt exceeds 5000 tokens ({total_estimated}). Truncating code and error.")
+        # Truncate code to last 2000 chars, error to last 1000 chars
+        trunc_code = broken_code[-2000:] if len(broken_code) > 2000 else broken_code
+        trunc_error = str(error)[-1000:] if len(str(error)) > 1000 else str(error)
+        
+        prompt = f"""\
+BROKEN CODE (Truncated):
+```python
+...
+{trunc_code}
+```
+
+ERROR MESSAGE (Truncated):
+...
+{trunc_error}
+
+Fix the code to resolve this error. Return only the corrected Python code.
+"""
+
     try:
         # Call LLM
         response = await llm.ainvoke([
@@ -120,8 +151,8 @@ Fix the code to resolve this error. Return only the corrected Python code.
         new_codes[scene_index] = fixed_code
 
         # Update Supabase with fixed code
-        if scripts and scene_index < len(scripts):
-            scene_order = scripts[scene_index].get("scene_order", scene_index + 1)
+        if storyboards and scene_index < len(storyboards):
+            scene_order = storyboards[scene_index].get("scene_number", scene_index + 1)
             scene_id = await get_scene_id_by_order(UUID(video_id), scene_order)
             if scene_id:
                 await update_scene_code(scene_id, fixed_code)

@@ -8,6 +8,7 @@ all rendered scene segments into a final video using FFmpeg.
 import asyncio
 import logging
 import subprocess
+import shutil
 from pathlib import Path
 from uuid import UUID
 
@@ -134,10 +135,16 @@ class VideoStitcher:
         work_dir = self.storage_path / video_id / "final"
         work_dir.mkdir(parents=True, exist_ok=True)
 
+        # Ensure edge-tts CLI is available
+        edge_tts_path = shutil.which("edge-tts")
+        if not edge_tts_path:
+            logger.error("edge-tts CLI not found.")
+            raise RuntimeError("edge-tts CLI is required but not found in PATH.")
+
         # Download all segments and validate
         segment_paths = []
         for scene in sorted(rendered_scenes, key=lambda s: s.scene_order):
-            local_path = work_dir / f"scene_{scene.scene_order}.mp4"
+            local_path = work_dir / f"scene_{scene.id}_{scene.scene_order}.mp4"
 
             logger.info(
                 f"Downloading scene {scene.scene_order} from: "
@@ -152,10 +159,111 @@ class VideoStitcher:
             if success and self._validate_video_file(local_path):
                 file_size = local_path.stat().st_size
                 logger.info(
-                    f"Scene {scene.scene_order} downloaded OK "
-                    f"({file_size} bytes)"
+                    f"Scene {scene.scene_order} downloaded OK ({file_size} bytes)"
                 )
-                segment_paths.append(local_path)
+                
+                final_scene_path = local_path
+                
+                # Check for narration to generate audio + subtitles
+                if scene.narration_script and scene.narration_script.strip():
+                    logger.info(f"Generating TTS and Subtitles for scene {scene.scene_order}")
+                    
+                    audio_path = work_dir / f"audio_{scene.id}.mp3"
+                    srt_path = work_dir / f"subtitles_{scene.id}.vtt"
+                    merged_path = work_dir / f"scene_{scene.id}_merged.mp4"
+                    
+                    try:
+                        # 1. Generate TTS and VTT Subtitles using edge-tts CLI
+                        tts_cmd = [
+                            edge_tts_path,
+                            "--text", scene.narration_script,
+                            "--voice", "en-US-AriaNeural",
+                            "--write-media", str(audio_path),
+                            "--write-subtitles", str(srt_path)
+                        ]
+                        
+                        logger.info(f"Running edge-tts: {' '.join(tts_cmd)}")
+                        await asyncio.get_event_loop().run_in_executor(
+                            None,
+                            lambda: subprocess.run(tts_cmd, check=True, capture_output=True)
+                        )
+                        
+                        # 2. Merge Video + Audio + Subtitles via FFmpeg with styling
+                        # Commas in force_style must be escaped for filter_complex
+                        subtitle_style = "Fontname=Arial,Fontsize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1,MarginV=10,Alignment=2"
+                        escaped_style = subtitle_style.replace(",", "\\,")
+                        
+                        merge_cmd = [
+                            "ffmpeg", "-y",
+                            "-i", local_path.name,
+                            "-i", audio_path.name,
+                            "-filter_complex", 
+                            f"[0:v]tpad=stop_mode=clone:stop_duration=300,subtitles={srt_path.name}:force_style='{escaped_style}'[v]",
+                            "-map", "[v]",
+                            "-map", "1:a",
+                            "-shortest",
+                            "-c:v", "libx264",
+                            "-preset", "fast",
+                            "-crf", "23",
+                            "-c:a", "aac",
+                            merged_path.name
+                        ]
+                        
+                        logger.info(f"Running intermediate merge: {' '.join(merge_cmd)}")
+                        
+                        merge_result = await asyncio.get_event_loop().run_in_executor(
+                            None,
+                            lambda: subprocess.run(
+                                merge_cmd,
+                                cwd=str(work_dir),
+                                capture_output=True,
+                                text=True,
+                                timeout=300,
+                            ),
+                        )
+                        
+                        if merge_result.returncode == 0 and merged_path.exists():
+                            logger.info(f"Successfully merged TTS/SRT for scene {scene.scene_order}")
+                            final_scene_path = merged_path
+                        else:
+                            logger.error(f"Failed to merge TTS/SRT: {merge_result.stderr}")
+                            
+                    except Exception as e:
+                        logger.error(f"Error processing TTS/SRT for scene {scene.scene_order}: {e}")
+                
+                # If we still don't have an audio track (no narration or TTS failed), add a silent one
+                if final_scene_path == local_path:
+                    logger.info(f"Adding silent audio track to scene {scene.scene_order} to ensure concat works")
+                    silent_path = work_dir / f"scene_{scene.id}_silent.mp4"
+                    silent_cmd = [
+                        "ffmpeg", "-y",
+                        "-i", local_path.name,
+                        "-f", "lavfi",
+                        "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
+                        "-c:v", "copy",
+                        "-c:a", "aac",
+                        "-shortest",
+                        silent_path.name
+                    ]
+                    try:
+                        silent_result = await asyncio.get_event_loop().run_in_executor(
+                            None,
+                            lambda: subprocess.run(
+                                silent_cmd,
+                                cwd=str(work_dir),
+                                capture_output=True,
+                                text=True,
+                                timeout=300,
+                            ),
+                        )
+                        if silent_result.returncode == 0 and silent_path.exists():
+                            final_scene_path = silent_path
+                        else:
+                            logger.error(f"Failed to add silent audio: {silent_result.stderr}")
+                    except Exception as e:
+                        logger.error(f"Error adding silent audio: {e}")
+                        
+                segment_paths.append(final_scene_path)
             else:
                 logger.warning(
                     f"Failed to download/validate scene {scene.scene_order}"
@@ -283,6 +391,7 @@ class VideoStitcher:
         public_url = client.storage.from_(bucket_name).get_public_url(
             storage_path
         )
+        public_url = public_url.replace("host.docker.internal", "127.0.0.1")
 
         return public_url
 

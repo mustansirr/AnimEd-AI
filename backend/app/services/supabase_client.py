@@ -88,6 +88,32 @@ async def get_video(video_id: UUID) -> Optional[VideoResponse]:
     return VideoResponse(**result.data[0])
 
 
+async def get_completed_video_by_prompt(prompt: str) -> Optional[VideoResponse]:
+    """
+    Get a completed video with the exact same prompt (and no syllabus).
+    
+    Args:
+        prompt: The topic/concept to explain.
+        
+    Returns:
+        VideoResponse if found, None otherwise.
+    """
+    client = get_supabase_client()
+    result = (
+        client.table("videos")
+        .select("*")
+        .eq("prompt", prompt)
+        .eq("status", VideoStatus.COMPLETED.value)
+        .is_("syllabus_doc_path", "null")
+        .limit(1)
+        .execute()
+    )
+
+    if not result.data:
+        return None
+    return VideoResponse(**result.data[0])
+
+
 async def update_video_status(video_id: UUID, status: VideoStatus) -> bool:
     """
     Update the status of a video.
@@ -165,6 +191,9 @@ async def create_scene(
     if visual_plan:
         data["visual_plan"] = visual_plan
 
+    # Delete existing scenes with this order to avoid 409 conflicts on retry
+    client.table("scenes").delete().eq("video_id", str(video_id)).eq("scene_order", scene_order).execute()
+    
     result = client.table("scenes").insert(data).execute()
     return UUID(result.data[0]["id"])
 
@@ -188,6 +217,44 @@ async def get_scenes(video_id: UUID) -> list[SceneResponse]:
         .execute()
     )
     return [SceneResponse(**scene) for scene in result.data]
+
+
+async def duplicate_scenes(source_video_id: UUID, target_video_id: UUID) -> bool:
+    """
+    Duplicate all scenes from a source video to a target video.
+
+    Args:
+        source_video_id: The UUID of the video to copy scenes from.
+        target_video_id: The UUID of the new video.
+        
+    Returns:
+        True if successful.
+    """
+    client = get_supabase_client()
+    
+    # Get all scenes from source
+    scenes = await get_scenes(source_video_id)
+    if not scenes:
+        return True
+        
+    # Prepare data for insertion (excluding id, created_at, updated_at which are auto-generated)
+    scenes_data = []
+    for scene in scenes:
+        scene_dict = scene.model_dump()
+        new_scene = {
+            "video_id": str(target_video_id),
+            "scene_order": scene_dict.get("scene_order"),
+            "narration_script": scene_dict.get("narration_script"),
+            "visual_plan": scene_dict.get("visual_plan"),
+            "manim_code": scene_dict.get("manim_code"),
+            "is_rendered": scene_dict.get("is_rendered"),
+            "error_log": scene_dict.get("error_log"),
+            "video_segment_url": scene_dict.get("video_segment_url"),
+        }
+        scenes_data.append(new_scene)
+        
+    result = client.table("scenes").insert(scenes_data).execute()
+    return len(result.data) > 0
 
 
 async def get_scene(scene_id: UUID) -> Optional[SceneResponse]:

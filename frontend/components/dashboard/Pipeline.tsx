@@ -8,6 +8,43 @@ import { cn } from "@/lib/utils";
 import { useVideo, VideoStatus } from "./VideoContext";
 import { ScriptReview } from "./ScriptReview";
 import { VideoPlayer } from "./VideoPlayer";
+import { useEffect } from "react";
+
+function StepProgress() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    // Simulate generation taking about 45-60 seconds
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        // Slow down near the end
+        if (prev > 90) return prev + 0.2;
+        if (prev > 70) return prev + 1;
+        return prev + 2;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const displayProgress = Math.min(Math.floor(progress), 99);
+  const timeRemaining = Math.max(0, 60 - Math.floor((displayProgress / 100) * 60));
+  
+  return (
+    <div className="mt-3 w-full pr-4">
+      <div className="flex justify-between text-xs text-muted-foreground mb-1.5 font-medium">
+        <span>Generating... {displayProgress}%</span>
+        <span>~{timeRemaining}s estimated</span>
+      </div>
+      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-gradient-to-r from-[#F875AA] to-[#AEDEFC] transition-all duration-500 ease-out rounded-full"
+          style={{ width: `${displayProgress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 // Pipeline step definitions
 const STEPS = [
@@ -154,6 +191,11 @@ export function Pipeline() {
                   <p className="text-xs text-muted-foreground">
                     {step.description}
                   </p>
+                  
+                  {/* Progress bar for long-running generation steps */}
+                  {(step.id === 3 || step.id === 4) && status === "processing" && (
+                    <StepProgress />
+                  )}
                 </div>
               </div>
             );

@@ -57,7 +57,16 @@ def create_llm(role: AgentRole, temperature: float = 0.7) -> BaseChatModel:
     )
 
     if provider == "groq":
-        return _create_groq_llm(model, temperature, settings.groq_api_key)
+        llm = _create_groq_llm(model, temperature, settings.groq_api_key)
+        # Add OpenRouter fallback to gracefully handle Groq rate limits
+        if settings.openrouter_api_key:
+            # User specifically requested this fallback model
+            or_model = "meta-llama/llama-3.1-8b-instruct:free"
+            fallback_llm = _create_openrouter_llm(
+                or_model, temperature, settings.openrouter_api_key
+            )
+            return llm.with_fallbacks([fallback_llm])
+        return llm
     elif provider == "openrouter":
         return _create_openrouter_llm(
             model, temperature, settings.openrouter_api_key
@@ -80,28 +89,52 @@ def _create_groq_llm(
         )
 
     from langchain_groq import ChatGroq
+    import asyncio
+    import time
 
-    return ChatGroq(
+    class RateLimitedChatGroq(ChatGroq):
+        async def _agenerate(self, messages, stop=None, run_manager=None, **kwargs):
+            try:
+                return await super()._agenerate(messages, stop, run_manager, **kwargs)
+            except Exception as e:
+                if "429" in str(e) or "rate" in str(e).lower():
+                    logger.warning("Groq rate limit hit, switching to fallback model...")
+                    await asyncio.sleep(5)
+                raise e
+        
+        def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+            try:
+                return super()._generate(messages, stop, run_manager, **kwargs)
+            except Exception as e:
+                if "429" in str(e) or "rate" in str(e).lower():
+                    logger.warning("Groq rate limit hit, switching to fallback model...")
+                    time.sleep(5)
+                raise e
+
+    return RateLimitedChatGroq(
         model=model,
         temperature=temperature,
         api_key=api_key,
+        max_tokens=2048,
     )
 
 
 def _create_openrouter_llm(
     model: str, temperature: float, api_key: str
 ) -> BaseChatModel:
-    """Create a ChatOpenRouter instance."""
+    """Create an OpenRouter instance using ChatOpenAI."""
     if not api_key:
         raise ValueError(
             "OPENROUTER_API_KEY is required when using the 'openrouter' "
             "provider. Set it in your .env file."
         )
 
-    from langchain_openrouter import ChatOpenRouter
+    from langchain_openai import ChatOpenAI
 
-    return ChatOpenRouter(
+    return ChatOpenAI(
         model=model,
         temperature=temperature,
         api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        max_tokens=8192,
     )

@@ -14,9 +14,12 @@ import {
   Pencil,
   RotateCcw,
   Send,
+  Volume2,
+  Square,
 } from "lucide-react";
 import { useVideo } from "./VideoContext";
 import { approveScripts, SceneResponse, ApiError } from "@/lib/api";
+import { useEffect } from "react";
 
 interface ScriptReviewProps {
   onClose?: () => void;
@@ -41,7 +44,37 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
   /** Per-scene editable copies; keyed by scene.id */
   const [sceneEdits, setSceneEdits] = useState<Record<string, SceneEdits>>({});
 
+  // ── Voice state ──────────────────────────────────────────────────────────
+  const [playingSceneId, setPlayingSceneId] = useState<string | null>(null);
+
   const isWaitingApproval = videoStatus === "waiting_approval";
+
+  // Cleanup speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const handlePlayNarration = (text: string, sceneId: string) => {
+    if (!text || typeof window === "undefined") return;
+
+    if (playingSceneId === sceneId) {
+      window.speechSynthesis.cancel();
+      setPlayingSceneId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    
+    utterance.onend = () => setPlayingSceneId(null);
+    utterance.onerror = () => setPlayingSceneId(null);
+
+    setPlayingSceneId(sceneId);
+    window.speechSynthesis.speak(utterance);
+  };
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -271,10 +304,34 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
               {/* Narration */}
               {(scene.narration_script || isSuggestMode) && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" />
-                    Narration
-                  </p>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" />
+                      Narration
+                    </p>
+                    {scene.narration_script && !isSuggestMode && (
+                      <button
+                        type="button"
+                        onClick={() => handlePlayNarration(scene.narration_script!, scene.id)}
+                        className={`flex items-center gap-1 text-[10px] transition-colors ${
+                          playingSceneId === scene.id 
+                            ? "text-blue-600 font-medium" 
+                            : "text-muted-foreground hover:text-blue-600"
+                        }`}
+                        title={playingSceneId === scene.id ? "Stop voice" : "Play narration voice"}
+                      >
+                        {playingSceneId === scene.id ? (
+                          <>
+                            <Square className="w-3 h-3 fill-current" /> Stop
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3 h-3" /> Play Voice
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   {isSuggestMode ? (
                     <Textarea
                       value={edits?.narration_script ?? ""}

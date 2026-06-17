@@ -10,11 +10,13 @@ from app.agents.prompts.scripter_prompts import (
     SCRIPTER_SYSTEM_PROMPT,
     create_scripter_prompt,
 )
-from app.agents.prompts.coder_prompts import (
-    CODER_SYSTEM_PROMPT,
-    create_coder_prompt,
-    get_few_shot_examples,
-    clean_code_response,
+from app.agents.prompts.storyboard_prompts import (
+    STORYBOARD_SYSTEM_PROMPT,
+    create_storyboard_prompt,
+)
+from app.agents.prompts.scene_json_prompts import (
+    create_scene_json_system_prompt,
+    create_scene_json_prompt,
 )
 
 __all__ = [
@@ -22,9 +24,8 @@ __all__ = [
     "create_planner_prompt",
     "SCRIPTER_SYSTEM_PROMPT",
     "create_scripter_prompt",
-    "CODER_SYSTEM_PROMPT",
-    "create_coder_prompt",
-    "get_few_shot_examples",
-    "clean_code_response",
+    "STORYBOARD_SYSTEM_PROMPT",
+    "create_storyboard_prompt",
+    "create_scene_json_system_prompt",
+    "create_scene_json_prompt",
 ]
-

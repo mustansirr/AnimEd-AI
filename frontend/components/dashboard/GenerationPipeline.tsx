@@ -80,7 +80,7 @@ function getStepState(
 // =============================================================================
 
 export function GenerationPipeline() {
-  const { currentVideoId, videoStatus, videoData, isPolling } = useVideo();
+  const { currentVideoId, videoStatus, videoData, scenes, isPolling } = useVideo();
   const [showPlayer, setShowPlayer] = useState(false);
   const activeRef = useRef<HTMLDivElement>(null);
 
@@ -89,6 +89,11 @@ export function GenerationPipeline() {
   const isFailed = videoStatus === "failed";
   const videoUrl = videoData?.final_video_url;
 
+  // Dynamic label for generation
+  const totalScenes = scenes?.length || 0;
+  const generatedScenesCount = scenes?.filter((s) => s.manim_code !== null).length || 0;
+  const currentGeneratingScene = Math.max(1, Math.min(generatedScenesCount + 1, totalScenes));
+  
   // Auto-scroll to the active step
   useEffect(() => {
     if (activeRef.current) {
@@ -112,11 +117,18 @@ export function GenerationPipeline() {
               </span>
             )}
           </span>
-          {currentVideoId && (
-            <span className="text-[10px] font-mono text-muted-foreground">
-              {currentVideoId.slice(0, 8)}...
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {!isCompleted && !isFailed && (
+              <span className="text-xs font-medium text-muted-foreground bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
+                Est. time: ~3-5 mins
+              </span>
+            )}
+            {currentVideoId && (
+              <span className="text-[10px] font-mono text-muted-foreground">
+                {currentVideoId.slice(0, 8)}...
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Steps */}
@@ -180,7 +192,9 @@ export function GenerationPipeline() {
                             : "text-gray-400"
                         )}
                       >
-                        {step.label}
+                        {step.id === 4 && state === "active" && totalScenes > 0
+                          ? `Generating scene ${currentGeneratingScene} of ${totalScenes}...`
+                          : step.label}
                       </p>
                     </div>
 

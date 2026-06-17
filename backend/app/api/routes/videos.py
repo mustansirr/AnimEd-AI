@@ -19,6 +19,9 @@ from app.services.supabase_client import (
     create_video,
     get_video,
     get_scenes,
+    get_completed_video_by_prompt,
+    duplicate_scenes,
+    set_final_video_url,
 )
 
 
@@ -75,6 +78,27 @@ async def create_video_request(
     # Validate user_id
     user_uuid = validate_uuid(user_id, "user_id")
 
+    # Check for cached video if no syllabus
+    if not video.syllabus_doc_path:
+        cached_video = await get_completed_video_by_prompt(video.prompt)
+        if cached_video:
+            # Create a new video record for this user
+            new_video_id = await create_video(
+                user_id=user_uuid,
+                prompt=video.prompt,
+                syllabus_doc_path=None
+            )
+            # Mark it as completed and link URL
+            await set_final_video_url(new_video_id, cached_video.final_video_url)
+            # Duplicate scenes
+            await duplicate_scenes(cached_video.id, new_video_id)
+            
+            return {
+                "video_id": str(new_video_id),
+                "status": VideoStatus.COMPLETED.value,
+                "message": "Video retrieved from cache."
+            }
+
     # Create video record (workflow is NOT started yet)
     video_id = await create_video(
         user_id=user_uuid,
@@ -118,7 +142,13 @@ async def start_video_workflow(video_id: str):
         )
     except Exception as e:
         import logging
+        from app.services.supabase_client import update_video_status
         logging.error(f"Workflow error for video {video_id}: {e}")
+        try:
+            await update_video_status(video_uuid, VideoStatus.FAILED)
+        except Exception as status_err:
+            logging.error(f"Failed to update status to FAILED: {status_err}")
+            
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Workflow failed to start: {str(e)}"

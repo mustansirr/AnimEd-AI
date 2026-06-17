@@ -10,13 +10,21 @@ FROM python:3.10-slim
 # - libcairo2-dev: 2D graphics library for rendering
 # - libpango1.0-dev: Text layout and rendering
 # - texlive-full: Full LaTeX support for mathematical equations
+# Force apt to use IPv4 (fixes common Docker Desktop Windows networking bugs)
+RUN echo 'Acquire::ForceIPv4 "true";' > /etc/apt/apt.conf.d/99force-ipv4
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
     ffmpeg \
     libcairo2-dev \
     libpango1.0-dev \
-    texlive-full \
+    texlive \
+    texlive-latex-extra \
+    texlive-fonts-extra \
+    texlive-latex-recommended \
+    texlive-science \
+    tipa \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip and install Manim with retry/timeout for slow networks

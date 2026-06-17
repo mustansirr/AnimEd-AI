@@ -11,6 +11,7 @@ import {
   VideoOff,
   X,
   AlertTriangle,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import { VideoDetailModal } from "./VideoDetailModal";
@@ -195,30 +196,42 @@ function VideoPlayerModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl bg-black rounded-lg overflow-hidden"
+        className="relative w-full max-w-4xl bg-black rounded-lg overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-2 right-2 z-10 text-white hover:bg-white/20"
-          onClick={onClose}
-        >
-          <X className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center justify-between p-4 bg-gray-900 border-b border-gray-800">
+          <h2 className="text-white font-medium text-lg truncate pr-4">{video.prompt}</h2>
+          <div className="flex items-center gap-2">
+            <a 
+              href={video.final_video_url} 
+              download={`video_${video.id}.mp4`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button variant="outline" size="sm" className="h-8 gap-2 bg-gray-800 text-white border-gray-700 hover:bg-gray-700">
+                <Download className="w-4 h-4" />
+                Download
+              </Button>
+            </a>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white hover:bg-gray-800 h-8 w-8"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
 
         <video
           src={video.final_video_url}
           controls
           autoPlay
-          className="w-full aspect-video"
+          className="w-full aspect-video bg-black"
         >
           Your browser does not support the video tag.
         </video>
-
-        <div className="p-4">
-          <p className="text-sm text-gray-300">{video.prompt}</p>
-        </div>
       </div>
     </div>
   );

@@ -20,12 +20,58 @@ class SceneScript(TypedDict):
 
 class ScenePlan(TypedDict):
     """Scene plan from the planner agent."""
-
     scene_number: int
     title: str
     key_concepts: List[str]
-    visual_type: str  # text_animation | diagram | graph | equation
+    visual_type: str
     duration_seconds: int
+
+
+class StoryboardScene(TypedDict):
+    """Storyboard output for a scene."""
+    scene_number: int
+    goal: str
+    narration: str
+    visuals: List[str]
+    animations: List[str]
+    duration: int
+
+
+class SceneJSON(TypedDict):
+    """Declarative JSON representing semantic scene specifications."""
+    schema_version: str
+    scene_type: str
+    learning_goal: str
+    visual_metaphor: str
+    components: List[str]
+    component_data: dict
+    animation_sequence: List[str]
+    duration: int
+    title: str
+    caption: str
+
+
+class PositionedJSON(TypedDict):
+    """Scene JSON with abstract layout zones assigned."""
+    scene_type: str
+    learning_goal: str
+    visual_metaphor: str
+    components: List[str]
+    animation_sequence: List[str]
+    duration: int
+    title: str
+    caption: str
+    layout_zones: dict
+
+
+class QualityScores(TypedDict):
+    """Scores from the Video Quality Evaluator."""
+    visual_clarity: int
+    educational_clarity: int
+    layout_quality: int
+    animation_quality: int
+    professional_appearance: int
+    feedback: str
 
 
 class AgentState(TypedDict):
@@ -44,6 +90,12 @@ class AgentState(TypedDict):
     syllabus_context: str
 
     # =========================================================================
+    # Concept Classification (from classifier node)
+    # =========================================================================
+    concept_topic: Optional[str]
+    visualization_strategy: Optional[str]
+
+    # =========================================================================
     # Planning outputs (from planner node)
     # =========================================================================
     video_title: str
@@ -51,9 +103,10 @@ class AgentState(TypedDict):
     scene_plans: List[ScenePlan]  # Detailed scene structure
 
     # =========================================================================
-    # Script outputs (from scripter node)
+    # Scripts / Storyboard outputs
     # =========================================================================
     scripts: List[SceneScript]
+    storyboards: List[StoryboardScene]
 
     # =========================================================================
     # Human review (set by webhook/resume)
@@ -62,17 +115,27 @@ class AgentState(TypedDict):
     user_feedback: Optional[str]
 
     # =========================================================================
-    # Code generation (for Sanika's coder node)
+    # JSON Generation & Layout
+    # =========================================================================
+    visual_metaphor: Optional[str]
+    suggested_component: Optional[str]
+    scene_jsons: List[SceneJSON]
+    positioned_jsons: List[PositionedJSON]
+
+    # =========================================================================
+    # Code generation (Manim Generator)
     # =========================================================================
     current_scene_index: int
     generated_codes: List[str]
 
     # =========================================================================
-    # Execution status (for Samruddhi's renderer node)
+    # Execution status & QA (Renderer, Evaluator, Fix Agent)
     # =========================================================================
     last_render_error: Optional[str]
+    last_rendered_video_path: Optional[str]
     retry_count: int
     all_scenes_done: bool
+    quality_scores: Optional[QualityScores]
 
 
 def create_initial_state(
@@ -96,20 +159,31 @@ def create_initial_state(
         video_id=video_id,
         user_prompt=user_prompt,
         syllabus_context=syllabus_context,
+        # Concept Classification
+        concept_topic=None,
+        visualization_strategy=None,
+        visual_metaphor=None,
+        suggested_component=None,
         # Planning
         video_title="",
         topic_breakdown=[],
         scene_plans=[],
-        # Scripts
+        # Scripts/Storyboard
         scripts=[],
+        storyboards=[],
         # Human review
         user_approved=False,
         user_feedback=None,
+        # JSON & Layout
+        scene_jsons=[],
+        positioned_jsons=[],
         # Code generation
         current_scene_index=0,
         generated_codes=[],
-        # Execution
+        # Execution & QA
         last_render_error=None,
+        last_rendered_video_path=None,
         retry_count=0,
         all_scenes_done=False,
+        quality_scores=None,
     )

@@ -9,6 +9,9 @@ This module provides the execute_and_check node function that:
 """
 
 import logging
+import base64
+import subprocess
+import asyncio
 from pathlib import Path
 from uuid import UUID
 
@@ -16,6 +19,8 @@ from app.agents.state import AgentState
 from app.sandbox.executor import ManimExecutor
 from app.services import supabase_client
 from app.config import get_settings
+from langchain_groq import ChatGroq
+from langchain_core.messages import HumanMessage
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +90,7 @@ async def upload_to_storage(
 
     # Get public URL
     public_url = client.storage.from_(bucket_name).get_public_url(storage_path)
+    public_url = public_url.replace("host.docker.internal", "127.0.0.1")
 
     logger.info(f"Uploaded video segment to {public_url}")
     return public_url
@@ -131,10 +137,19 @@ async def execute_and_check(state: AgentState) -> AgentState:
     executor = get_executor()
     result = await executor.execute(code, video_id, scene_index)
 
+    # Vision critic moved to video_quality_evaluator
+
     if result["success"]:
         logger.info(
             f"Render successful for video {video_id}, scene {scene_index}"
         )
+        
+        # END-TO-END VERIFICATION LOG
+        scene_jsons = state.get("scene_jsons", [])
+        if scene_jsons and scene_index < len(scene_jsons):
+            comp = scene_jsons[scene_index].get("components", ["None"])
+            comp = comp[0] if comp else "None"
+            logger.info(f"Rendered Component: {comp}")
 
         try:
             # Upload to Supabase Storage
@@ -166,19 +181,20 @@ async def execute_and_check(state: AgentState) -> AgentState:
             # The video was rendered successfully
 
         # Check if all scenes are done
-        scripts = state.get("scripts", [])
-        all_done = scene_index >= len(scripts) - 1
+        storyboards = state.get("storyboards", [])
+        all_done = scene_index >= len(storyboards) - 1
 
         return {
             **state,
             "current_scene_index": scene_index + 1 if not all_done else scene_index,
             "all_scenes_done": all_done,
             "last_render_error": None,
+            "last_rendered_video_path": result["video_path"],
             "retry_count": 0,  # Reset retry count on success
         }
 
     else:
-        # Render failed
+        # Render failed or vision critic failed
         error_msg = result.get("error", "Unknown error")
         logger.error(
             f"Render failed for video {video_id}, scene {scene_index}: "

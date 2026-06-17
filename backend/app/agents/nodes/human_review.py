@@ -57,11 +57,31 @@ async def wait_for_approval(state: AgentState) -> dict:
         }
 
     # User approved - prepare for code generation
-    logger.info(f"Video {video_id} scripts approved, starting code generation")
+    logger.info(f"Video {video_id} scripts approved, preparing next nodes")
 
     await update_video_status(UUID(video_id), VideoStatus.GENERATING)
+    
+    # CRITICAL FIX: Re-fetch scenes from Supabase because the user might have edited them in the frontend!
+    from app.services.supabase_client import get_scenes
+    updated_scenes = await get_scenes(UUID(video_id))
+    
+    storyboards = state.get("storyboards", [])
+    
+    # We must patch the state's storyboards with the new text from the UI
+    for i, scene in enumerate(updated_scenes):
+        if i < len(storyboards):
+            # Update narration
+            storyboards[i]["narration"] = scene.narration_script or storyboards[i]["narration"]
+            # The UI updated visual_plan as a single string. 
+            # We don't need to parse it back into goals/visuals/animations arrays 
+            # because the next node (SceneJSON Generator) reads it as a string anyway!
+            # Let's just override "visuals" with the raw text so the next prompt gets it.
+            if scene.visual_plan:
+                storyboards[i]["visuals"] = [scene.visual_plan]
+                storyboards[i]["animations"] = [] # Clear out animations since they are now embedded in the string
 
     return {
+        "storyboards": storyboards,
         "current_scene_index": 0,
         "generated_codes": [],
         "retry_count": 0,
