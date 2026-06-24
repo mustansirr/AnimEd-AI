@@ -1,4 +1,16 @@
 from manim import *
+# Explicit color imports to satisfy IDE static analysis:
+from manim import YELLOW, BLUE, GREEN, WHITE, RED, GRAY, BLACK, TEAL, BLUE_D, GREEN_C, BLUE_E
+# Explicit symbol imports to satisfy IDE static analysis:
+from manim import (
+    AnimationGroup, ArcBetweenPoints, Arrow, Axes, BarChart, Circle,
+    Circumscribe, Create, DL, DOWN, DR, Dot, DoubleArrow, Ellipse,
+    FadeIn, FadeOut, Flash, GrowArrow, GrowFromCenter, Indicate,
+    LEFT, Line, MathTex, Matrix, MoveAlongPath, NumberLine, ORIGIN,
+    PI, Polygon, RIGHT, Rectangle, ReplacementTransform, RightAngle,
+    Square, Succession, Text, Transform, UL, UP, UR, UpdateFromFunc,
+    VGroup, Wiggle, Write
+)
 import numpy as np
 
 class VisualGrammar:
@@ -90,16 +102,81 @@ STEM_BLUEPRINTS = {
     }
 }
 
+class GlobalTransitionEngine:
+    """
+    Forces all generative assets to utilize Manim's native smooth interpolation
+    instead of hard visual cuts.
+    """
+    @staticmethod
+    def apply_global_entry_logic(mobject, entry_style="smooth"):
+        if entry_style == "smooth":
+            return FadeIn(mobject, shift=UP*0.2, scale=0.8)
+        return FadeIn(mobject)
+
+    @staticmethod
+    def transition_between_states(old_group, new_group):
+        # Automatically handles morphing between abstract concepts and real-world examples
+        return ReplacementTransform(old_group, new_group, run_time=1.5)
+
 class AnimatableComponent(VGroup):
-    def get_intro_animations(self):
-        return [FadeIn(self)]
-    def get_highlight_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
+        if not self.submobjects:
+            return [GlobalTransitionEngine.apply_global_entry_logic(self)]
+        animations = [GlobalTransitionEngine.apply_global_entry_logic(obj) for obj in self.submobjects]
+        return [AnimationGroup(*animations, lag_ratio=0.1)]
+
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self)]
-    def get_transformation_animations(self):
-        return [AnimationGroup(self.animate.scale(1.05), self.animate.scale(1/1.05), lag_ratio=1)]
-    def get_explanation_animations(self):
+
+    def get_transformation_animations(self, *args, **kwargs):
+        return [Wiggle(self)]
+
+    def get_explanation_animations(self, *args, **kwargs):
         return [Circumscribe(self)]
-    def get_focus_animations(self):
+
+    def get_focus_animations(self, *args, **kwargs):
+        return [Flash(self.get_center())]
+
+class ImageLabelCard(AnimatableComponent):
+    def __init__(self, image_path: str = "", label: str = "", **kwargs):
+        super().__init__(**filter_manim_kwargs(kwargs))
+        self.image_path = image_path
+        self.label_text = label
+        
+        self.group = VGroup()
+        
+        try:
+            if not image_path:
+                raise ValueError("No image path provided")
+            import os
+            if not os.path.exists(image_path):
+                raise FileNotFoundError(f"Image not found at {image_path}")
+            
+            self.img = ImageMobject(image_path)
+            self.img.scale_to_fit_height(3.0)
+        except Exception as e:
+            # Fallback to textured square placeholder
+            base_sq = Square(side_length=3.0, fill_color=VisualGrammar.colors["surface"], fill_opacity=0.8, stroke_color=RED, stroke_width=4)
+            warning_text = SmartText("Image Missing", font_size=20, color=RED).move_to(base_sq.get_center())
+            self.img = VGroup(base_sq, warning_text)
+            
+        self.group.add(self.img)
+        
+        if label:
+            lbl = SmartText(str(label), font_size=24).next_to(self.img, DOWN, buff=0.5)
+            self.group.add(lbl)
+            
+        self.add(self.group)
+        
+    def get_intro_animations(self, *args, **kwargs):
+        return [FadeIn(self.group, shift=UP*0.2)]
+    def get_highlight_animations(self, *args, **kwargs):
+        return [Indicate(self)]
+    def get_transformation_animations(self, *args, **kwargs):
+        return [AnimationGroup(self.animate.scale(1.05), self.animate.scale(1/1.05), lag_ratio=1)]
+    def get_explanation_animations(self, *args, **kwargs):
+        return [Circumscribe(self)]
+    def get_focus_animations(self, *args, **kwargs):
         return [Flash(self.get_center())]
 
 class SmartText(AnimatableComponent):
@@ -176,21 +253,40 @@ class TreeDiagram(AnimatableComponent):
         self.edges = VGroup()
         for child in self.children_nodes:
             self.edges.add(Line(self.root.get_bottom(), child.get_top(), color=WHITE))
+            
+        # Hide children and edges initially for progressive insertion
+        for child in self.children_nodes:
+            child.target_pos = child.get_center()
+            child.move_to(self.root.get_center())
+            child.set_opacity(0)
+            
+        self.edges.set_opacity(0)
         self.add(self.root, self.children_nodes, self.edges)
 
-    def get_intro_animations(self):
-        return [FadeIn(self.root, shift=DOWN), Create(self.edges), FadeIn(self.children_nodes, shift=UP)]
+    def get_intro_animations(self, *args, **kwargs):
+        return [FadeIn(self.root, shift=DOWN)]
         
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.root)]
         
-    def get_transformation_animations(self):
-        return [Indicate(child) for child in self.children_nodes]
+    def get_transformation_animations(self, *args, **kwargs):
+        # Enforce Animation Chaining: Travel down the tree sequentially via intermediate points
+        animations = []
+        for child, edge in zip(self.children_nodes, self.edges):
+            midpoint = (self.root.get_center() + child.target_pos) / 2
+            node_travel = Succession(
+                child.animate.set_opacity(1).move_to(midpoint),
+                child.animate.move_to(child.target_pos)
+            )
+            edge_reveal = Create(edge)
+            animations.append(AnimationGroup(node_travel, edge_reveal, lag_ratio=0.5))
+            
+        return [AnimationGroup(*animations, lag_ratio=0.8)]
         
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.edges)]
         
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.children_nodes[0] if self.children_nodes else self)]
 
 class NetworkDiagram(AnimatableComponent):
@@ -220,10 +316,20 @@ class NetworkDiagram(AnimatableComponent):
         self.layer_groups.arrange(RIGHT, buff=2.0)
         
         self.edges = VGroup()
+        import random
+        # Parse weights if provided: list of lists corresponding to layers
+        weights_data = kwargs.get("weights", None)
+        
         for i in range(len(self.all_nodes)-1):
-            for src in self.all_nodes[i]:
-                for tgt in self.all_nodes[i+1]:
-                    self.edges.add(Line(src.get_center(), tgt.get_center(), stroke_opacity=0.3, z_index=-1))
+            src_layer = self.all_nodes[i]
+            tgt_layer = self.all_nodes[i+1]
+            for s_idx, src in enumerate(src_layer):
+                for t_idx, tgt in enumerate(tgt_layer):
+                    try:
+                        weight = weights_data[i][s_idx][t_idx] if weights_data else random.randint(1, 5)
+                    except (IndexError, TypeError):
+                        weight = random.randint(1, 5)
+                    self.edges.add(Line(src.get_center(), tgt.get_center(), stroke_width=weight, stroke_opacity=0.4, z_index=-1))
                     
         self.add(self.edges, self.layer_groups)
         
@@ -240,6 +346,23 @@ class NetworkDiagram(AnimatableComponent):
             
         print(f"NetworkDiagram created with layers: {layers}")
         print(f"Total mobjects: {len(self.submobjects)}")
+
+    def get_transformation_animations(self, *args, **kwargs):
+        # Pulse data signals physically through connections layer by layer
+        anims = []
+        for i in range(len(self.all_nodes) - 1):
+            layer_pulses = []
+            for src in self.all_nodes[i]:
+                for tgt in self.all_nodes[i+1]:
+                    pulse = Dot(src.get_center(), radius=0.08, color=YELLOW)
+                    travel = Succession(
+                        FadeIn(pulse, run_time=0.1),
+                        pulse.animate(run_time=0.6).move_to(tgt.get_center()),
+                        FadeOut(pulse, run_time=0.1)
+                    )
+                    layer_pulses.append(travel)
+            anims.append(AnimationGroup(*layer_pulses))
+        return anims
 
 class GraphDiagram(AnimatableComponent):
     def __init__(self, nodes=None, edges=None, **kwargs):
@@ -274,19 +397,19 @@ class GraphDiagram(AnimatableComponent):
                 
         self.add(self.edges_group, self.nodes_group)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [FadeIn(self.nodes_group, scale=0.5), Create(self.edges_group)]
         
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.nodes_group)]
         
-    def get_transformation_animations(self):
+    def get_transformation_animations(self, *args, **kwargs):
         return [Wiggle(self.nodes_group)]
         
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.edges_group)]
         
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.nodes_group[0] if self.nodes_group else self)]
 
 class TimelineDiagram(AnimatableComponent):
@@ -496,9 +619,18 @@ class BinarySearchDiagram(AnimatableComponent):
         if high is not None and 0 <= high < len(self.cells):
             t_high = SmartText("high", font_size=20, color=RED).next_to(self.cells[high], DOWN)
             self.add(t_high)
+            
+        self.eval_node = self.cells
         if mid is not None and 0 <= mid < len(self.cells):
             t_mid = SmartText("mid", font_size=20, color=YELLOW).next_to(self.cells[mid], UP)
             self.add(t_mid)
+            self.eval_node = self.cells[mid]
+        elif target is not None and 0 <= target < len(self.cells):
+            self.eval_node = self.cells[target]
+
+    def get_highlight_animations(self, *args, **kwargs):
+        # Logic Highlight States: Explicitly indicate the node evaluating the condition
+        return [Indicate(self.eval_node, scale_factor=1.2, color=RED)]
 
 class GradientDescentPlot(AnimatableComponent):
     def __init__(self, function="x**2", start_x=3, learning_rate=0.3, steps=5, **kwargs):
@@ -553,90 +685,159 @@ class MoleculeDiagram(AnimatableComponent):
                 
         self.add(self.edges, self.nodes)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [FadeIn(self.nodes, shift=UP), Create(self.edges)]
         
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.nodes)]
         
-    def get_transformation_animations(self):
+    def get_transformation_animations(self, *args, **kwargs):
         return [Wiggle(self.nodes)]
         
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.edges)]
         
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.nodes[0] if self.nodes else self)]
 
 class LiquidSurfaceDiagram(AnimatableComponent):
     def __init__(self, **kwargs):
         super().__init__(**filter_manim_kwargs(kwargs))
-        self.surface = Line(LEFT*4, RIGHT*4, color=BLUE, stroke_width=4).move_to(UP*1)
-        self.water = Polygon(LEFT*4+UP*1, RIGHT*4+UP*1, RIGHT*4+DOWN*2, LEFT*4+DOWN*2, color=BLUE).set_fill(BLUE, 0.2)
+        # Dense particle array representing bulk fluid instead of a static container
+        self.particles = VGroup()
+        for x in np.linspace(-3.5, 3.5, 12):
+            for y in np.linspace(-1.5, 0.7, 5):
+                offset_x = 0.05 * np.sin(x*y)
+                dot = Dot(RIGHT*(x + offset_x) + UP*y, radius=0.08, color=BLUE, fill_opacity=0.6)
+                self.particles.add(dot)
+                
+        # Surface boundary represented by connected surface particles
+        self.surface_particles = VGroup(*[
+            Dot(RIGHT*x + UP*0.9, radius=0.1, color=BLUE_D)
+            for x in np.linspace(-3.5, 3.5, 10)
+        ])
+        self.surface_links = VGroup(*[
+            Line(self.surface_particles[i].get_center(), self.surface_particles[i+1].get_center(), stroke_width=3, color=BLUE)
+            for i in range(len(self.surface_particles)-1)
+        ])
         
         self.molecules = VGroup()
-        # Surface molecules
-        for x in np.linspace(-3, 3, 7):
-            m = Circle(radius=0.2, color=WHITE).set_fill(BLUE, 0.5).move_to(RIGHT*x + UP*0.8)
-            self.molecules.add(m)
-            # Net inward force arrow
+        # Inward forces on surface molecules
+        for m in self.surface_particles[2:-2]:
             self.molecules.add(Arrow(m.get_center(), m.get_center() + DOWN*0.6, buff=0.1, color=RED, max_tip_length_to_length_ratio=0.3))
             
-        # Bulk molecule
-        bulk_m = Circle(radius=0.2, color=WHITE).set_fill(BLUE, 0.5).move_to(DOWN*0.5)
+        # Highlighted bulk molecule showing symmetrical forces
+        bulk_m = Dot(DOWN*0.5, radius=0.15, color=GREEN_C)
         self.molecules.add(bulk_m)
         for dx, dy in [(0,1), (0,-1), (1,0), (-1,0)]:
-            self.molecules.add(Arrow(bulk_m.get_center(), bulk_m.get_center() + RIGHT*dx*0.6 + UP*dy*0.6, buff=0.1, color=GREEN, max_tip_length_to_length_ratio=0.3))
+            self.molecules.add(Arrow(bulk_m.get_center(), bulk_m.get_center() + RIGHT*0.6*dx + UP*0.6*dy, buff=0.1, color=GREEN, max_tip_length_to_length_ratio=0.3))
             
-        self.add(self.water, self.surface, self.molecules)
+        self.add(self.particles, self.surface_links, self.surface_particles, self.molecules)
+
+    def get_transformation_animations(self, *args, **kwargs):
+        # Surface deforms downward into a meniscus curve under cohesive force
+        anims = []
+        for i, dot in enumerate(self.surface_particles):
+            dist_from_center = abs(i - len(self.surface_particles)/2)
+            pull_down = max(0, 0.45 * (1 - (dist_from_center / (len(self.surface_particles)/2))))
+            anims.append(dot.animate.shift(DOWN * pull_down))
+            
+        for i, line in enumerate(self.surface_links):
+            anims.append(UpdateFromFunc(line, lambda l, idx=i: l.put_start_and_end_on(
+                self.surface_particles[idx].get_center(),
+                self.surface_particles[idx+1].get_center()
+            )))
+            
+        # Shift bulk particles down slightly to follow the meniscus deformation
+        for p in self.particles:
+            pos = p.get_center()
+            dist_x = abs(pos[0])
+            if pos[1] > 0.0:
+                pull = max(0, 0.3 * (1 - (dist_x / 4.0)))
+                anims.append(p.animate.shift(DOWN * pull))
+                
+        return [AnimationGroup(*anims, lag_ratio=0.01)]
 
 class ForceVectorDiagram(AnimatableComponent):
-    def __init__(self, forces=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**filter_manim_kwargs(kwargs))
-        self.center_obj = Circle(radius=0.5, color=WHITE).set_fill(GRAY, 0.5)
-        self.add(self.center_obj)
         
-        if not forces: forces = [("Gravity", 0, -2), ("Normal", 0, 2), ("Friction", -1.5, 0)]
-        self.arrows = VGroup()
-        self.labels = VGroup()
+        # Two competing blocks (Small vs Large)
+        self.small_block = Square(side_length=1.0, color=BLUE, fill_opacity=0.5).move_to(LEFT * 3)
+        self.small_label = SmartText("m", font_size=24).move_to(self.small_block.get_center())
         
-        for label, dx, dy in forces[:VisualGrammar.max_objects_per_scene]:
-            arr = Arrow(ORIGIN, RIGHT*dx + UP*dy, buff=0.5, color=VisualGrammar.colors["primary"])
-            lbl = SmartText(str(label)[:15], font_size=20).next_to(arr.get_end(), RIGHT*np.sign(dx) + UP*np.sign(dy), buff=0.1)
-            self.arrows.add(arr)
-            self.labels.add(lbl)
-            
-        self.add(self.arrows, self.labels)
+        self.large_block = Square(side_length=2.5, color=GREEN, fill_opacity=0.5).move_to(RIGHT * 3)
+        self.large_label = SmartText("M", font_size=36).move_to(self.large_block.get_center())
+        
+        self.blocks = VGroup(self.small_block, self.small_label, self.large_block, self.large_label)
+        
+        # Identical force arrows applied to both blocks
+        self.force_arrow_small = Arrow(self.small_block.get_right(), self.small_block.get_right() + RIGHT*2, buff=0.1, color=RED)
+        self.force_arrow_large = Arrow(self.large_block.get_right(), self.large_block.get_right() + RIGHT*2, buff=0.1, color=RED)
+        self.arrows = VGroup(self.force_arrow_small, self.force_arrow_large)
+        
+        # Acceleration vectors (Small block has large acceleration, Large block has small acceleration)
+        self.accel_arrow_small = Arrow(self.small_block.get_top(), self.small_block.get_top() + UP*1.5 + RIGHT*0.5, buff=0.1, color=YELLOW)
+        self.accel_arrow_large = Arrow(self.large_block.get_top(), self.large_block.get_top() + UP*0.5 + RIGHT*0.1, buff=0.1, color=YELLOW)
+        self.accels = VGroup(self.accel_arrow_small, self.accel_arrow_large)
+        
+        self.add(self.blocks, self.arrows, self.accels)
 
-    def get_intro_animations(self):
-        anims = [FadeIn(self.center_obj)]
-        for arr in self.arrows: anims.append(GrowArrow(arr))
-        anims.append(Write(self.labels))
-        return anims
+    def get_intro_animations(self, *args, **kwargs):
+        return [FadeIn(self.blocks, shift=UP), GrowArrow(self.force_arrow_small), GrowArrow(self.force_arrow_large)]
         
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.arrows)]
         
-    def get_transformation_animations(self):
-        return [Wiggle(self.center_obj)]
+    def get_transformation_animations(self, *args, **kwargs):
+        return [GrowArrow(self.accel_arrow_small), GrowArrow(self.accel_arrow_large)]
         
-    def get_explanation_animations(self):
-        return [Indicate(self.labels)]
+    def get_explanation_animations(self, *args, **kwargs):
+        return [Circumscribe(self.large_block)]
         
-    def get_focus_animations(self):
-        return [Circumscribe(self.center_obj)]
+    def get_focus_animations(self, *args, **kwargs):
+        return [Indicate(self.accels)]
 
 class DropletDiagram(AnimatableComponent):
     def __init__(self, **kwargs):
         super().__init__(**filter_manim_kwargs(kwargs))
-        self.droplet = Circle(radius=1.5, color=BLUE).set_fill(BLUE, 0.3)
+        # Droplet outer surface as particle ring
+        self.surface_particles = VGroup()
+        self.num_particles = 16
+        for i in range(self.num_particles):
+            angle = i * (2 * np.pi / self.num_particles)
+            dot = Dot(RIGHT*1.5*np.cos(angle) + UP*1.5*np.sin(angle), radius=0.08, color=BLUE)
+            self.surface_particles.add(dot)
+            
+        # Droplet inner bulk particles
+        self.bulk_particles = VGroup()
+        for r in np.linspace(0.3, 1.2, 3):
+            num_inner = int(r * 10)
+            for i in range(num_inner):
+                angle = i * (2 * np.pi / num_inner)
+                dot = Dot(RIGHT*r*np.cos(angle) + UP*r*np.sin(angle), radius=0.06, color=BLUE, fill_opacity=0.4)
+                self.bulk_particles.add(dot)
+                
+        self.droplet = VGroup(self.surface_particles, self.bulk_particles)
+        
         self.arrows = VGroup()
-        for angle in np.linspace(0, 2*np.pi, 8, endpoint=False):
-            start = self.droplet.point_at_angle(angle)
-            self.arrows.add(Arrow(start, start + np.array([-np.cos(angle), -np.sin(angle), 0])*0.6, buff=0, color=RED, max_tip_length_to_length_ratio=0.3))
+        for p in self.surface_particles:
+            v = -p.get_center() / np.linalg.norm(p.get_center())
+            self.arrows.add(Arrow(p.get_center(), p.get_center() + v*0.5, buff=0.05, color=RED))
             
         self.label = SmartText("Minimizing Surface Area", font_size=24).next_to(self.droplet, DOWN, buff=0.5)
         self.add(self.droplet, self.arrows, self.label)
+
+    def get_transformation_animations(self, *args, **kwargs):
+        anims = []
+        # Pulse contraction to show surface tension action
+        for p in self.surface_particles:
+            v = -p.get_center() / np.linalg.norm(p.get_center())
+            anims.append(p.animate.shift(v * 0.15))
+        for p in self.bulk_particles:
+            v = -p.get_center() / np.linalg.norm(p.get_center()) if np.linalg.norm(p.get_center()) > 0 else ORIGIN
+            anims.append(p.animate.shift(v * 0.1))
+        return [AnimationGroup(*anims)]
 
 class RightTriangleDiagram(AnimatableComponent):
     def __init__(self, a=3, b=4, c=5, **kwargs):
@@ -661,19 +862,19 @@ class RightTriangleDiagram(AnimatableComponent):
         
         self.add(self.shape, self.l_a, self.l_b, self.l_c, self.angle_marker, self.equation_label)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [Create(self.shape), Write(self.l_a), Write(self.l_b), Write(self.l_c), Create(self.angle_marker), Write(self.equation_label)]
         
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.shape)]
         
-    def get_transformation_animations(self):
+    def get_transformation_animations(self, *args, **kwargs):
         return [Indicate(self.l_c)]
         
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.equation_label)]
         
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.angle_marker)]
 
 class AreaProofDiagram(AnimatableComponent):
@@ -712,19 +913,19 @@ class ParticleDiagram(AnimatableComponent):
         
         self.add(self.particles, self.interaction_vectors)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [FadeIn(self.particles, scale=0.5), Create(self.interaction_vectors)]
         
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.particles)]
         
-    def get_transformation_animations(self):
+    def get_transformation_animations(self, *args, **kwargs):
         return [Wiggle(self.interaction_vectors)]
         
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.interaction_vectors)]
         
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.particles)]
 
 class CoordinateGeometryDiagram(AnimatableComponent):
@@ -735,15 +936,15 @@ class CoordinateGeometryDiagram(AnimatableComponent):
         self.line_or_shape = Line(self.points[0].get_center(), self.points[1].get_center(), color=YELLOW)
         self.add(self.axes, self.points, self.line_or_shape)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [Create(self.axes), FadeIn(self.points), Create(self.line_or_shape)]
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.points)]
-    def get_transformation_animations(self):
+    def get_transformation_animations(self, *args, **kwargs):
         return [self.points[1].animate.move_to(self.axes.coords_to_point(4, 1)), UpdateFromFunc(self.line_or_shape, lambda l: l.put_start_and_end_on(self.points[0].get_center(), self.points[1].get_center()))]
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.line_or_shape)]
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.line_or_shape)]
 
 class ElectricFieldDiagram(AnimatableComponent):
@@ -766,15 +967,15 @@ class ElectricFieldDiagram(AnimatableComponent):
         )
         self.add(self.charges, self.field_lines, self.force_vectors)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [FadeIn(self.charges, scale=0.5), Create(self.field_lines), GrowArrow(self.force_vectors[0]), GrowArrow(self.force_vectors[1])]
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.charges)]
-    def get_transformation_animations(self):
+    def get_transformation_animations(self, *args, **kwargs):
         return [Wiggle(self.field_lines)]
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.force_vectors)]
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.charges)]
 
 class WaveDiagram(AnimatableComponent):
@@ -786,21 +987,32 @@ class WaveDiagram(AnimatableComponent):
         self.wavelength_marker = DoubleArrow(self.axes.coords_to_point(np.pi/2, 1.2), self.axes.coords_to_point(5*np.pi/2, 1.2), buff=0, color=RED)
         self.add(self.axes, self.sine_wave, self.amplitude_marker, self.wavelength_marker)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [Create(self.axes), Create(self.sine_wave)]
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Create(self.amplitude_marker), Create(self.wavelength_marker)]
-    def get_transformation_animations(self):
+    def get_transformation_animations(self, *args, **kwargs):
         return [self.sine_wave.animate.set_color(RED)]
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.amplitude_marker)]
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.wavelength_marker)]
 
 class AtomDiagram(AnimatableComponent):
     def __init__(self, **kwargs):
         super().__init__(**filter_manim_kwargs(kwargs))
-        self.nucleus = Circle(radius=0.5, color=RED).set_fill(RED, 0.8)
+        # Nucleus as particle cluster (protons/neutrons) instead of a static circle
+        self.nucleus_particles = VGroup(*[
+            Dot(
+                RIGHT * (0.15 * np.cos(angle)) + UP * (0.15 * np.sin(angle)),
+                radius=0.1,
+                color=RED if i % 2 == 0 else GRAY
+            )
+            for i, angle in enumerate(np.linspace(0, 2*np.pi, 7, endpoint=False))
+        ])
+        self.nucleus_particles.add(Dot(ORIGIN, radius=0.1, color=RED))
+        self.nucleus = self.nucleus_particles
+        
         self.electron_orbits = VGroup(
             Ellipse(width=4, height=1.5, color=WHITE).set_opacity(0.3).rotate(np.pi/4),
             Ellipse(width=4, height=1.5, color=WHITE).set_opacity(0.3).rotate(-np.pi/4)
@@ -811,15 +1023,27 @@ class AtomDiagram(AnimatableComponent):
         )
         self.add(self.nucleus, self.electron_orbits, self.electrons)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [GrowFromCenter(self.nucleus), Create(self.electron_orbits), FadeIn(self.electrons)]
-    def get_highlight_animations(self):
+        
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.electrons)]
-    def get_transformation_animations(self):
-        return [MoveAlongPath(self.electrons[0], self.electron_orbits[0]), MoveAlongPath(self.electrons[1], self.electron_orbits[1])]
-    def get_explanation_animations(self):
+        
+    def get_transformation_animations(self, *args, **kwargs):
+        anims = [
+            MoveAlongPath(self.electrons[0], self.electron_orbits[0]),
+            MoveAlongPath(self.electrons[1], self.electron_orbits[1])
+        ]
+        # Nucleus vibration to show dynamic energy state
+        for particle in self.nucleus:
+            random_offset = np.array([np.random.uniform(-0.15, 0.15), np.random.uniform(-0.15, 0.15), 0])
+            anims.append(particle.animate.shift(random_offset))
+        return anims
+        
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.nucleus)]
-    def get_focus_animations(self):
+        
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.nucleus)]
 
 class ReactionDiagram(AnimatableComponent):
@@ -835,15 +1059,15 @@ class ReactionDiagram(AnimatableComponent):
         self.yield_arrow = Arrow(LEFT*1, RIGHT*1, buff=0.2, color=WHITE)
         self.add(self.reactants, self.yield_arrow, self.products)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [FadeIn(self.reactants, shift=RIGHT), GrowArrow(self.yield_arrow), FadeIn(self.products, shift=LEFT)]
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.reactants), Indicate(self.products)]
-    def get_transformation_animations(self):
+    def get_transformation_animations(self, *args, **kwargs):
         return [Transform(self.reactants.copy(), self.products)]
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.yield_arrow)]
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [Circumscribe(self.products)]
 
 class LayoutZones:
@@ -877,7 +1101,7 @@ class LayoutZones:
 def validate_animation_interfaces():
     import logging
     try:
-        from app.sandbox.shared_animation_registry import SUPPORTED_COMPONENTS
+        from app.sandbox.shared_animation_registry import COMPONENT_REGISTRY
     except ImportError:
         return
         
@@ -889,12 +1113,12 @@ def validate_animation_interfaces():
         "get_explanation_animations",
         "get_focus_animations",
     ]
-    for comp_name in SUPPORTED_COMPONENTS:
-        comp_class = globals().get(comp_name)
+    for registry_name, impl_name in COMPONENT_REGISTRY.items():
+        comp_class = globals().get(impl_name)
         if comp_class and isinstance(comp_class, type) and issubclass(comp_class, AnimatableComponent):
             for method in required:
                 if not hasattr(comp_class, method) or not callable(getattr(comp_class, method)):
-                    missing.append(f"{comp_name}.{method}")
+                    missing.append(f"{impl_name}.{method}")
     if missing:
         logging.warning(f"Components missing animation interfaces: {missing}")
 
@@ -903,32 +1127,61 @@ class SurfaceTensionDiagram(AnimatableComponent):
     """Diagram specifically for surface tension with surface molecules pulled inward."""
     def __init__(self, **kwargs):
         super().__init__()
-        self.water = Rectangle(width=6, height=3, color=BLUE, fill_opacity=0.3).move_to(DOWN*1.5)
-        self.surface_line = Line(LEFT*3, RIGHT*3, color=BLUE).move_to(self.water.get_top())
-        self.molecules = VGroup()
-        # Bulk molecule
-        bulk = Circle(radius=0.2, color=BLUE_E, fill_opacity=1).move_to(DOWN*2)
-        bulk_arrows = VGroup(*[Arrow(bulk.get_center(), bulk.get_center() + UP*0.6).rotate(angle, about_point=bulk.get_center()) for angle in [0, PI/2, PI, 3*PI/2]])
-        # Surface molecule
-        surface = Circle(radius=0.2, color=BLUE_C, fill_opacity=1).move_to(self.surface_line.get_center())
-        surface_arrows = VGroup(*[Arrow(surface.get_center(), surface.get_center() + UP*0.6).rotate(angle, about_point=surface.get_center()) for angle in [PI, 3*PI/2, 2*PI, -PI/4, 5*PI/4]])
+        # Liquid particle grid
+        self.particles = VGroup()
+        for x in np.linspace(-3.0, 3.0, 10):
+            for y in np.linspace(-3.0, 0.0, 6):
+                dot = Dot(RIGHT*x + UP*y, radius=0.08, color=BLUE, fill_opacity=0.5)
+                self.particles.add(dot)
+                
+        # Surface particles
+        self.surface_particles = VGroup(*[
+            Dot(RIGHT*x + UP*0.1, radius=0.12, color=BLUE_D)
+            for x in np.linspace(-3.0, 3.0, 8)
+        ])
+        self.surface_line = VGroup(*[
+            Line(self.surface_particles[i].get_center(), self.surface_particles[i+1].get_center(), stroke_width=3, color=BLUE)
+            for i in range(len(self.surface_particles)-1)
+        ])
         
-        self.molecules.add(bulk, bulk_arrows, surface, surface_arrows)
-        self.add(self.water, self.surface_line, self.molecules)
+        self.molecules = VGroup()
+        # Pulling forces on surface
+        self.surface_arrows = VGroup()
+        for p in self.surface_particles:
+            self.surface_arrows.add(Arrow(p.get_center(), p.get_center() + DOWN*0.6, buff=0.1, color=RED, max_tip_length_to_length_ratio=0.3))
+            
+        # Bulk molecule
+        bulk = Dot(DOWN*1.5, radius=0.15, color=BLUE_E)
+        bulk_arrows = VGroup(*[Arrow(bulk.get_center(), bulk.get_center() + UP*0.6).rotate(angle, about_point=bulk.get_center()) for angle in [0, PI/2, PI, 3*PI/2]])
+        
+        self.molecules.add(bulk, bulk_arrows, self.surface_particles, self.surface_arrows)
+        self.add(self.particles, self.surface_line, self.molecules)
 
-    def get_intro_animations(self):
-        return [FadeIn(self.water), Create(self.surface_line), FadeIn(self.molecules)]
+    def get_intro_animations(self, *args, **kwargs):
+        return [FadeIn(self.particles), Create(self.surface_line), FadeIn(self.molecules)]
 
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Wiggle(self.molecules)]
 
-    def get_transformation_animations(self):
-        return [Indicate(self.surface_line, color=RED)]
+    def get_transformation_animations(self, *args, **kwargs):
+        # Surface deforms downward under cohesive force pull (tension)
+        anims = []
+        for i, dot in enumerate(self.surface_particles):
+            dist_from_center = abs(i - len(self.surface_particles)/2)
+            pull_down = max(0, 0.5 * (1 - (dist_from_center / (len(self.surface_particles)/2))))
+            anims.append(dot.animate.shift(DOWN * pull_down))
+            
+        for i, line in enumerate(self.surface_line):
+            anims.append(UpdateFromFunc(line, lambda l, idx=i: l.put_start_and_end_on(
+                self.surface_particles[idx].get_center(),
+                self.surface_particles[idx+1].get_center()
+            )))
+        return [AnimationGroup(*anims)]
 
-    def get_explanation_animations(self):
-        return [Flash(self.surface_line)]
+    def get_explanation_animations(self, *args, **kwargs):
+        return [Indicate(self.surface_line)]
 
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [self.animate.scale(1.1)]
 
 
@@ -949,30 +1202,45 @@ class NeuralNetworkDiagram(AnimatableComponent):
                 layer_nodes.add(node)
             self.nodes.add(layer_nodes)
             
-        # Create edges
+        # Create edges with random weight-based stroke scaling
+        import random
         for i in range(len(layers) - 1):
             layer1 = self.nodes[i]
             layer2 = self.nodes[i+1]
             for n1 in layer1:
                 for n2 in layer2:
-                    self.edges.add(Line(n1.get_center(), n2.get_center(), stroke_width=1, stroke_opacity=0.3))
+                    weight = random.randint(1, 5)
+                    self.edges.add(Line(n1.get_center(), n2.get_center(), stroke_width=weight, stroke_opacity=0.4))
                     
         self.add(self.edges, self.nodes)
 
-    def get_intro_animations(self):
+    def get_intro_animations(self, *args, **kwargs):
         return [Create(self.nodes), Create(self.edges)]
 
-    def get_highlight_animations(self):
+    def get_highlight_animations(self, *args, **kwargs):
         return [Wiggle(self.nodes)]
 
-    def get_transformation_animations(self):
-        # Pulse data through the network
-        return [LaggedStart(*[Indicate(n, color=YELLOW) for layer in self.nodes for n in layer], lag_ratio=0.1)]
+    def get_transformation_animations(self, *args, **kwargs):
+        # Pulse data signals physically through connections layer by layer
+        anims = []
+        for i in range(len(self.nodes) - 1):
+            layer_pulses = []
+            for n1 in self.nodes[i]:
+                for n2 in self.nodes[i+1]:
+                    pulse = Dot(n1.get_center(), radius=0.08, color=YELLOW)
+                    travel = Succession(
+                        FadeIn(pulse, run_time=0.1),
+                        pulse.animate(run_time=0.6).move_to(n2.get_center()),
+                        FadeOut(pulse, run_time=0.1)
+                    )
+                    layer_pulses.append(travel)
+            anims.append(AnimationGroup(*layer_pulses))
+        return anims
 
-    def get_explanation_animations(self):
+    def get_explanation_animations(self, *args, **kwargs):
         return [Flash(self.nodes[-1])]
 
-    def get_focus_animations(self):
+    def get_focus_animations(self, *args, **kwargs):
         return [self.animate.scale(1.1)]
 
 

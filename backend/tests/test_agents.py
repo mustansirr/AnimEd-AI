@@ -111,7 +111,7 @@ class TestPlannerPrompts:
 
         assert "Explain derivatives" in prompt
         assert "Calculus I" in prompt
-        assert "Syllabus Context" in prompt
+        assert "Reference Material" in prompt
 
 
 class TestScripterPrompts:
@@ -255,3 +255,132 @@ class TestAgentNodes:
             result = await wait_for_approval(state)
 
         assert result["all_scenes_done"] is True  # Stop processing
+
+
+class TestSchemaValidator:
+    """Tests for the schema validator and mathematical caret validation."""
+
+    @pytest.mark.asyncio
+    async def test_schema_validation_passes_valid(self):
+        """Test that schema validation passes for a valid scene."""
+        from app.agents.nodes.schema_validator import validate_schema
+        
+        state: AgentState = create_initial_state(
+            video_id="550e8400-e29b-41d4-a716-446655440000",
+            user_prompt="Test prompt",
+        )
+        state["scene_jsons"] = [
+            {
+                "schema_version": "v2",
+                "scene_type": "binary_search_tree",
+                "learning_goal": "Understand BST",
+                "visual_metaphor": "A tree layout",
+                "title": "Binary Search Tree",
+                "caption": "A simple visualization",
+                "focal_bounding_box": [0.0, 0.0, 14.0, 8.0],
+                "components": ["HierarchyDiagram"],
+                "component_data": {
+                    "root": "50"
+                },
+                "animation_sequence": ["intro"],
+                "duration": 5
+            }
+        ]
+        
+        result = await validate_schema(state)
+        assert result.get("last_render_error") is None
+
+    @pytest.mark.asyncio
+    async def test_schema_validation_fails_raw_caret_in_title(self):
+        """Test that schema validation fails if a raw caret is in the title."""
+        from app.agents.nodes.schema_validator import validate_schema
+        
+        state: AgentState = create_initial_state(
+            video_id="550e8400-e29b-41d4-a716-446655440000",
+            user_prompt="Test prompt",
+        )
+        state["scene_jsons"] = [
+            {
+                "schema_version": "v2",
+                "scene_type": "binary_search_tree",
+                "learning_goal": "Understand BST",
+                "visual_metaphor": "A tree layout",
+                "title": "BST height: O(log n)^2",
+                "caption": "A simple visualization",
+                "focal_bounding_box": [0.0, 0.0, 14.0, 8.0],
+                "components": ["HierarchyDiagram"],
+                "component_data": {
+                    "root": "50"
+                },
+                "animation_sequence": ["intro"],
+                "duration": 5
+            }
+        ]
+        
+        result = await validate_schema(state)
+        assert result.get("last_render_error") is not None
+        assert "Raw math caret or wedge detected" in result["last_render_error"]
+
+    @pytest.mark.asyncio
+    async def test_schema_validation_fails_wedge_in_caption(self):
+        """Test that schema validation fails if a LaTeX wedge is in the caption."""
+        from app.agents.nodes.schema_validator import validate_schema
+        
+        state: AgentState = create_initial_state(
+            video_id="550e8400-e29b-41d4-a716-446655440000",
+            user_prompt="Test prompt",
+        )
+        state["scene_jsons"] = [
+            {
+                "schema_version": "v2",
+                "scene_type": "binary_search_tree",
+                "learning_goal": "Understand BST",
+                "visual_metaphor": "A tree layout",
+                "title": "BST",
+                "caption": "Logical AND: A \\wedge B",
+                "focal_bounding_box": [0.0, 0.0, 14.0, 8.0],
+                "components": ["HierarchyDiagram"],
+                "component_data": {
+                    "root": "50"
+                },
+                "animation_sequence": ["intro"],
+                "duration": 5
+            }
+        ]
+        
+        result = await validate_schema(state)
+        assert result.get("last_render_error") is not None
+        assert "Raw math caret or wedge detected" in result["last_render_error"]
+
+    @pytest.mark.asyncio
+    async def test_schema_validation_fails_caret_in_nested_component_data(self):
+        """Test that schema validation fails if a caret is nested in component_data."""
+        from app.agents.nodes.schema_validator import validate_schema
+        
+        state: AgentState = create_initial_state(
+            video_id="550e8400-e29b-41d4-a716-446655440000",
+            user_prompt="Test prompt",
+        )
+        state["scene_jsons"] = [
+            {
+                "schema_version": "v2",
+                "scene_type": "binary_search_tree",
+                "learning_goal": "Understand BST",
+                "visual_metaphor": "A tree layout",
+                "title": "BST",
+                "caption": "A simple visualization",
+                "focal_bounding_box": [0.0, 0.0, 14.0, 8.0],
+                "components": ["HierarchyDiagram"],
+                "component_data": {
+                    "formula": {
+                        "steps": ["x = y", "z = x^3"]
+                    }
+                },
+                "animation_sequence": ["intro"],
+                "duration": 5
+            }
+        ]
+        
+        result = await validate_schema(state)
+        assert result.get("last_render_error") is not None
+        assert "Raw math caret or wedge detected" in result["last_render_error"]

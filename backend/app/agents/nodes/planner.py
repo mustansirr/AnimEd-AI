@@ -70,6 +70,7 @@ async def plan_scenes(state: AgentState) -> dict:
     prompt = create_planner_prompt(
         user_prompt=state["user_prompt"],
         syllabus_context=state.get("syllabus_context", ""),
+        stem_blueprint=state.get("stem_blueprint")
     )
 
     import tiktoken

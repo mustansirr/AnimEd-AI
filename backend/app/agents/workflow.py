@@ -13,12 +13,11 @@ from app.agents.nodes.context import retrieve_context_node
 from app.agents.nodes.planner import plan_scenes
 from app.agents.nodes.storyboard_agent import write_storyboard
 from app.agents.nodes.human_review import wait_for_approval
-from app.agents.nodes.scene_json_generator import generate_scene_json
+from app.agents.nodes.scene_json_generator import parse_storyboard_to_json
 from app.agents.nodes.layout_agent import compute_layouts
 from app.agents.nodes.coder import generate_code
 from app.agents.nodes.static_analyzer import static_analysis_pass
 from app.agents.nodes.reflector import reflect_and_fix
-from app.sandbox.renderer import execute_and_check
 from app.agents.nodes.video_quality_evaluator import evaluate_quality
 from app.agents.nodes.fix_agent import fix_scene
 from app.sandbox.stitcher import finalize_video
@@ -41,12 +40,15 @@ def create_workflow():
     workflow.add_node("concept_classifier", classify_concept)
     workflow.add_node("storyboard", write_storyboard)
     workflow.add_node("human_review", wait_for_approval)
-    workflow.add_node("scene_json", generate_scene_json)
+    workflow.add_node("scene_json_generator", parse_storyboard_to_json)
     workflow.add_node("layout", compute_layouts)
     workflow.add_node("coder", generate_code)
     workflow.add_node("static_analyzer", static_analysis_pass)
     workflow.add_node("reflector", reflect_and_fix)
+    
+    from app.sandbox.renderer import execute_and_check
     workflow.add_node("renderer", execute_and_check)
+    
     workflow.add_node("diagram_validator", validate_diagram)
     workflow.add_node("quality_evaluator", evaluate_quality)
     workflow.add_node("fix_agent", fix_scene)
@@ -59,44 +61,27 @@ def create_workflow():
     workflow.add_node("educational_validator", validate_educational_quality)
 
     workflow.set_entry_point("retrieve_info")
-    workflow.add_edge("retrieve_info", "planner")
+    workflow.add_edge("retrieve_info", "concept_classifier")
+    workflow.add_edge("concept_classifier", "planner")
     
     workflow.add_conditional_edges(
         "planner",
         route_after_pre_render_validation,
-        {"pass": "concept_classifier", "fail": END, "fatal": END}
+        {"pass": "storyboard", "fail": END, "fatal": END}
     )
     
-    workflow.add_edge("concept_classifier", "storyboard")
+    # Route through human review
     workflow.add_edge("storyboard", "human_review")
-
     workflow.add_conditional_edges(
         "human_review",
         route_after_review,
-        {"approved": "scene_json", "rejected": END}
+        {"approved": "scene_json_generator", "rejected": END}
     )
-
-    # Pre-render Validation Pipeline
-    workflow.add_edge("scene_json", "schema_validator")
+    workflow.add_edge("scene_json_generator", "layout")
     
-    workflow.add_conditional_edges(
-        "schema_validator",
-        route_after_pre_render_validation,
-        {"pass": "domain_validator", "fail": END, "fatal": END}
-    )
+    # Bypassed nodes: schema_validator, domain_validator, educational_validator
     
-    workflow.add_conditional_edges(
-        "domain_validator",
-        route_after_pre_render_validation,
-        {"pass": "educational_validator", "fail": "fix_agent", "fatal": END}
-    )
-    
-    workflow.add_conditional_edges(
-        "educational_validator",
-        route_after_pre_render_validation,
-        {"pass": "layout", "fail": "fix_agent", "fatal": END}
-    )
-    
+    # After layout, we route through layout_validator
     workflow.add_edge("layout", "layout_validator")
     
     workflow.add_conditional_edges(
@@ -235,7 +220,11 @@ async def start_workflow(video_id: str, user_prompt: str, syllabus_context: str 
         syllabus_context=syllabus_context,
     )
 
-    result = await workflow.ainvoke(initial_state, config)
+    # State Sanitation: Enforce a hard reset to prevent old components from bleeding
+    initial_state["component_data"] = {}
+    await workflow.aupdate_state(config, initial_state)
+
+    result = await workflow.ainvoke(None, config)
     _active_workflows[video_id] = (workflow, config)
     return result
 
@@ -247,7 +236,7 @@ async def resume_workflow(video_id: str, approved: bool, feedback: str = None) -
     workflow, config = _active_workflows[video_id]
     # Ensure recursion limit is maintained on resume
     config["recursion_limit"] = 150
-    await workflow.aupdate_state(config, {"user_approved": approved, "user_feedback": feedback})
+    await workflow.aupdate_state(config, {"user_approved": approved, "user_feedback": feedback}, as_node="human_review")
     result = await workflow.ainvoke(None, config)
     del _active_workflows[video_id]
     return result

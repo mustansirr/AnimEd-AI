@@ -7,7 +7,7 @@ from app.agents.nodes.planner import plan_scenes
 from app.agents.nodes.scripter import write_scripts
 from app.agents.nodes.storyboard_agent import write_storyboard
 from app.agents.nodes.human_review import wait_for_approval
-from app.agents.nodes.scene_json_generator import generate_scene_json
+from app.agents.nodes.scene_json_generator import parse_storyboard_to_json
 from app.agents.nodes.layout_agent import compute_layouts
 from app.agents.nodes.coder import generate_code
 from app.agents.nodes.reflector import reflect_and_fix, should_retry
@@ -20,7 +20,7 @@ __all__ = [
     "write_scripts",
     "write_storyboard",
     "wait_for_approval",
-    "generate_scene_json",
+    "parse_storyboard_to_json",
     "compute_layouts",
     "generate_code",
     "reflect_and_fix",

@@ -29,6 +29,8 @@ VISUAL_METAPHOR_LIBRARY = {
     "algorithm_sort": "Organizing books on a shelf by height",
     "data_structure_tree": "A family tree showing ancestors and descendants",
     "data_structure_graph": "A map of cities connected by highways",
+    "computer_science_theory": "A robotic read/write head moving back and forth along an infinite paper tape",
+    "computer_science_networks": "Mail being sorted and passed between post offices to reach a destination",
     "neural_network": "A group of experts voting on a decision based on their specialties",
 
     # Chemistry/Biology
@@ -41,6 +43,11 @@ VISUAL_METAPHOR_LIBRARY = {
     "process_flow": "Water flowing through pipes with different valves",
     "summary": "A highlight reel of the most important moments",
     "definition": "Opening a treasure chest to reveal the core meaning",
+    
+    # Engineering
+    "engineering_electrical": "Water flowing through a pipe network (voltage is pressure, current is flow)",
+    "engineering_civil": "A skeleton of triangles distributing a heavy load",
+    "engineering_mechanical": "Gears interlocking to transfer motion and power",
 }
 
 def get_visual_metaphor(topic: str) -> str:

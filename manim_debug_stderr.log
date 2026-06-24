@@ -1,0 +1,64 @@
+
+Animation 0: FadeIn(TitleCard of 2 submobjects):   0%|          | 0/15 [00:00<?, ?it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  13%|█▎        | 2/15 [00:00<00:00, 18.45it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  27%|██▋       | 4/15 [00:00<00:00, 18.29it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  53%|█████▎    | 8/15 [00:00<00:00, 25.88it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  80%|████████  | 12/15 [00:00<00:00, 29.05it/s]
+                                                                                                
+/render/scene.py:1058: DeprecationWarning: This method is not guaranteed to stay around. Please prefer getting the attribute normally.
+  if callable(anim_method): self.play(*anim_method())
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /usr/local/lib/python3.10/site-packages/manim/cli/render/commands.py:115 in  │
+│ render                                                                       │
+│                                                                              │
+│   112 │   │   │   try:                                                       │
+│   113 │   │   │   │   with tempconfig({}):                                   │
+│   114 │   │   │   │   │   scene = SceneClass()                               │
+│ ❱ 115 │   │   │   │   │   scene.render()                                     │
+│   116 │   │   │   except Exception:                                          │
+│   117 │   │   │   │   error_console.print_exception()                        │
+│   118 │   │   │   │   sys.exit(1)                                            │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/scene/scene.py:223 in render   │
+│                                                                              │
+│    220 │   │   """                                                           │
+│    221 │   │   self.setup()                                                  │
+│    222 │   │   try:                                                          │
+│ ❱  223 │   │   │   self.construct()                                          │
+│    224 │   │   except EndSceneEarlyException:                                │
+│    225 │   │   │   pass                                                      │
+│    226 │   │   except RerunSceneException as e:                              │
+│                                                                              │
+│ /render/scene.py:1058 in construct                                           │
+│                                                                              │
+│   1055 │   │   zones = LayoutZones.arrange_zones(title_zone=title_card, visu │
+│   1056 │   │   if title_card: self.play(FadeIn(title_card))                  │
+│   1057 │   │   anim_method = getattr(main_comp, 'get_intro_animations', None │
+│ ❱ 1058 │   │   if callable(anim_method): self.play(*anim_method())           │
+│   1059 │   │   else: self.play(FadeIn(main_comp))                            │
+│   1060 │   │   # Synchronize visual hold with audio duration                 │
+│   1061 │   │   self.wait(3.5)                                                │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:647 in      │
+│ getter                                                                       │
+│                                                                              │
+│    644 │   │   │   │   │   stacklevel=2,                                     │
+│    645 │   │   │   │   )                                                     │
+│    646 │   │   │   │                                                         │
+│ ❱  647 │   │   │   │   return getattr(self, to_get)                          │
+│    648 │   │   │                                                             │
+│    649 │   │   │   # Return a bound method                                   │
+│    650 │   │   │   return types.MethodType(getter, self)                     │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:672 in      │
+│ __getattr__                                                                  │
+│                                                                              │
+│    669 │   │   │   return types.MethodType(setter, self)                     │
+│    670 │   │                                                                 │
+│    671 │   │   # Unhandled attribute, therefore error                        │
+│ ❱  672 │   │   raise AttributeError(f"{type(self).__name__} object has no at │
+│    673 │                                                                     │
+│    674 │   @property                                                         │
+│    675 │   def width(self) -> float:                                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+AttributeError: VGroup object has no attribute 'intro_animations'

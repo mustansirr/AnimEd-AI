@@ -19,6 +19,8 @@ CONCEPT_TO_COMPONENT = {
     "algorithm_sort": "ArrayDiagram",
     "data_structure_tree": "TreeDiagram",
     "data_structure_graph": "GraphDiagram",
+    "computer_science_networks": "NetworkDiagram",
+    "computer_science_theory": "ArrayDiagram",
     "neural_network": "NeuralNetworkDiagram",
     # Mathematics
     "geometry": "CoordinateGeometryDiagram",
@@ -45,6 +47,10 @@ CONCEPT_TO_COMPONENT = {
     "process_flow": "FlowChart",
     "summary": "SummaryDiagram",
     "definition": "SummaryDiagram",
+    # Engineering
+    "engineering_electrical": "NetworkDiagram",
+    "engineering_civil": "NetworkDiagram",
+    "engineering_mechanical": "NetworkDiagram",
 }
 
 async def classify_concept(state: AgentState) -> dict:
@@ -58,6 +64,40 @@ async def classify_concept(state: AgentState) -> dict:
 
     logger.info(f"Classifying concept for video {video_id}...")
 
+    # 1. Blueprint Semantic Search (Hybrid Retrieval)
+    from app.sandbox.stem_blueprint_dataset import registry
+    try:
+        hybrid_result = await registry.get_blueprint_hybrid(user_prompt)
+        if hybrid_result:
+            match_type, score, blueprint = hybrid_result
+            logger.info(f"\n--- Blueprint Semantic Search ---")
+            logger.info(f"Query:\n\"{user_prompt}\"")
+            logger.info(f"Matched Blueprint:\n{blueprint.topic}")
+            logger.info(f"Match Type:\n{match_type}")
+            logger.info(f"Similarity:\n{score:.2f}")
+            logger.info(f"Component:\n{blueprint.primary_component}")
+            logger.info(f"Visual Metaphor:\n{blueprint.visual_metaphor}")
+            logger.info(f"---------------------------------\n")
+            
+            # Return immediately, skipping the classifier LLM entirely
+            return {
+                "concept_topic": blueprint.topic,
+                "concept_type": blueprint.category.value,
+                "suggested_component": blueprint.primary_component,
+                "visual_metaphor": blueprint.visual_metaphor,
+                "visualization_strategy": blueprint.category.value,
+                "stem_blueprint": blueprint.to_dict()
+            }
+        else:
+            logger.info("\n--- Blueprint Semantic Search ---")
+            logger.info(f"Query:\n\"{user_prompt}\"")
+            logger.info("No Blueprint Found.")
+            logger.info("Falling back to generic explanation pipeline.")
+            logger.info("---------------------------------\n")
+    except Exception as e:
+        logger.error(f"Blueprint Semantic Search failed: {e}. Falling back to LLM classifier.")
+
+    # 2. Generic Explanation Pipeline Fallback
     llm = create_llm("planner", temperature=0.0) # Use planner model, it's cheap and smart enough
     prompt = create_classifier_prompt(user_prompt, video_title)
 
@@ -102,11 +142,11 @@ async def classify_concept(state: AgentState) -> dict:
         
         component_suggestion = CONCEPT_TO_COMPONENT.get(concept_type, "SummaryDiagram")
         metaphor = get_visual_metaphor(concept_type)
+        stem_blueprint_data = None
         
         # Component Coverage Tracking
-        from app.sandbox.shared_animation_registry import SUPPORTED_COMPONENTS
+        from app.sandbox.shared_animation_registry import COMPONENT_REGISTRY
         # Simple heuristic: if we suggested a specific class that isn't SummaryDiagram, and it's a known string.
-        # But we also have components.py. Let's just track based on if it's generic.
         coverage = "YES" if component_suggestion != "SummaryDiagram" else "NO"
         
         logger.info(f"\n--- COMPONENT COVERAGE TRACKING ---")
@@ -126,7 +166,8 @@ async def classify_concept(state: AgentState) -> dict:
             "concept_type": concept_type,
             "suggested_component": component_suggestion,
             "visual_metaphor": metaphor,
-            "visualization_strategy": concept_type # Keep this for backwards compatibility
+            "visualization_strategy": concept_type, # Keep this for backwards compatibility
+            "stem_blueprint": stem_blueprint_data
         }
         
     except Exception as e:
@@ -137,5 +178,6 @@ async def classify_concept(state: AgentState) -> dict:
             "concept_type": "generic_concept",
             "suggested_component": "SummaryDiagram",
             "visual_metaphor": "A simple, clear visual explanation",
-            "visualization_strategy": "generic_concept"
+            "visualization_strategy": "generic_concept",
+            "stem_blueprint": None
         }

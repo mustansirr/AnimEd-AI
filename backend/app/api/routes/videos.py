@@ -89,7 +89,7 @@ async def create_video_request(
                 syllabus_doc_path=None
             )
             # Mark it as completed and link URL
-            await set_final_video_url(new_video_id, cached_video.final_video_url)
+            await set_final_video_url(new_video_id, str(cached_video.final_video_url))
             # Duplicate scenes
             await duplicate_scenes(cached_video.id, new_video_id)
             
@@ -122,7 +122,7 @@ async def create_video_request(
 
     Call this AFTER uploading any PDF context so the planner
     can use the RAG embeddings. The workflow will run planning
-    and scripting, then pause for human review.
+    and scripting, then automatically bypass human review and render in the background.
     """,
 )
 async def start_video_workflow(video_id: str):
@@ -133,31 +133,35 @@ async def start_video_workflow(video_id: str):
     video = await get_video_or_404(video_uuid)
 
     # Start the LangGraph workflow
-    from app.agents.workflow import start_workflow
-    try:
-        await start_workflow(
-            video_id=str(video_uuid),
-            user_prompt=video.prompt,
-            syllabus_context=""  # retrieve_context_node will fetch from RAG
-        )
-    except Exception as e:
-        import logging
-        from app.services.supabase_client import update_video_status
-        logging.error(f"Workflow error for video {video_id}: {e}")
+    from app.agents.workflow import start_workflow, resume_workflow
+    import asyncio
+    
+    async def run_full_workflow():
         try:
-            await update_video_status(video_uuid, VideoStatus.FAILED)
-        except Exception as status_err:
-            logging.error(f"Failed to update status to FAILED: {status_err}")
+            state = await start_workflow(
+                video_id=str(video_uuid),
+                user_prompt=video.prompt,
+                syllabus_context=""  # retrieve_context_node will fetch from RAG
+            )
             
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Workflow failed to start: {str(e)}"
-        )
+            # The workflow will pause automatically at the human_review node
+            # The frontend UI will call the /approve endpoint to resume it.
+        except Exception as e:
+            import logging
+            from app.services.supabase_client import update_video_status
+            logging.error(f"Workflow error for video {video_id}: {e}")
+            try:
+                await update_video_status(video_uuid, VideoStatus.FAILED)
+            except Exception as status_err:
+                logging.error(f"Failed to update status to FAILED: {status_err}")
+
+    # Fire and forget the full workflow to prevent HTTP timeouts
+    asyncio.create_task(run_full_workflow())
 
     return {
         "video_id": str(video_uuid),
-        "status": VideoStatus.WAITING_APPROVAL.value,
-        "message": "Scripts ready for review"
+        "status": VideoStatus.GENERATING.value,
+        "message": "Workflow started and rendering in background"
     }
 
 
@@ -213,16 +217,19 @@ async def list_user_videos(
     user_uuid = validate_uuid(user_id, "user_id")
     client = get_supabase_client()
 
+    safe_limit = limit if limit is not None else 20
+    safe_offset = offset if offset is not None else 0
+
     result = (
         client.table("videos")
         .select("*")
         .eq("user_id", str(user_uuid))
         .order("created_at", desc=True)
-        .range(offset, offset + limit - 1)
+        .range(safe_offset, safe_offset + safe_limit - 1)
         .execute()
     )
 
-    return [VideoResponse(**video) for video in result.data]
+    return [VideoResponse.model_validate(video) for video in result.data]
 
 
 @router.delete(

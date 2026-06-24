@@ -33,6 +33,7 @@ COMMON ERRORS AND FIXES:
 4. "No Scene found": Ensure class inherits from Scene
 5. Positioning errors: Use proper coordinate tuples (x, y, z)
 6. Animation errors: Ensure objects are added before animating
+7. Temporal Freeze / Transition errors: Add `ReplacementTransform`, `Transform`, `.animate`, or explicit `self.wait(T)` to fix static pacing.
 
 DEBUGGING APPROACH:
 - Read the error message carefully
@@ -40,6 +41,10 @@ DEBUGGING APPROACH:
 - Check for typos in method/class names
 - Verify all objects are created before use
 - Ensure proper imports
+
+CRITICAL CONSTRAINT FOR FIX_AGENT/REFLECTOR:
+1. When patching code following a compilation or validation failure, you are STRICTLY FORBIDDEN from generating or calling custom testing/validation functions (e.g., 'validate_animation_interfaces()') inside the Manim python code payload. Every function execution must map strictly to real classes defined inside components.py or native Manim syntax.
+2. DO NOT hallucinate custom animation methods on VGroups (e.g., do NOT use `obj.intro_animations()`). If a custom transition method does not exist, use standard Manim animations like `FadeIn(obj)`, `Write(obj)`, or `obj.animate...`.
 
 OUTPUT: Return ONLY the fixed Python code.
 Do not include explanations, just the corrected code.
@@ -93,11 +98,19 @@ async def reflect_and_fix(state: AgentState) -> dict:
     # Initialize LLM for code reflection (provider configured via env vars)
     llm = create_llm("reflector", temperature=0.1)
 
+    # Prevent LLM from truncating preamble by only sending the class definition
+    if "class Scene1(Scene):" in broken_code:
+        preamble, scene_class = broken_code.split("class Scene1(Scene):", 1)
+        scene_class = "class Scene1(Scene):" + scene_class
+    else:
+        preamble = ""
+        scene_class = broken_code
+
     # Create prompt with broken code and error
     prompt = f"""\
 BROKEN CODE:
 ```python
-{broken_code}
+{scene_class}
 ```
 
 ERROR MESSAGE:
@@ -144,8 +157,10 @@ Fix the code to resolve this error. Return only the corrected Python code.
         ])
 
         # Clean response
-        fixed_code = clean_code_response(response.content)
-
+        fixed_scene_class = clean_code_response(response.content)
+        
+        fixed_code = preamble + "\n" + fixed_scene_class
+        
         # Update the code in the list
         new_codes = generated_codes.copy()
         new_codes[scene_index] = fixed_code

@@ -66,6 +66,14 @@ async def evaluate_quality(state: AgentState) -> dict:
             animation_quality=0, professional_appearance=0, feedback="Video file missing"
         )}
 
+    # Time-Synchronization Math Check
+    generated_codes = state.get("generated_codes", [])
+    if generated_codes and len(generated_codes) > scene_index:
+        current_code = generated_codes[scene_index]
+        if "Synchronize visual hold with audio duration" not in current_code and "self.wait" not in current_code:
+            logger.error("Time-Synchronization Math Check failed.")
+            return {"last_render_error": "Time Sync Math Check Failed: Explicit audio duration sync (self.wait) missing. Scene has a temporal freeze; visuals remain unchanged while audio text advances past 7 seconds."}
+
     video_path = Path(video_path_str)
 
     frame_path = video_path.with_suffix(".jpg")

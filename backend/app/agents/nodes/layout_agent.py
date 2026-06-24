@@ -4,11 +4,12 @@ Assigns components and text to semantic layout zones for deterministic arrangeme
 """
 
 import logging
-from app.agents.state import AgentState, PositionedJSON
+from typing import Any, Dict
+from app.agents.state import AgentState, PositionedJSON, SceneJSON
 
 logger = logging.getLogger(__name__)
 
-def _assign_zones(scene_json: dict) -> dict:
+def _assign_zones(scene_json: SceneJSON) -> Dict[str, Any]:
     """
     Map semantic scene spec to abstract layout zones.
     """
@@ -43,7 +44,8 @@ def _assign_zones(scene_json: dict) -> dict:
         "duration": scene_json.get("duration", 5),
         "title": scene_json.get("title", ""),
         "caption": scene_json.get("caption", ""),
-        "layout_zones": layout_zones
+        "layout_zones": layout_zones,
+        "focal_bounding_box": scene_json.get("focal_bounding_box", [0.0, 0.0, 14.0, 8.0])
     }
     
     return positioned

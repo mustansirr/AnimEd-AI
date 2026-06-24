@@ -8,6 +8,7 @@ Semantic Scene Specification (v2).
 
 import json
 import logging
+import re
 from uuid import UUID
 from app.agents.state import AgentState
 from app.models.schemas import VideoStatus
@@ -34,6 +35,28 @@ def _validate_scene_schema(scene: dict) -> list[str]:
         errors.append("'components' must be a list")
     if not isinstance(animations, list):
         errors.append("'animation_sequence' must be a list")
+        
+    # Strict Math Syntax Enforcement
+    caret_pattern = re.compile(r"\^|\\wedge")
+    
+    def check_value(val, path=""):
+        if isinstance(val, str):
+            if caret_pattern.search(val):
+                errors.append(f"Raw math caret or wedge detected at {path}: '{val}'. Must be routed exclusively through MathTex() or formatted correctly.")
+        elif isinstance(val, dict):
+            for k, v in val.items():
+                check_value(v, f"{path}.{k}" if path else k)
+        elif isinstance(val, list):
+            for idx, item in enumerate(val):
+                check_value(item, f"{path}[{idx}]" if path else f"[{idx}]")
+
+    # Enforce checks on title, caption, and component_data
+    if "title" in scene:
+        check_value(scene["title"], "title")
+    if "caption" in scene:
+        check_value(scene["caption"], "caption")
+    if "component_data" in scene:
+        check_value(scene["component_data"], "component_data")
             
     return errors
 
@@ -49,23 +72,26 @@ async def validate_schema(state: AgentState) -> dict:
             try:
                 from app.services.supabase_client import update_video_status
                 from app.models.schemas import VideoStatus
-                import asyncio
-                # We need to run it, but this is an async function so we can await it
                 await update_video_status(UUID(video_id), VideoStatus.FAILED)
             except Exception as e:
                 logger.error(f"Failed to update video status to FAILED: {e}")
         logger.info("--- EXITING SCHEMA_VALIDATOR NODE (ERROR) ---")
         return {"last_render_error": error_msg}
         
+    all_errors = []
     for i, scene in enumerate(scene_jsons):
         logger.info(f"Generated SceneJSON for scene {i+1}:\n{json.dumps(scene, indent=2)}")
         
         errors = _validate_scene_schema(scene)
         if errors:
-            error_msg = f"Schema validation failed for scene {i+1}: " + ", ".join(errors)
-            logger.warning(f"Validation Result: WARN\n{error_msg}")
-            # Non-fatal failure: Log warning and continue
+            all_errors.extend([f"Scene {i+1}: {err}" for err in errors])
             
+    if all_errors:
+        error_msg = "Schema validation failed: " + "; ".join(all_errors)
+        logger.warning(f"Validation Result: FAIL\n{error_msg}")
+        logger.info("--- EXITING SCHEMA_VALIDATOR NODE (FAIL) ---")
+        return {"last_render_error": error_msg}
+        
     logger.info("Validation Result: PASS")
     logger.info("--- EXITING SCHEMA_VALIDATOR NODE ---")
-    return {}
+    return {"last_render_error": None}

@@ -25,13 +25,11 @@ export function Header() {
           <span className="sr-only">Toggle notifications</span>
         </Button>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="outline-none">
-              <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
-                <AvatarImage src="" alt="@user" />
-                <AvatarFallback className="bg-primary/10 text-primary">U</AvatarFallback>
-              </Avatar>
-            </button>
+          <DropdownMenuTrigger className="outline-none" suppressHydrationWarning>
+            <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
+              <AvatarImage src="" alt="@user" />
+              <AvatarFallback className="bg-primary/10 text-primary">U</AvatarFallback>
+            </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>

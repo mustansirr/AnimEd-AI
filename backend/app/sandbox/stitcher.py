@@ -151,6 +151,10 @@ class VideoStitcher:
                 f"{scene.video_segment_url}"
             )
 
+            if not scene.video_segment_url:
+                logger.warning(f"Scene {scene.scene_order} has no video segment URL. Skipping.")
+                continue
+
             success = await self.download_file(
                 scene.video_segment_url,
                 local_path,

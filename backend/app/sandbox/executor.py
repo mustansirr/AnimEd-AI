@@ -200,6 +200,7 @@ class ManimExecutor:
         # Build Docker command with security constraints
         docker_cmd = [
             "docker", "run", "--rm",
+            "-e", "PYTHONWARNINGS=ignore",
             "-v", f"{render_dir.absolute()}:/render",
             "--memory=512m",      # Limit memory to 512MB
             "--cpus=1",           # Limit to 1 CPU core

@@ -5,8 +5,11 @@ This module defines the shared state that flows through all nodes
 in the agentic video generation workflow.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Annotated
 from typing_extensions import TypedDict
+
+def merge_component_data(old_data: dict, new_data: dict) -> dict:
+    return {} if not new_data else {**old_data, **new_data}
 
 
 class SceneScript(TypedDict):
@@ -49,6 +52,7 @@ class SceneJSON(TypedDict):
     duration: int
     title: str
     caption: str
+    focal_bounding_box: Optional[List[float]]
 
 
 class PositionedJSON(TypedDict):
@@ -62,6 +66,7 @@ class PositionedJSON(TypedDict):
     title: str
     caption: str
     layout_zones: dict
+    focal_bounding_box: Optional[List[float]]
 
 
 class QualityScores(TypedDict):
@@ -94,6 +99,7 @@ class AgentState(TypedDict):
     # =========================================================================
     concept_topic: Optional[str]
     visualization_strategy: Optional[str]
+    stem_blueprint: Optional[dict]
 
     # =========================================================================
     # Planning outputs (from planner node)
@@ -119,6 +125,7 @@ class AgentState(TypedDict):
     # =========================================================================
     visual_metaphor: Optional[str]
     suggested_component: Optional[str]
+    component_data: Annotated[dict, merge_component_data]
     scene_jsons: List[SceneJSON]
     positioned_jsons: List[PositionedJSON]
 

@@ -56,6 +56,14 @@ async def validate_diagram(state: AgentState) -> dict:
         logger.error(f"Cannot evaluate: {video_path_str} not found.")
         return {"last_render_error": "Video file missing for validation"}
 
+    # Fluid Transition Assertion (Code Parsing)
+    generated_codes = state.get("generated_codes", [])
+    if generated_codes and len(generated_codes) > scene_index:
+        current_code = generated_codes[scene_index]
+        if "old_comp =" in current_code or "morph" in current_code.lower() or "transform" in current_code.lower():
+            if "ReplacementTransform" not in current_code and "Transform(" not in current_code and ".animate" not in current_code and "GlobalTransitionEngine.transition_between_states" not in current_code:
+                return {"last_render_error": "Fluid Transition Assertion Failed: Scene contains multi-part transition but missing ReplacementTransform, Transform, or .animate."}
+
     video_path = Path(video_path_str)
     frame_path = video_path.with_suffix(".diag.jpg")
     cmd = [

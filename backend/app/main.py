@@ -47,6 +47,17 @@ app.include_router(upload.router, prefix="/api")
 app.include_router(videos.router, prefix="/api")
 app.include_router(webhooks.router, prefix="/api")
 
+@app.on_event("startup")
+async def startup_event():
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("Initializing blueprint semantic search embeddings...")
+    from app.sandbox.stem_blueprint_dataset import registry
+    try:
+        await registry._initialize_embeddings()
+        logger.info("Blueprint embeddings initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize blueprint embeddings: {e}")
 
 @app.get("/")
 def read_root():

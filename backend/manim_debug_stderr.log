@@ -1,0 +1,94 @@
+
+Animation 0: FadeIn(TitleCard of 2 submobjects):   0%|          | 0/15 [00:00<?, ?it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  20%|██        | 3/15 [00:00<00:00, 24.24it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  40%|████      | 6/15 [00:00<00:00, 24.50it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  60%|██████    | 9/15 [00:00<00:00, 26.02it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  80%|████████  | 12/15 [00:00<00:00, 24.45it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects): 100%|██████████| 15/15 [00:00<00:00, 24.89it/s]
+                                                                                                
+
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):   0%|          | 0/23 [00:00<?, ?it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):   4%|▍         | 1/23 [00:00<00:02,  7.73it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  13%|█▎        | 3/23 [00:00<00:01, 11.72it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  22%|██▏       | 5/23 [00:00<00:01, 14.46it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  35%|███▍      | 8/23 [00:00<00:00, 16.90it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  48%|████▊     | 11/23 [00:00<00:00, 18.95it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  57%|█████▋    | 13/23 [00:00<00:00, 17.26it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  65%|██████▌   | 15/23 [00:00<00:00, 16.03it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  74%|███████▍  | 17/23 [00:01<00:00, 16.11it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  87%|████████▋ | 20/23 [00:01<00:00, 17.04it/s]
+Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  96%|█████████▌| 22/23 [00:01<00:00, 17.05it/s]
+                                                                                                                          
+
+Animation 2: FadeIn(VGroup of 60 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]
+Animation 2: FadeIn(VGroup of 60 submobjects), etc.:   7%|▋         | 1/15 [00:00<00:01,  8.20it/s]
+Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  20%|██        | 3/15 [00:00<00:00, 12.91it/s]
+Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  33%|███▎      | 5/15 [00:00<00:00, 14.08it/s]
+Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 14.69it/s]
+Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  67%|██████▋   | 10/15 [00:00<00:00, 14.15it/s]
+Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  80%|████████  | 12/15 [00:00<00:00, 14.68it/s]
+Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  93%|█████████▎| 14/15 [00:00<00:00, 15.29it/s]
+                                                                                                    
+
+Animation 3: Wiggle(VGroup of 4 submobjects):   0%|          | 0/30 [00:00<?, ?it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):   3%|▎         | 1/30 [00:00<00:04,  6.27it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):   7%|▋         | 2/30 [00:00<00:04,  6.97it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  10%|█         | 3/30 [00:00<00:03,  7.23it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  13%|█▎        | 4/30 [00:00<00:03,  7.95it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  17%|█▋        | 5/30 [00:00<00:03,  7.96it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  23%|██▎       | 7/30 [00:00<00:02,  8.80it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  27%|██▋       | 8/30 [00:01<00:02,  7.81it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  30%|███       | 9/30 [00:01<00:02,  8.12it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  37%|███▋      | 11/30 [00:01<00:02,  9.00it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  40%|████      | 12/30 [00:01<00:02,  9.00it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  43%|████▎     | 13/30 [00:01<00:02,  7.81it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  47%|████▋     | 14/30 [00:01<00:02,  7.89it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  50%|█████     | 15/30 [00:01<00:01,  8.30it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  53%|█████▎    | 16/30 [00:01<00:01,  8.66it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  57%|█████▋    | 17/30 [00:02<00:01,  8.67it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  60%|██████    | 18/30 [00:02<00:01,  8.52it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  63%|██████▎   | 19/30 [00:02<00:01,  8.83it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  67%|██████▋   | 20/30 [00:02<00:01,  8.99it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  73%|███████▎  | 22/30 [00:02<00:00,  9.48it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  77%|███████▋  | 23/30 [00:02<00:00,  9.05it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  80%|████████  | 24/30 [00:02<00:00,  9.17it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  83%|████████▎ | 25/30 [00:02<00:00,  9.37it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  87%|████████▋ | 26/30 [00:03<00:00,  9.35it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  93%|█████████▎| 28/30 [00:03<00:00,  9.83it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects):  97%|█████████▋| 29/30 [00:03<00:00,  9.43it/s]
+Animation 3: Wiggle(VGroup of 4 submobjects): 100%|██████████| 30/30 [00:03<00:00,  9.39it/s]
+                                                                                             
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /usr/local/lib/python3.10/site-packages/manim/cli/render/commands.py:115 in  │
+│ render                                                                       │
+│                                                                              │
+│   112 │   │   │   try:                                                       │
+│   113 │   │   │   │   with tempconfig({}):                                   │
+│   114 │   │   │   │   │   scene = SceneClass()                               │
+│ ❱ 115 │   │   │   │   │   scene.render()                                     │
+│   116 │   │   │   except Exception:                                          │
+│   117 │   │   │   │   error_console.print_exception()                        │
+│   118 │   │   │   │   sys.exit(1)                                            │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/scene/scene.py:223 in render   │
+│                                                                              │
+│    220 │   │   """                                                           │
+│    221 │   │   self.setup()                                                  │
+│    222 │   │   try:                                                          │
+│ ❱  223 │   │   │   self.construct()                                          │
+│    224 │   │   except EndSceneEarlyException:                                │
+│    225 │   │   │   pass                                                      │
+│    226 │   │   except RerunSceneException as e:                              │
+│                                                                              │
+│ /render/scene.py:1304 in construct                                           │
+│                                                                              │
+│   1301 │   │   except AttributeError:                                        │
+│   1302 │   │   │   self.play(Indicate(main_comp))                            │
+│   1303 │   │   try:                                                          │
+│ ❱ 1304 │   │   │   self.play(*main_comp.get_transformation_animations(main_c │
+│   1305 │   │   except AttributeError:                                        │
+│   1306 │   │   │   if hasattr(main_comp, 'is_math_component') and main_comp. │
+│   1307 │   │   │   │   self.play(TransformMatchingTex(main_comp, main_comp_t │
+╰──────────────────────────────────────────────────────────────────────────────╯
+TypeError: SurfaceTensionDiagram.get_transformation_animations() takes 1 
+positional argument but 2 were given

@@ -16,10 +16,12 @@ Requirements:
   5. Is there an example?
   6. Is the concept summarized?
 - NO EMPTY SCENES: Black screens and empty scenes are FORBIDDEN. Every scene must contain a diagram, graph, chart, illustration, animation, process visualization, or educational object.
-- NARRATION SYNCHRONIZATION: Visuals must follow narration. Every narration segment must have matching visuals and animations. When narration changes concept, the visual scene must change. Do not keep the same visual for unrelated narration.
-- ANIMATION QUALITY: Static scenes longer than 2 seconds are not allowed. Every 1-3 seconds something should happen (object appears, disappears, moves, graph updates, arrow animates, highlight changes, etc).
+- NARRATION SYNCHRONIZATION & CHRONOLOGICAL STORYBOARDING: Visuals must follow narration perfectly. Break the script down into distinct visual beats. When the audio shifts contexts (e.g., from generic concept to specific algorithm or example), you MUST end the scene and start a new one. Do not linger on a generic visual while the narration discusses something specific.
+- ANIMATION QUALITY & RULE E: NO STATIC SCREENS. No scene may remain visually unchanged for more than 2 seconds. Allow: motion, highlighting, camera movement, particle flow, vector updates, color transitions. This alone will make videos feel much more alive. Every 1-2 seconds something MUST happen.
 - COGNITIVE LOAD CONTROL: Do not show too much information at once. Limit number of visible objects. Reveal information progressively. Guide viewer attention. Keep scenes simple.
 - VISUAL STORYBOARDING: Every scene MUST explicitly define: learning_objective, narration, visual_goal, objects, animations, and duration.
+- REGISTRY ALIGNMENT: All generated scene goals and object metadata MUST strictly derive from the canonical STEM_BLUEPRINT_REGISTRY (e.g., DecisionTreeDiagram for Supervised Classification). Unrenderable abstract descriptions (like 'experts with hats' or 'voting ballots') are strictly FORBIDDEN.
+- IMAGE INGESTION: If a real-world example is required (e.g., distinguishing 'cats' vs 'dogs'), you MUST request an 'ImageLabelCard' component payload containing a local sandbox image path.
 - IF VISUAL GOAL OR ANIMATIONS ARE MISSING, DO NOT GENERATE THE SCENE.
 - FAIL-SAFE RULE: If you cannot confidently visualize a complex concept, DO NOT generate random shapes. Instead, generate a simplified educational visualization (diagram, flowchart, process animation) while maintaining structural correctness.
 - ALGORITHM/MATH RULES: Algorithms must be animated step-by-step. Every state transition must be visualized. Do not jump from input to output. Equations must be revealed progressively.

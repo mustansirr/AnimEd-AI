@@ -17,10 +17,14 @@ Visual descriptions should be specific enough for Manim animation:
 - "Draw a right triangle, then animate the Pythagorean squares on each side"
 - "Display a number line from -5 to 5, highlight the integers"
 
-IMPORTANT: Visuals can ONLY use Manim's built-in primitives (shapes, text, math, arrows, lines).
-Do NOT describe visuals that require external images, SVG files, or pre-made assets.
-Instead of "Show an image of X", describe how to build it from basic shapes and text.
+IMPORTANT: Visuals MUST derive from the STEM_BLUEPRINT_REGISTRY. Unrenderable abstract descriptions (like 'experts with hats') are FORBIDDEN.
+If a real-world example is absolutely required (e.g. distinguishing 'cats' vs 'dogs'), you MUST request an 'ImageLabelCard' component and provide a local sandbox 'image_path'.
 CRITICAL VISUAL RULE: DO NOT instruct the coder to write long sentences or paragraphs on the screen. The narration will be handled by voiceover. On-screen text MUST be limited to short titles, formulas, and 1-3 word labels/bullet points.
+
+GLOBAL VISUAL BEATS & SCENE TIME-CAP RULE: 
+- You MUST break down raw text into distinct action-by-action scripts with explicit narrative pacing cues.
+- FORBIDDEN: You are forbidden from writing a single conceptual script section or visual state that lasts longer than 7 seconds of narration. 
+- If a paragraph is long, you MUST force a sub-scene transition, camera shift, or scene-progression beat.
 
 Keep narration conversational but educational. Match the duration estimate.
 

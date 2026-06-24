@@ -150,11 +150,18 @@ async def execute_and_check(state: AgentState) -> AgentState:
             comp = scene_jsons[scene_index].get("components", ["None"])
             comp = comp[0] if comp else "None"
             logger.info(f"Rendered Component: {comp}")
+            
+        stem_blueprint = state.get("stem_blueprint")
+        if stem_blueprint:
+            logger.info(f"\n--- Blueprint Propagation Log ---")
+            logger.info(f"Node: Renderer")
+            logger.info(f"Rendered Primary Component: {stem_blueprint.get('primary_component')}")
+            logger.info(f"---------------------------------\n")
 
         try:
             # Upload to Supabase Storage
             video_url = await upload_to_storage(
-                result["video_path"],
+                str(result["video_path"]),
                 video_id,
                 scene_index,
             )
@@ -208,7 +215,7 @@ async def execute_and_check(state: AgentState) -> AgentState:
                 scene_index + 1,
             )
             if scene_id:
-                await supabase_client.log_scene_error(scene_id, error_msg)
+                await supabase_client.log_scene_error(scene_id, str(error_msg))
         except Exception as e:
             logger.exception(f"Error logging scene error: {e}")
 

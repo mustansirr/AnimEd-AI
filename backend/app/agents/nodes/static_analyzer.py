@@ -131,20 +131,16 @@ class CodeValidator(ast.NodeVisitor):
         self.current_scope = old_scope
 
     def visit_With(self, node):
-        old_scope = self.current_scope.copy()
         for item in node.items:
             if item.optional_vars:
                 self._add_to_scope(item.optional_vars)
         self.generic_visit(node)
-        self.current_scope = old_scope
 
     def visit_Try(self, node):
-        old_scope = self.current_scope.copy()
         for handler in node.handlers:
             if handler.name:
                 self.current_scope.add(handler.name)
         self.generic_visit(node)
-        self.current_scope = old_scope
 
     def visit_ListComp(self, node):
         old_scope = self.current_scope.copy()

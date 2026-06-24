@@ -23,10 +23,15 @@ Components: {components}
 Animation Sequence: {animations}
 
 Are the components and animations sufficient to teach this concept without being misleading or 'empty'?
+
+CRITICAL TEMPORAL FREEZE CHECK:
+Calculate the approximate duration of the narration (assume 2.5 words per second).
+If the scene has fewer than 2 animations and the narration lasts longer than 7 seconds, you MUST FAIL this check because it violates the "Temporal Freeze" rule. The scene visuals cannot remain static while audio introduces new sub-phenomena.
+
 Output ONLY a JSON object:
 {{
     "is_valid": true,
-    "reason": "Brief explanation"
+    "reason": "Brief explanation. If failing due to temporal freeze, explicitly state 'Scene has a temporal freeze; visuals remain unchanged while audio text advances past 7 seconds'."
 }}
 """
 

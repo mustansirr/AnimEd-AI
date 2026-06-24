@@ -3,11 +3,14 @@ import os
 import sys
 from uuid import uuid4
 
+os.environ["PYTHONIOENCODING"] = "utf-8"
+sys.stdout.reconfigure(encoding='utf-8')
+
 # Setup sys.path to include backend
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "backend")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(__file__), "backend", ".env"))
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "backend", ".env"))
 
 from app.agents.workflow import start_workflow, resume_workflow, get_workflow_state
 from app.services.supabase_client import get_supabase_client, create_video
@@ -20,15 +23,18 @@ async def main():
         sys.exit(1)
         
     user_id = result.data[0]["user_id"]
-    video_id = await create_video(user_id=user_id, prompt="Explain surface tension and how it affects water droplets.")
+    
+    topic = sys.argv[1] if len(sys.argv) > 1 else "explain me friction with example"
+    
+    video_id = await create_video(user_id=user_id, prompt=topic)
     video_id = str(video_id)
-    print(f"Starting test generation for video ID: {video_id}")
+    print(f"Starting test generation for video ID: {video_id} and topic: {topic}")
     
     # 1. Start workflow
     print("Running Planner -> Storyboard (waiting for human review)...")
     state = await start_workflow(
         video_id=video_id,
-        user_prompt="Explain surface tension and how it affects water droplets.",
+        user_prompt=topic,
     )
     
     # 2. Check if we hit the review step

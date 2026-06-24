@@ -4,7 +4,7 @@ Provides helper methods for CRUD operations on videos and scenes.
 """
 
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Dict, Any, cast
 from uuid import UUID
 
 from supabase import Client, create_client
@@ -67,7 +67,7 @@ async def create_video(
         data["syllabus_doc_path"] = syllabus_doc_path
 
     result = client.table("videos").insert(data).execute()
-    return UUID(result.data[0]["id"])
+    return UUID(str(cast(Dict[str, Any], result.data[0])["id"]))
 
 
 async def get_video(video_id: UUID) -> Optional[VideoResponse]:
@@ -85,7 +85,7 @@ async def get_video(video_id: UUID) -> Optional[VideoResponse]:
 
     if not result.data:
         return None
-    return VideoResponse(**result.data[0])
+    return VideoResponse.model_validate(result.data[0])
 
 
 async def get_completed_video_by_prompt(prompt: str) -> Optional[VideoResponse]:
@@ -111,7 +111,7 @@ async def get_completed_video_by_prompt(prompt: str) -> Optional[VideoResponse]:
 
     if not result.data:
         return None
-    return VideoResponse(**result.data[0])
+    return VideoResponse.model_validate(result.data[0])
 
 
 async def update_video_status(video_id: UUID, status: VideoStatus) -> bool:
@@ -195,7 +195,7 @@ async def create_scene(
     client.table("scenes").delete().eq("video_id", str(video_id)).eq("scene_order", scene_order).execute()
     
     result = client.table("scenes").insert(data).execute()
-    return UUID(result.data[0]["id"])
+    return UUID(str(cast(Dict[str, Any], result.data[0])["id"]))
 
 
 async def get_scenes(video_id: UUID) -> list[SceneResponse]:
@@ -364,4 +364,4 @@ async def get_scene_id_by_order(video_id: UUID, scene_order: int) -> Optional[UU
 
     if not result.data:
         return None
-    return UUID(result.data[0]["id"])
+    return UUID(str(cast(Dict[str, Any], result.data[0])["id"]))

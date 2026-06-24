@@ -97,7 +97,7 @@ async def approve_scripts(video_id: str, request: ApprovalRequest):
                 await resume_workflow(
                     video_id=str(video_uuid),
                     approved=True,
-                    feedback=request.feedback
+                    feedback=request.feedback or ""
                 )
                 logger.info(f"Workflow completed successfully for video {video_uuid}")
             except Exception as e:

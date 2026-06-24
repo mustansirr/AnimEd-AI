@@ -54,5 +54,13 @@ async def validate_layout(state: AgentState) -> dict:
             logger.error(error_msg)
             return {"last_render_error": error_msg}
             
+    # Fluid Transition Assertion (Code Parsing check if generated_codes exists)
+    generated_codes = state.get("generated_codes", [])
+    if generated_codes:
+        for current_code in generated_codes:
+            if "old_comp =" in current_code or "morph" in current_code.lower() or "transform" in current_code.lower():
+                if "ReplacementTransform" not in current_code and "Transform(" not in current_code and ".animate" not in current_code and "GlobalTransitionEngine.transition_between_states" not in current_code:
+                    return {"last_render_error": "Fluid Transition Assertion Failed: Scene contains multi-part transition but missing ReplacementTransform, Transform, or .animate."}
+
     logger.info("Layout validation passed for all scenes.")
     return {}
