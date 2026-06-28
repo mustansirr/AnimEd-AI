@@ -110,7 +110,7 @@ export default function DeckPage({ params }: { params: Promise<{ deckId: string 
               ) : !deck ? (
                 <div className="text-center py-20">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-foreground">Deck not found</h2>
-                  <p className="text-gray-500 mt-2">The deck you are looking for does not exist or you don't have access.</p>
+                  <p className="text-gray-500 mt-2">The deck you are looking for does not exist or you don&apos;t have access.</p>
                 </div>
               ) : (
                 <>
