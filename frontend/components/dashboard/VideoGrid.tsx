@@ -241,34 +241,34 @@ function DeleteConfirmDialog({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onCancel}
     >
       <div
-        className="bg-white rounded-lg p-6 max-w-sm w-full shadow-xl"
+        className="bg-white dark:bg-card rounded-lg p-6 max-w-sm w-full shadow-xl border border-gray-200 dark:border-border"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 mb-4">
-          <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
+          <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-foreground">
               Delete Video
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-muted-foreground">
               This action cannot be undone.
             </p>
           </div>
         </div>
 
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
           Are you sure you want to delete this video? All associated data
           including scenes will be permanently removed.
         </p>
 
         <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={onCancel} disabled={isDeleting}>
+          <Button variant="ghost" onClick={onCancel} disabled={isDeleting} className="text-gray-700 dark:text-foreground hover:bg-gray-100 dark:hover:bg-muted">
             Cancel
           </Button>
           <Button

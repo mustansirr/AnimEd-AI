@@ -8,7 +8,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import upload, videos, webhooks
+from app.api.routes import upload, videos, webhooks, flashcards
 from app.config import get_settings
 
 # Get application settings
@@ -43,6 +43,7 @@ app.add_middleware(
 app.include_router(upload.router, prefix="/api")
 app.include_router(videos.router, prefix="/api")
 app.include_router(webhooks.router, prefix="/api")
+app.include_router(flashcards.router, prefix="/api")
 
 
 @app.get("/")
