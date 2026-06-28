@@ -12,11 +12,10 @@ async def fix_scene(state: AgentState) -> dict:
     video_id = state["video_id"]
     scores = state.get("quality_scores")
     
-    current_index = state.get("current_scene_index", 1)
     retry_count = state.get("retry_count", 0)
     
     error_msg = state.get("last_render_error")
-    feedback = scores.feedback if scores and hasattr(scores, "feedback") else getattr(scores, "get", lambda x, y=None: y)("feedback", "") if scores else ""
+    feedback = scores.get("feedback", "") if scores else ""
     
     fix_reason = error_msg or feedback
     logger.warning(
@@ -24,12 +23,13 @@ async def fix_scene(state: AgentState) -> dict:
     )
 
     # Automated Fix Implementation: Hook up reflector critique to fix the Manim script
-    if fix_reason and "Temporal Freeze" in fix_reason or "Fluid Transition" in fix_reason:
+    if fix_reason and ("Temporal Freeze" in fix_reason or "Fluid Transition" in fix_reason):
         from app.services.llm_factory import create_llm
         llm = create_llm("coder", temperature=0.1)
         generated_codes = state.get("generated_codes", [])
-        if generated_codes and len(generated_codes) >= current_index:
-            bad_code = generated_codes[current_index - 1]
+        if generated_codes:
+            scene_index = len(generated_codes) - 1
+            bad_code = generated_codes[scene_index]
             
             # Prevent LLM from truncating preamble by only sending the class definition
             if "class Scene1(Scene):" in bad_code:
@@ -51,8 +51,8 @@ async def fix_scene(state: AgentState) -> dict:
                      pass # We assume the LLM returned it correctly or we could force it
                      
                 fixed_code = preamble + "\n" + fixed_scene_class
-                generated_codes[current_index - 1] = fixed_code
-                logger.info(f"Fix agent applied self-correction to scene {current_index}.")
+                generated_codes[scene_index] = fixed_code
+                logger.info(f"Fix agent applied self-correction to scene {scene_index}.")
                 return {
                     "generated_codes": generated_codes,
                     "retry_count": retry_count + 1,
@@ -63,7 +63,6 @@ async def fix_scene(state: AgentState) -> dict:
 
     # Fallback if no LLM fix applied
     return {
-        "current_scene_index": max(0, current_index - 1),
         "retry_count": retry_count + 1,
         "last_render_error": f"Quality check failed: {fix_reason}"
     }

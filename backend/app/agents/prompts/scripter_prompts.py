@@ -43,8 +43,10 @@ Output your response as valid JSON with this exact format:
 Return ONLY valid JSON, no additional text or markdown."""
 
 
+from app.agents.state import ScenePlan
+
 def create_scripter_prompt(
-    scene_plan: dict,
+    scene_plan: ScenePlan,
     scene_index: int,
     video_title: str
 ) -> str:
@@ -52,7 +54,7 @@ def create_scripter_prompt(
     Create the user prompt for the scripter agent.
 
     Args:
-        scene_plan: The scene plan dict from the planner.
+        scene_plan: ScenePlan model produced by the planner.
         scene_index: 0-indexed scene number.
         video_title: Title of the overall video.
 

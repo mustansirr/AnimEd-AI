@@ -1,29 +1,50 @@
 Manim Community v0.18.0
 
-<<<<<<< HEAD
-[06/24/26 18:36:09] INFO     Animation 0 : Partial      scene_file_writer.py:527
+[06/28/26 17:53:36] INFO     Animation 0 : Partial      scene_file_writer.py:527
                              movie file written in                              
                              '/render/media/videos/scen                         
                              e/480p15/partial_movie_fil                         
-                             es/Scene1/148373998_246955                         
-                             769_2783964248.mp4'                                
-[06/24/26 18:36:12] INFO     Animation 1 : Partial      scene_file_writer.py:527
+                             es/Scene1/747236922_884185                         
+                             461_223132457.mp4'                                 
+[06/28/26 17:53:37] INFO     Animation 1 : Partial      scene_file_writer.py:527
                              movie file written in                              
                              '/render/media/videos/scen                         
                              e/480p15/partial_movie_fil                         
-                             es/Scene1/3830446710_20568                         
-                             82330_2394724269.mp4'                              
-[06/24/26 18:36:13] INFO     Animation 2 : Partial      scene_file_writer.py:527
+                             es/Scene1/3396326743_16644                         
+                             95981_257827087.mp4'                               
+[06/28/26 17:53:38] INFO     Animation 2 : Partial      scene_file_writer.py:527
                              movie file written in                              
                              '/render/media/videos/scen                         
                              e/480p15/partial_movie_fil                         
-                             es/Scene1/3830446710_31821                         
-                             40889_3871342459.mp4'                              
-[06/24/26 18:36:18] INFO     Animation 3 : Partial      scene_file_writer.py:527
+                             es/Scene1/3396326743_31985                         
+                             9043_1732536664.mp4'                               
+[06/28/26 17:53:40] INFO     Animation 3 : Partial      scene_file_writer.py:527
                              movie file written in                              
                              '/render/media/videos/scen                         
                              e/480p15/partial_movie_fil                         
-                             es/Scene1/3830446710_31936                         
-                             30605_421466128.mp4'                               
-=======
->>>>>>> a7fd14e42416616890e87ef226f143234d621116
+                             es/Scene1/3396326743_37169                         
+                             06224_2769292425.mp4'                              
+[06/28/26 17:53:42] INFO     Animation 4 : Partial      scene_file_writer.py:527
+                             movie file written in                              
+                             '/render/media/videos/scen                         
+                             e/480p15/partial_movie_fil                         
+                             es/Scene1/3396326743_40648                         
+                             12280_427397912.mp4'                               
+[06/28/26 17:53:44] INFO     Animation 5 : Partial      scene_file_writer.py:527
+                             movie file written in                              
+                             '/render/media/videos/scen                         
+                             e/480p15/partial_movie_fil                         
+                             es/Scene1/3396326743_37169                         
+                             06224_635953282.mp4'                               
+[06/28/26 17:53:46] INFO     Animation 6 : Partial      scene_file_writer.py:527
+                             movie file written in                              
+                             '/render/media/videos/scen                         
+                             e/480p15/partial_movie_fil                         
+                             es/Scene1/3396326743_40648                         
+                             12280_132910310.mp4'                               
+[06/28/26 17:53:48] INFO     Animation 7 : Partial      scene_file_writer.py:527
+                             movie file written in                              
+                             '/render/media/videos/scen                         
+                             e/480p15/partial_movie_fil                         
+                             es/Scene1/3396326743_37169                         
+                             06224_3252961193.mp4'                              

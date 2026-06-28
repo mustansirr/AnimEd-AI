@@ -48,6 +48,9 @@ class SceneJSON(TypedDict):
     visual_metaphor: str
     components: List[str]
     component_data: dict
+    component_id: Optional[str]
+    visual_state: Optional[dict]
+    transition: Optional[dict]
     animation_sequence: List[Union[str, dict]]
     duration: int
     title: str
@@ -61,6 +64,9 @@ class PositionedJSON(TypedDict):
     learning_goal: str
     visual_metaphor: str
     components: List[str]
+    component_id: Optional[str]
+    visual_state: Optional[dict]
+    transition: Optional[dict]
     animation_sequence: List[Union[str, dict]]
     duration: int
     title: str
@@ -171,6 +177,8 @@ def create_initial_state(
         visualization_strategy=None,
         visual_metaphor=None,
         suggested_component=None,
+        stem_blueprint=None,
+        component_data={},
         # Planning
         video_title="",
         topic_breakdown=[],

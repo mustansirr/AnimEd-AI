@@ -60,7 +60,7 @@ STRICT OUTPUT LIMITS:
 - Do not output SceneJSON, coordinates, animations, or layout data. Only the high-level outline is needed."""
 
 
-def create_planner_prompt(user_prompt: str, syllabus_context: str = "", stem_blueprint: dict = None) -> str:
+def create_planner_prompt(user_prompt: str, syllabus_context: str = "", stem_blueprint: dict | None = None) -> str:
     """
     Create the user prompt for the planner agent.
     """

@@ -98,6 +98,9 @@ async def plan_scenes(state: AgentState) -> dict:
         logger.info(f"[DIAGNOSTIC] New Token Estimate after truncation: System={sys_tokens}, User={user_tokens}, Total={total_estimated}")
 
     # Call LLM with a loop to enforce >= 5 scenes
+    scene_plans: list[ScenePlan] = []
+    plan: dict[str, Any] = {}
+    response = None
     max_attempts = 3
     for attempt in range(max_attempts):
         try:
@@ -162,7 +165,8 @@ async def plan_scenes(state: AgentState) -> dict:
         logger.error(error_msg)
         
         # Log raw response for debugging
-        logger.error(f"[DIAGNOSTIC] Raw LLM Response that caused 0 scenes:\n{response.content}")
+        if response is not None:
+            logger.error(f"[DIAGNOSTIC] Raw LLM Response that caused 0 scenes:\n{response.content}")
         
         try:
             await update_video_status(UUID(video_id), VideoStatus.FAILED)

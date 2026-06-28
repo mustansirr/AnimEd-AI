@@ -5,7 +5,7 @@ Scene JSON Generator Node.
 import json
 import logging
 import re
-from typing import Any
+from typing import cast, Any
 
 from app.services.llm_factory import create_llm
 from app.agents.state import AgentState, SceneJSON
@@ -13,7 +13,7 @@ from app.agents.prompts.scene_json_prompts import (
     create_scene_json_system_prompt,
     create_scene_json_prompt,
 )
-from app.sandbox.shared_animation_registry import get_allowed_components
+from app.sandbox.shared_animation_registry import SUPPORTED_COMPONENTS
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +35,11 @@ async def generate_scene_json(state: AgentState) -> dict:
         return {"scene_jsons": []}
 
     llm = create_llm("scripter", temperature=0.1) # low temp for JSON parsing
-    viz_strategy = state.get("visualization_strategy", "generic_concept")
-    suggested_component = state.get("suggested_component")
+    viz_strategy = str(state.get("visualization_strategy", "generic_concept"))
+    suggested_component = str(state.get("suggested_component") or "")
     
     prompt = create_scene_json_prompt(storyboards, viz_strategy)
-    allowed_components = get_allowed_components(viz_strategy)
+    allowed_components = list(SUPPORTED_COMPONENTS)
     system_prompt = create_scene_json_system_prompt(allowed_components, suggested_component)
 
     try:
@@ -87,12 +87,16 @@ async def generate_scene_json(state: AgentState) -> dict:
                 scene_type=s.get("scene_type", viz_strategy),
                 learning_goal=s.get("learning_goal", ""),
                 visual_metaphor=s.get("visual_metaphor", ""),
-                components=valid_components,
+                components=cast(list[str], valid_components),
                 component_data=s.get("component_data", {}),
+                component_id=s.get("component_id"),
+                visual_state=s.get("visual_state"),
+                transition=s.get("transition"),
                 animation_sequence=s.get("animation_sequence", []),
                 duration=s.get("duration", 5),
                 title=s.get("title", ""),
-                caption=s.get("caption", "")
+                caption=s.get("caption", ""),
+                focal_bounding_box=[0.0, 0.0, 14.0, 8.0]
             ))
             
         logger.info(f"Generated {len(scene_jsons)} Scene JSONs for video {video_id}. First scene: {json.dumps(scene_jsons[0] if scene_jsons else {}, indent=2)}")
@@ -101,19 +105,4 @@ async def generate_scene_json(state: AgentState) -> dict:
         
     except Exception as e:
         logger.error(f"Scene JSON Generator failed: {e}")
-        # Always return a default empty scene to avoid breaking the pipeline violently
-        # The schema validator will catch it and properly mark it FAILED
-        fallback_scene = SceneJSON(
-            schema_version="v2",
-            scene_type="error",
-            learning_goal="Error recovery",
-            visual_metaphor="None",
-            components=[],
-            component_data={},
-            animation_sequence=[],
-            duration=5,
-            title="Error",
-            caption="Failed to generate scene"
-        )
-        logger.info("--- EXITING SCENE_JSON_GENERATOR NODE ---")
-        return {"scene_jsons": [fallback_scene]}
+        raise e

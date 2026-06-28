@@ -54,6 +54,10 @@ async def startup_event():
     logger.info("Initializing blueprint semantic search embeddings...")
     from app.sandbox.stem_blueprint_dataset import registry
     try:
+        from app.sandbox.stem_blueprint_dataset import validate_blueprints_against_registry
+        validate_blueprints_against_registry()
+        from app.sandbox.shared_animation_registry import validate_component_implementations
+        validate_component_implementations()
         await registry._initialize_embeddings()
         logger.info("Blueprint embeddings initialized successfully.")
     except Exception as e:

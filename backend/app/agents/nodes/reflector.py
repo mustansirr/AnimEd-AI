@@ -121,15 +121,17 @@ async def reflect_and_fix(state: AgentState) -> dict:
         scene_order = storyboards[scene_index].get("scene_number", scene_index + 1)
         scene_id = await get_scene_id_by_order(UUID(video_id), scene_order)
         if scene_id:
-            await log_scene_error(scene_id, error)
+            await log_scene_error(scene_id, str(error))
 
     # Initialize LLM for code reflection (provider configured via env vars)
     llm = create_llm("reflector", temperature=0.1)
 
-    # Prevent LLM from truncating preamble by only sending the class definition
-    if "class Scene1(Scene):" in broken_code:
-        preamble, scene_class = broken_code.split("class Scene1(Scene):", 1)
-        scene_class = "class Scene1(Scene):" + scene_class
+    import re
+    match = re.search(r"^class\s+\w+\(.*?\):", broken_code, re.MULTILINE)
+
+    if match:
+        preamble = broken_code[:match.start()]
+        scene_class = broken_code[match.start():]
     else:
         preamble = ""
         scene_class = broken_code
@@ -188,6 +190,20 @@ Fix the code to resolve this error. Return only the corrected Python code.
         fixed_scene_class = clean_code_response(response.content)
         
         fixed_code = preamble + "\n" + fixed_scene_class
+        
+        # Sanity Checks
+        import re
+        if "from manim import" not in fixed_code:
+            logger.error("Reflector sanity check failed: Missing Manim imports.")
+            return {"retry_count": retry_count + 1, "last_render_error": "Reflector failed: Missing Manim imports."}
+            
+        if not re.search(r"class \w+\(.*?Scene\):", fixed_code):
+            logger.error("Reflector sanity check failed: Missing Scene class definition.")
+            return {"retry_count": retry_count + 1, "last_render_error": "Reflector failed: Missing Scene class."}
+            
+        if len(fixed_code) < 0.5 * len(broken_code):
+            logger.error(f"Reflector sanity check failed: Patch removed too much code (old: {len(broken_code)}, new: {len(fixed_code)}).")
+            return {"retry_count": retry_count + 1, "last_render_error": "Reflector failed: Patch removed too much code."}
         
         # Update the code in the list
         new_codes = generated_codes.copy()

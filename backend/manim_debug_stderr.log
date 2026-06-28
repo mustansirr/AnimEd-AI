@@ -1,76 +1,43 @@
-<<<<<<< HEAD
+/render/scene.py:234: DeprecationWarning: This method is not guaranteed to stay around. Please prefer setting the attribute normally or with Mobject.set().
+  self.divider = Line(LEFT, RIGHT, color=VisualGrammar.colors["accent"]).set_width(self.content_group.width + 1)
 
 Animation 0: FadeIn(TitleCard of 2 submobjects):   0%|          | 0/15 [00:00<?, ?it/s]
-Animation 0: FadeIn(TitleCard of 2 submobjects):  20%|██        | 3/15 [00:00<00:00, 24.24it/s]
-Animation 0: FadeIn(TitleCard of 2 submobjects):  40%|████      | 6/15 [00:00<00:00, 24.50it/s]
-Animation 0: FadeIn(TitleCard of 2 submobjects):  60%|██████    | 9/15 [00:00<00:00, 26.02it/s]
-Animation 0: FadeIn(TitleCard of 2 submobjects):  80%|████████  | 12/15 [00:00<00:00, 24.45it/s]
-Animation 0: FadeIn(TitleCard of 2 submobjects): 100%|██████████| 15/15 [00:00<00:00, 24.89it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  20%|██        | 3/15 [00:00<00:00, 27.60it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  40%|████      | 6/15 [00:00<00:00, 22.74it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  67%|██████▋   | 10/15 [00:00<00:00, 26.63it/s]
+Animation 0: FadeIn(TitleCard of 2 submobjects):  93%|█████████▎| 14/15 [00:00<00:00, 29.73it/s]
                                                                                                 
 
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):   0%|          | 0/23 [00:00<?, ?it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):   4%|▍         | 1/23 [00:00<00:02,  7.73it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  13%|█▎        | 3/23 [00:00<00:01, 11.72it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  22%|██▏       | 5/23 [00:00<00:01, 14.46it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  35%|███▍      | 8/23 [00:00<00:00, 16.90it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  48%|████▊     | 11/23 [00:00<00:00, 18.95it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  57%|█████▋    | 13/23 [00:00<00:00, 17.26it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  65%|██████▌   | 15/23 [00:00<00:00, 16.03it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  74%|███████▍  | 17/23 [00:01<00:00, 16.11it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  87%|████████▋ | 20/23 [00:01<00:00, 17.04it/s]
-Animation 1: ReplacementTransform(SurfaceTensionDiagram of 3 submobjects):  96%|█████████▌| 22/23 [00:01<00:00, 17.05it/s]
-                                                                                                                          
+Animation 1: FadeIn(NeuralNetworkDiagram of 2 submobjects):   0%|          | 0/15 [00:00<?, ?it/s]
+Animation 1: FadeIn(NeuralNetworkDiagram of 2 submobjects):  20%|██        | 3/15 [00:00<00:00, 26.31it/s]
+Animation 1: FadeIn(NeuralNetworkDiagram of 2 submobjects):  53%|█████▎    | 8/15 [00:00<00:00, 39.10it/s]
+Animation 1: FadeIn(NeuralNetworkDiagram of 2 submobjects):  93%|█████████▎| 14/15 [00:00<00:00, 46.13it/s]
+                                                                                                           
 
-Animation 2: FadeIn(VGroup of 60 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]
-Animation 2: FadeIn(VGroup of 60 submobjects), etc.:   7%|▋         | 1/15 [00:00<00:01,  8.20it/s]
-Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  20%|██        | 3/15 [00:00<00:00, 12.91it/s]
-Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  33%|███▎      | 5/15 [00:00<00:00, 14.08it/s]
-Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 14.69it/s]
-Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  67%|██████▋   | 10/15 [00:00<00:00, 14.15it/s]
-Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  80%|████████  | 12/15 [00:00<00:00, 14.68it/s]
-Animation 2: FadeIn(VGroup of 60 submobjects), etc.:  93%|█████████▎| 14/15 [00:00<00:00, 15.29it/s]
-                                                                                                    
+Animation 2: Create(VGroup of 4 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]
+Animation 2: Create(VGroup of 4 submobjects), etc.:  20%|██        | 3/15 [00:00<00:00, 27.22it/s]
+Animation 2: Create(VGroup of 4 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 38.74it/s]
+Animation 2: Create(VGroup of 4 submobjects), etc.:  93%|█████████▎| 14/15 [00:00<00:00, 48.01it/s]
+                                                                                                   
 
-Animation 3: Wiggle(VGroup of 4 submobjects):   0%|          | 0/30 [00:00<?, ?it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):   3%|▎         | 1/30 [00:00<00:04,  6.27it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):   7%|▋         | 2/30 [00:00<00:04,  6.97it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  10%|█         | 3/30 [00:00<00:03,  7.23it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  13%|█▎        | 4/30 [00:00<00:03,  7.95it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  17%|█▋        | 5/30 [00:00<00:03,  7.96it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  23%|██▎       | 7/30 [00:00<00:02,  8.80it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  27%|██▋       | 8/30 [00:01<00:02,  7.81it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  30%|███       | 9/30 [00:01<00:02,  8.12it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  37%|███▋      | 11/30 [00:01<00:02,  9.00it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  40%|████      | 12/30 [00:01<00:02,  9.00it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  43%|████▎     | 13/30 [00:01<00:02,  7.81it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  47%|████▋     | 14/30 [00:01<00:02,  7.89it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  50%|█████     | 15/30 [00:01<00:01,  8.30it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  53%|█████▎    | 16/30 [00:01<00:01,  8.66it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  57%|█████▋    | 17/30 [00:02<00:01,  8.67it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  60%|██████    | 18/30 [00:02<00:01,  8.52it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  63%|██████▎   | 19/30 [00:02<00:01,  8.83it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  67%|██████▋   | 20/30 [00:02<00:01,  8.99it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  73%|███████▎  | 22/30 [00:02<00:00,  9.48it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  77%|███████▋  | 23/30 [00:02<00:00,  9.05it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  80%|████████  | 24/30 [00:02<00:00,  9.17it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  83%|████████▎ | 25/30 [00:02<00:00,  9.37it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  87%|████████▋ | 26/30 [00:03<00:00,  9.35it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  93%|█████████▎| 28/30 [00:03<00:00,  9.83it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects):  97%|█████████▋| 29/30 [00:03<00:00,  9.43it/s]
-Animation 3: Wiggle(VGroup of 4 submobjects): 100%|██████████| 30/30 [00:03<00:00,  9.39it/s]
+Animation 4: Wiggle(VGroup of 4 submobjects):   0%|          | 0/30 [00:00<?, ?it/s]
+Animation 4: Wiggle(VGroup of 4 submobjects):   7%|▋         | 2/30 [00:00<00:01, 16.48it/s]
+Animation 4: Wiggle(VGroup of 4 submobjects):  13%|█▎        | 4/30 [00:00<00:01, 17.32it/s]
+Animation 4: Wiggle(VGroup of 4 submobjects):  30%|███       | 9/30 [00:00<00:00, 30.03it/s]
+Animation 4: Wiggle(VGroup of 4 submobjects):  43%|████▎     | 13/30 [00:00<00:00, 33.54it/s]
+Animation 4: Wiggle(VGroup of 4 submobjects):  57%|█████▋    | 17/30 [00:00<00:00, 30.24it/s]
+Animation 4: Wiggle(VGroup of 4 submobjects):  70%|███████   | 21/30 [00:00<00:00, 31.75it/s]
+Animation 4: Wiggle(VGroup of 4 submobjects):  87%|████████▋ | 26/30 [00:00<00:00, 35.32it/s]
                                                                                              
-=======
-/usr/local/lib/python3.10/site-packages/click/core.py:1223: UserWarning: The parameter -s is used more than once. Remove its duplicate as parameters should be unique.
-  parser = self.make_parser(ctx)
-/usr/local/lib/python3.10/site-packages/click/core.py:1223: UserWarning: The parameter --save_last_frame is used more than once. Remove its duplicate as parameters should be unique.
-  parser = self.make_parser(ctx)
-/usr/local/lib/python3.10/site-packages/cloup/constraints/_support.py:183: UserWarning: The parameter -s is used more than once. Remove its duplicate as parameters should be unique.
-  args = super().parse_args(ctx, args)  # type: ignore
-/usr/local/lib/python3.10/site-packages/cloup/constraints/_support.py:183: UserWarning: The parameter --save_last_frame is used more than once. Remove its duplicate as parameters should be unique.
-  args = super().parse_args(ctx, args)  # type: ignore
-/render/scene.py:142: DeprecationWarning: This method is not guaranteed to stay around. Please prefer setting the attribute normally or with Mobject.set().
-  self.divider = Line(LEFT, RIGHT, color=VisualGrammar.colors["accent"]).set_width(self.content_group.width + 1)
->>>>>>> a7fd14e42416616890e87ef226f143234d621116
+
+Animation 6: Wiggle(VGroup of 4 submobjects):   0%|          | 0/30 [00:00<?, ?it/s]
+Animation 6: Wiggle(VGroup of 4 submobjects):  10%|█         | 3/30 [00:00<00:01, 21.29it/s]
+Animation 6: Wiggle(VGroup of 4 submobjects):  27%|██▋       | 8/30 [00:00<00:00, 33.70it/s]
+Animation 6: Wiggle(VGroup of 4 submobjects):  43%|████▎     | 13/30 [00:00<00:00, 39.12it/s]
+Animation 6: Wiggle(VGroup of 4 submobjects):  60%|██████    | 18/30 [00:00<00:00, 41.84it/s]
+Animation 6: Wiggle(VGroup of 4 submobjects):  77%|███████▋  | 23/30 [00:00<00:00, 43.90it/s]
+Animation 6: Wiggle(VGroup of 4 submobjects):  93%|█████████▎| 28/30 [00:00<00:00, 45.48it/s]
+                                                                                             
 ╭───────────────────── Traceback (most recent call last) ──────────────────────╮
 │ /usr/local/lib/python3.10/site-packages/manim/cli/render/commands.py:115 in  │
 │ render                                                                       │
@@ -93,116 +60,12 @@ Animation 3: Wiggle(VGroup of 4 submobjects): 100%|█████████�
 │    225 │   │   │   pass                                                      │
 │    226 │   │   except RerunSceneException as e:                              │
 │                                                                              │
-<<<<<<< HEAD
-│ /render/scene.py:1304 in construct                                           │
+│ /render/scene.py:1518 in construct                                           │
 │                                                                              │
-│   1301 │   │   except AttributeError:                                        │
-│   1302 │   │   │   self.play(Indicate(main_comp))                            │
-│   1303 │   │   try:                                                          │
-│ ❱ 1304 │   │   │   self.play(*main_comp.get_transformation_animations(main_c │
-│   1305 │   │   except AttributeError:                                        │
-│   1306 │   │   │   if hasattr(main_comp, 'is_math_component') and main_comp. │
-│   1307 │   │   │   │   self.play(TransformMatchingTex(main_comp, main_comp_t │
+│   1515 │   │   if callable(anim_method): self.play(*anim_method())           │
+│   1516 │   │   else: self.play(Indicate(main_comp))                          │
+│   1517 │   │   self.wait(5.666666666666667)                                  │
+│ ❱ 1518 │   │   self.play(FadeOut(zones))                                     │
+│   1519                                                                       │
 ╰──────────────────────────────────────────────────────────────────────────────╯
-TypeError: SurfaceTensionDiagram.get_transformation_animations() takes 1 
-positional argument but 2 were given
-=======
-│ /render/scene.py:1095 in construct                                           │
-│                                                                              │
-│   1092 │   │                                                                 │
-│   1093 │   │   title_card = TitleCard('Pythagoras Theorem Summary', 'A^2 + B │
-│   1094 │   │   main_comp = CoordinateGeometryDiagram(triangle={'side_a': 3,  │
-│ ❱ 1095 │   │   zones = LayoutZones.arrange_zones(title_zone=title_card, visu │
-│   1096 │   │   if title_card: self.play(FadeIn(title_card))                  │
-│   1097 │   │   anim_method = getattr(main_comp, 'get_intro_animations', None │
-│   1098 │   │   if callable(anim_method): self.play(*anim_method())           │
-│                                                                              │
-│ /render/scene.py:968 in arrange_zones                                        │
-│                                                                              │
-│    965 │   │   │   zones.add(caption)                                        │
-│    966 │   │                                                                 │
-│    967 │   │   if len(zones) > 0:                                            │
-│ ❱  968 │   │   │   zones.arrange(DOWN, buff=0.5)                             │
-│    969 │   │   │   zones.move_to(ORIGIN)                                     │
-│    970 │   │   │                                                             │
-│    971 │   │   │   # Dynamically scale to fit within camera bounds           │
-│                                                                              │
-│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:2255 in     │
-│ arrange                                                                      │
-│                                                                              │
-│   2252 │   │   │   │   │   self.add(x)                                       │
-│   2253 │   │   """                                                           │
-│   2254 │   │   for m1, m2 in zip(self.submobjects, self.submobjects[1:]):    │
-│ ❱ 2255 │   │   │   m2.next_to(m1, direction, buff, **kwargs)                 │
-│   2256 │   │   if center:                                                    │
-│   2257 │   │   │   self.center()                                             │
-│   2258 │   │   return self                                                   │
-│                                                                              │
-│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:1478 in     │
-│ next_to                                                                      │
-│                                                                              │
-│   1475 │   │   │   aligner = self[index_of_submobject_to_align]              │
-│   1476 │   │   else:                                                         │
-│   1477 │   │   │   aligner = self                                            │
-│ ❱ 1478 │   │   point_to_align = aligner.get_critical_point(aligned_edge - di │
-│   1479 │   │   self.shift((target_point - point_to_align + buff * direction) │
-│   1480 │   │   return self                                                   │
-│   1481                                                                       │
-│                                                                              │
-│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:1983 in     │
-│ get_critical_point                                                           │
-│                                                                              │
-│   1980 │   │                                                                 │
-│   1981 │   │   """                                                           │
-│   1982 │   │   result = np.zeros(self.dim)                                   │
-│ ❱ 1983 │   │   all_points = self.get_points_defining_boundary()              │
-│   1984 │   │   if len(all_points) == 0:                                      │
-│   1985 │   │   │   return result                                             │
-│   1986 │   │   for dim in range(self.dim):                                   │
-│                                                                              │
-│ /usr/local/lib/python3.10/site-packages/manim/mobject/types/vectorized_mobje │
-│ ct.py:1478 in get_points_defining_boundary                                   │
-│                                                                              │
-│   1475 │   def get_points_defining_boundary(self) -> Point3D_Array:          │
-│   1476 │   │   # Probably returns all anchors, but this is weird regarding   │
-│   1477 │   │   return np.array(                                              │
-│ ❱ 1478 │   │   │   tuple(it.chain(*(sm.get_anchors() for sm in self.get_fami │
-│   1479 │   │   )                                                             │
-│   1480 │                                                                     │
-│   1481 │   def get_arc_length(self, sample_points_per_curve: int | None = No │
-│                                                                              │
-│ /usr/local/lib/python3.10/site-packages/manim/mobject/types/vectorized_mobje │
-│ ct.py:1478 in <genexpr>                                                      │
-│                                                                              │
-│   1475 │   def get_points_defining_boundary(self) -> Point3D_Array:          │
-│   1476 │   │   # Probably returns all anchors, but this is weird regarding   │
-│   1477 │   │   return np.array(                                              │
-│ ❱ 1478 │   │   │   tuple(it.chain(*(sm.get_anchors() for sm in self.get_fami │
-│   1479 │   │   )                                                             │
-│   1480 │                                                                     │
-│   1481 │   def get_arc_length(self, sample_points_per_curve: int | None = No │
-│                                                                              │
-│ /usr/local/lib/python3.10/site-packages/manim/mobject/types/vectorized_mobje │
-│ ct.py:1469 in get_anchors                                                    │
-│                                                                              │
-│   1466 │   │   Point3D_Array                                                 │
-│   1467 │   │   │   The anchors.                                              │
-│   1468 │   │   """                                                           │
-│ ❱ 1469 │   │   if self.points.shape[0] == 1:                                 │
-│   1470 │   │   │   return self.points                                        │
-│   1471 │   │   return np.array(                                              │
-│   1472 │   │   │   tuple(it.chain(*zip(self.get_start_anchors(), self.get_en │
-│                                                                              │
-│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:672 in      │
-│ __getattr__                                                                  │
-│                                                                              │
-│    669 │   │   │   return types.MethodType(setter, self)                     │
-│    670 │   │                                                                 │
-│    671 │   │   # Unhandled attribute, therefore error                        │
-│ ❱  672 │   │   raise AttributeError(f"{type(self).__name__} object has no at │
-│    673 │                                                                     │
-│    674 │   @property                                                         │
-│    675 │   def width(self) -> float:                                         │
-╰──────────────────────────────────────────────────────────────────────────────╯
-AttributeError: VGroup object has no attribute 'shape'
->>>>>>> a7fd14e42416616890e87ef226f143234d621116
+NameError: name 'zones' is not defined

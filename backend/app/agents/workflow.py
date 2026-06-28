@@ -3,7 +3,8 @@ LangGraph Workflow for Video Generation.
 """
 
 import logging
-from typing import Dict, Literal
+from typing import Dict, Literal, Any
+from langchain_core.runnables.config import RunnableConfig
 
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
@@ -13,7 +14,7 @@ from app.agents.nodes.context import retrieve_context_node
 from app.agents.nodes.planner import plan_scenes
 from app.agents.nodes.storyboard_agent import write_storyboard
 from app.agents.nodes.human_review import wait_for_approval
-from app.agents.nodes.scene_json_generator import parse_storyboard_to_json
+from app.agents.nodes.scene_json_generator import generate_scene_json
 from app.agents.nodes.layout_agent import compute_layouts
 from app.agents.nodes.coder import generate_code
 from app.agents.nodes.static_analyzer import static_analysis_pass
@@ -40,7 +41,7 @@ def create_workflow():
     workflow.add_node("concept_classifier", classify_concept)
     workflow.add_node("storyboard", write_storyboard)
     workflow.add_node("human_review", wait_for_approval)
-    workflow.add_node("scene_json_generator", parse_storyboard_to_json)
+    workflow.add_node("scene_json_generator", generate_scene_json)
     workflow.add_node("layout", compute_layouts)
     workflow.add_node("coder", generate_code)
     workflow.add_node("static_analyzer", static_analysis_pass)
@@ -117,8 +118,7 @@ def create_workflow():
             "eval_quality": "quality_evaluator",
         }
     )
-    
-    workflow.add_edge("reflector", "coder")
+    workflow.add_edge("reflector", "static_analyzer")
 
     workflow.add_conditional_edges(
         "quality_evaluator",
@@ -129,8 +129,7 @@ def create_workflow():
             "finalize": "finalize",
         }
     )
-    
-    workflow.add_edge("fix_agent", "coder")
+    workflow.add_edge("fix_agent", "static_analyzer")
     workflow.add_edge("finalize", END)
 
     memory = MemorySaver()
@@ -212,7 +211,7 @@ def route_after_eval(state: AgentState) -> Literal["fix", "next_scene", "finaliz
 
 async def start_workflow(video_id: str, user_prompt: str, syllabus_context: str = "") -> AgentState:
     workflow = create_workflow()
-    config = {"configurable": {"thread_id": video_id}, "recursion_limit": 150}
+    config: RunnableConfig = {"configurable": {"thread_id": video_id}, "recursion_limit": 150}
 
     initial_state = create_initial_state(
         video_id=video_id,
@@ -226,10 +225,10 @@ async def start_workflow(video_id: str, user_prompt: str, syllabus_context: str 
 
     result = await workflow.ainvoke(None, config)
     _active_workflows[video_id] = (workflow, config)
-    return result
+    return result # type: ignore
 
 
-async def resume_workflow(video_id: str, approved: bool, feedback: str = None) -> AgentState:
+async def resume_workflow(video_id: str, approved: bool, feedback: str | None = None) -> AgentState:
     if video_id not in _active_workflows:
         raise ValueError(f"No active workflow found for video {video_id}")
 
@@ -239,14 +238,14 @@ async def resume_workflow(video_id: str, approved: bool, feedback: str = None) -
     await workflow.aupdate_state(config, {"user_approved": approved, "user_feedback": feedback}, as_node="human_review")
     result = await workflow.ainvoke(None, config)
     del _active_workflows[video_id]
-    return result
+    return result # type: ignore
 
 
 def get_workflow_state(video_id: str) -> AgentState | None:
     if video_id not in _active_workflows:
         return None
     workflow, config = _active_workflows[video_id]
-    return workflow.get_state(config).values
+    return workflow.get_state(config).values # type: ignore
 
 
 def is_workflow_active(video_id: str) -> bool:

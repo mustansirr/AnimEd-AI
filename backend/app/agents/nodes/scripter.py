@@ -9,6 +9,7 @@ import json
 import logging
 from typing import Any
 from uuid import UUID
+import re
 
 from app.services.llm_factory import create_llm
 

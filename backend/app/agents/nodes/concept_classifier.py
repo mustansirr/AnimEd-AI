@@ -14,45 +14,7 @@ from app.sandbox.shared_animation_registry import CONCEPT_TO_COMPONENT
 
 logger = logging.getLogger(__name__)
 
-CONCEPT_TO_COMPONENT = {
-    # Computer Science
-    "algorithm_search": "ArrayDiagram",
-    "algorithm_sort": "ArrayDiagram",
-    "data_structure_tree": "TreeDiagram",
-    "data_structure_graph": "GraphDiagram",
-    "computer_science_networks": "NetworkDiagram",
-    "computer_science_theory": "ArrayDiagram",
-    "neural_network": "NeuralNetworkDiagram",
-    # Mathematics
-    "geometry": "CoordinateGeometryDiagram",
-    "mathematics_theorem_law": "RightTriangleDiagram",
-    "mathematics_area_proof": "AreaProofDiagram",
-    "function_plot": "FunctionPlotDiagram",
-    "statistics": "BarChartDiagram",
-    "linear_algebra": "MatrixDisplay",
-    # Physics
-    "physics_motion": "FunctionPlot",
-    "physics_force": "ForceVectorDiagram",
-    "physics_forces_multiple": "ForceVectorDiagram",
-    "physics_surface_tension": "SurfaceTensionDiagram",
-    "physics_droplet": "DropletDiagram",
-    "physics_electric_field": "ElectricFieldDiagram",
-    "physics_particle": "ParticleDiagram",
-    "physics_wave": "WaveDiagram",
-    # Biology/Chemistry
-    "biology_process": "FlowChart",
-    "chemistry_molecule": "MoleculeDiagram",
-    "chemistry_atom": "AtomDiagram",
-    "chemistry_reaction": "ReactionDiagram",
-    # General
-    "process_flow": "FlowChart",
-    "summary": "SummaryDiagram",
-    "definition": "SummaryDiagram",
-    # Engineering
-    "engineering_electrical": "NetworkDiagram",
-    "engineering_civil": "NetworkDiagram",
-    "engineering_mechanical": "NetworkDiagram",
-}
+
 async def classify_concept(state: AgentState) -> dict:
     """
     Classifies the user's topic into a predefined STEM category.

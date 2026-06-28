@@ -437,9 +437,10 @@ async def retrieve_context(
     # Concatenate chunks with similarity scores as context
     context_parts = []
     for chunk in data:
-        similarity = chunk.get("similarity", 0)
-        content = chunk.get("content", "")
-        context_parts.append(f"[Relevance: {similarity:.2f}]\n{content}")
+        if isinstance(chunk, dict):
+            similarity = chunk.get("similarity", 0)
+            content = chunk.get("content", "")
+            context_parts.append(f"[Relevance: {similarity:.2f}]\n{content}")
 
     return "\n\n---\n\n".join(context_parts)
 

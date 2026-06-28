@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 import builtins
 
 try:
-    from manim import *
+    from manim import * # pyright: ignore[reportWildcardImportFromLibrary]
     _HAS_MANIM = True
 except ImportError:
     _HAS_MANIM = False
@@ -97,24 +97,22 @@ class CodeValidator(ast.NodeVisitor):
 
     def visit_Assign(self, node):
         for target in node.targets:
-            if isinstance(target, ast.Name):
-                self.current_scope.add(target.id)
-            elif isinstance(target, ast.Tuple) or isinstance(target, ast.List):
-                for elt in target.elts:
-                    if isinstance(elt, ast.Name):
-                        self.current_scope.add(elt.id)
+            self._add_to_scope(target)
+        self.generic_visit(node)
+        
+    def visit_AugAssign(self, node):
+        self._add_to_scope(node.target)
+        self.generic_visit(node)
+        
+    def visit_AnnAssign(self, node):
+        self._add_to_scope(node.target)
         self.generic_visit(node)
         
     def visit_For(self, node):
-        if isinstance(node.target, ast.Name):
-            self.current_scope.add(node.target.id)
-        elif isinstance(node.target, ast.Tuple) or isinstance(node.target, ast.List):
-            for elt in node.target.elts:
-                if isinstance(elt, ast.Name):
-                    self.current_scope.add(elt.id)
+        self._add_to_scope(node.target)
         self.generic_visit(node)
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node: ast.FunctionDef | ast.AsyncFunctionDef):
         self.defined_names.add(node.name)
         # Add arguments to scope
         func_scope = set()
@@ -154,10 +152,25 @@ class CodeValidator(ast.NodeVisitor):
                 self._add_to_scope(item.optional_vars)
         self.generic_visit(node)
 
+    def visit_AsyncWith(self, node):
+        self.visit_With(node)
+
     def visit_Try(self, node):
         for handler in node.handlers:
             if handler.name:
                 self.current_scope.add(handler.name)
+        self.generic_visit(node)
+
+    def visit_Match(self, node):
+        # Python 3.10+ pattern matching variables leak into the surrounding scope
+        for case in node.cases:
+            for child in ast.walk(case.pattern):
+                if isinstance(child, getattr(ast, 'MatchAs', type(None))) and child.name:
+                    self.current_scope.add(child.name)
+                elif isinstance(child, getattr(ast, 'MatchStar', type(None))) and child.name:
+                    self.current_scope.add(child.name)
+                elif isinstance(child, getattr(ast, 'MatchMapping', type(None))) and child.rest:
+                    self.current_scope.add(child.rest)
         self.generic_visit(node)
 
     def visit_ListComp(self, node):

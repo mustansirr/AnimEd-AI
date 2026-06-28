@@ -4,6 +4,7 @@ Video Stitcher - FFmpeg-based video assembly.
 This module provides the VideoStitcher class that combines
 all rendered scene segments into a final video using FFmpeg.
 """
+from __future__ import annotations
 
 import asyncio
 import logging
@@ -11,11 +12,15 @@ import subprocess
 import shutil
 from pathlib import Path
 from uuid import UUID
+from typing import Dict, Any, TYPE_CHECKING
 
 import httpx
 
 from app.services import supabase_client
 from app.config import get_settings
+
+if TYPE_CHECKING:
+    from app.agents.state import AgentState
 
 logger = logging.getLogger(__name__)
 
@@ -396,7 +401,7 @@ class VideoStitcher:
         return public_url
 
 
-async def finalize_video(state: dict) -> dict:
+async def finalize_video(state: AgentState) -> dict:
     """
     LangGraph node to finalize video by stitching all scenes.
 

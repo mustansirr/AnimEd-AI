@@ -4,9 +4,7 @@ Scene JSON Generator Prompts.
 
 from app.sandbox.shared_animation_registry import SUPPORTED_COMPONENTS, SUPPORTED_ANIMATIONS
 
-from app.sandbox.shared_animation_registry import SUPPORTED_ANIMATIONS
-
-def create_scene_json_system_prompt(allowed_components: list, suggested_component: str = None, stem_blueprint: dict = None) -> str:
+def create_scene_json_system_prompt(allowed_components: list, suggested_component: str | None = None, stem_blueprint: dict | None = None) -> str:
     component_enforcement = f"You MUST strictly use EXACTLY this component: {suggested_component}. Do not hallucinate." if suggested_component else f"STRICT COMPONENT ALLOWLIST: You must use EXACTLY one of: {allowed_components}. Do NOT hallucinate components."
     
     blueprint_section = ""
@@ -37,9 +35,14 @@ Requirements:
 - STRICT ANIMATION ALLOWLIST: You must use ONLY these specific component animation templates: ["intro", "highlight", "transform", "explain", "focus", "morph", "shift_camera"]. Do NOT use generic fade_in or uncreate.
 - SEMANTIC MORPHING DIRECTIVES: When transitioning scenes, do not use hard cuts. You must output scene transitions using abstract relational actions like `transition_type`: "morph", "transform", or `camera_action`: "shift_camera", "zoom". - Define the `learning_goal` and `visual_metaphor` for the scene.
 - Define `visual_intent` explaining what the visualization is trying to show.
-- Use `component_data` to pass specific semantic data to the component.
+- Use `component_data` to pass specific semantic data to the component (legacy).
+- EVOLVING STATE: To create continuous animations instead of slideshows, prefer using `component_id`, `visual_state` and `transition` instead of `component_data` where possible.
+- COMPONENT_ID: Use `component_id` (e.g., "graph_main", "atom_left") to uniquely identify a component across scenes. This prevents recreating the diagram from scratch.
+- VISUAL_STATE: Use `visual_state` to declaratively describe the exact state of the component (e.g. `{{"electrons": 50, "show_cloud": true}}`).
+- TRANSITION: Use `transition: {{"type": "morph"}}` (or "replace", "reset", "reuse", "parallel") when a scene evolves a previous diagram with the same `component_id`.
+- CRITICAL ANIMATION RULE: NEVER generate raw Manim animation class names like `ReplacementTransform` or `FadeOut`. The Engine handles this. Only describe declarative states in `visual_state`.
 
-RULE: component_data must always describe WHAT TO SHOW visually.
+RULE: visual_state (or component_data) must always describe WHAT TO SHOW visually.
 For concepts involving microscopic interactions, particle-based visualizations are preferred.
 For components like NetworkDiagram:
   layers = list of lists of node names (ALWAYS 2D array)
@@ -52,6 +55,9 @@ For physics or chemistry components like MoleculeDiagram, ForceVectorDiagram:
   Use semantic properties fitting the diagram, e.g. 'molecules', 'forces', 'system_type'.
 
 - PRESERVE the duration from the storyboard.
+
+CRITICAL REQUIREMENT for `components`:
+The `components` array MUST ONLY contain strings (the names of the components). Do NOT put dictionaries or objects inside the `components` array. Pass any properties or parameters in the `component_data` object instead.
 
 Output your response as valid JSON with this exact format:
 {{
@@ -68,9 +74,15 @@ Output your response as valid JSON with this exact format:
             "components": [
                 "{suggested_component or 'HierarchyDiagram'}"
             ],
-            "component_data": {{
+            "component_id": "hierarchy_main",
+            "component_data": {{}},
+            "visual_state": {{
                 "root_label": "50",
-                "children_labels": ["30", "70"]
+                "children_labels": ["30", "70"],
+                "highlighted_node": "30"
+            }},
+            "transition": {{
+                "type": "morph"
             }},
             "animation_sequence": [
                 {{"action": "intro"}},

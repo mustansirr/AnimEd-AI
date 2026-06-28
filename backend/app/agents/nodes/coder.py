@@ -1,3 +1,4 @@
+from typing import Any
 """
 Manim Generator Agent Node (formerly Coder).
 Generates Manim code deterministically from Semantic Scene Specs.
@@ -24,14 +25,18 @@ def get_components_lib() -> str:
     try:
         blueprints_path = Path(__file__).parent.parent.parent / "sandbox" / "blueprints.py"
         comp_path = Path(__file__).parent.parent.parent / "sandbox" / "components.py"
+        trans_path = Path(__file__).parent.parent.parent / "sandbox" / "transition_engine.py"
         
         with open(blueprints_path, "r", encoding="utf-8") as f:
             blueprints = f.read()
         with open(comp_path, "r", encoding="utf-8") as f:
             components = f.read()
+        with open(trans_path, "r", encoding="utf-8") as f:
+            transition_engine = f.read()
             
+        components = components.replace("from app.sandbox.blueprints import STEM_BLUEPRINTS", "")
         components = components.replace("from blueprints import STEM_BLUEPRINTS", "")
-        return blueprints + "\n\n" + components
+        return blueprints + "\n\n" + components + "\n\n" + transition_engine
     except Exception as e:
         logger.error(f"Failed to load components.py: {e}")
         return ""
@@ -50,7 +55,7 @@ class EducationalBackground(VGroup):
         self.add(grid)
 """
 
-from app.sandbox.shared_animation_registry import COMPONENT_REGISTRY, COMPONENT_ALIASES
+from app.sandbox.shared_animation_registry import COMPONENT_REGISTRY, COMPONENT_ALIASES, SUPPORTED_COMPONENTS
 
 def generate_animation_code(anim_info, comp_var: str, comp_name: str = "") -> str:
     """Map semantic animation intent to deterministic Manim code."""
@@ -138,17 +143,36 @@ def generate_animation_code(anim_info, comp_var: str, comp_name: str = "") -> st
         return safe_anim("get_intro_animations", "FadeIn")
     return mapping[anim_name]
 
-def build_deterministic_scene(scene_spec: dict, prev_scene_spec: dict = None) -> str:
+def build_deterministic_scene(scene_spec: Any, prev_scene_spec: Any = None) -> str:
+    if hasattr(scene_spec, 'model_dump'): scene_spec = scene_spec.model_dump()
+    if hasattr(prev_scene_spec, 'model_dump'): prev_scene_spec = prev_scene_spec.model_dump()
     components_lib = get_components_lib()
     
     # Explicit naming alias intercept
     comp_names = scene_spec.get("components", [])
     if comp_names:
-        legacy_alias_map = {
-            "TreeDiagram": "HierarchyDiagram",
-            "LinkedListDiagram": "NetworkDiagram"
-        }
-        scene_spec["components"] = [legacy_alias_map.get(c, c) for c in comp_names]
+        normalized_components = []
+        merged_component_data = dict(scene_spec.get("component_data", {}) or {})
+        
+        for c in comp_names:
+            if isinstance(c, dict):
+                logger.warning(f"LLM generated a dict instead of string for component: {c}. Normalizing...")
+                name_str = c.get("name") or c.get("type") or "SummaryDiagram"
+                
+                props = c.get("props") or c.get("parameters") or c
+                # Safely merge: only add missing keys or overwrite None values
+                for k, v in props.items():
+                    if k not in ("name", "type") and v is not None:
+                        if k not in merged_component_data or merged_component_data[k] is None:
+                            merged_component_data[k] = v
+                            
+                normalized_components.append(COMPONENT_ALIASES.get(name_str, name_str))
+            else:
+                normalized_components.append(COMPONENT_ALIASES.get(c, c))
+                
+        scene_spec["components"] = normalized_components
+        scene_spec["component_data"] = merged_component_data
+        comp_names = scene_spec["components"]
         
     learning_goal = scene_spec.get("learning_goal", "")
     from app.sandbox.stem_blueprint_dataset import STEM_BLUEPRINT_REGISTRY
@@ -203,96 +227,86 @@ def build_deterministic_scene(scene_spec: dict, prev_scene_spec: dict = None) ->
     if layout.get("title") == "TitleZone":
         code.append(f"        title_card = TitleCard({repr(scene_spec.get('title'))}, {repr(scene_spec.get('caption'))})")
         
+    code.append("        component_registry = {}")
+    
     comp_names = scene_spec.get("components", [])
     if comp_names:
         comp_name = comp_names[0]
-        comp_data = scene_spec.get("component_data", {})
-        visual_intent = scene_spec.get("visual_intent", "")
-        # Provide a default empty dict if None
-        if comp_data is None:
-            comp_data = {}
-            
-        logger.info(f"Coder Instantiating Component: {comp_name} with data: {comp_data}")
+        comp_id = scene_spec.get("component_id", "main")
         
-        # END-TO-END VERIFICATION LOG
-        logger.info(f"Coder Component: {comp_name}")
-        
-        # Pass learning_goal to all components as a fallback
-        if "learning_goal" not in comp_data:
-            comp_data["learning_goal"] = scene_spec.get("learning_goal", "Understand the concept")
+        # Prefer visual_state, fallback to component_data
+        curr_state = scene_spec.get("visual_state")
+        if curr_state is None:
+            curr_state = scene_spec.get("component_data", {})
             
-        kwargs_str = ", ".join(f"{k}={repr(v)}" for k, v in comp_data.items())
+        logger.info(f"Coder Component: {comp_name}, ID: {comp_id}, State: {curr_state}")
         
-        if comp_name == "GraphPlot":
-            code.append(f"        main_comp = GraphPlot({kwargs_str})")
-        elif comp_name == "FlowChart":
-            code.append(f"        main_comp = FlowChart({kwargs_str})")
-        elif comp_name == "HierarchyDiagram":
-            code.append(f"        main_comp = HierarchyDiagram({kwargs_str})")
-        elif comp_name == "NetworkDiagram":
-            code.append(f"        main_comp = NetworkDiagram({kwargs_str})")
-        elif comp_name == "TimelineDiagram":
-            code.append(f"        main_comp = TimelineDiagram({kwargs_str})")
-        elif comp_name == "ArrayDiagram":
-            code.append(f"        main_comp = ArrayDiagram({kwargs_str})")
-        elif comp_name == "SummaryDiagram":
-            code.append(f"        main_comp = SummaryDiagram({kwargs_str})")
-        elif comp_name == "NumberLineDiagram":
-            code.append(f"        main_comp = NumberLineDiagram({kwargs_str})")
-        elif comp_name == "FunctionPlot":
-            code.append(f"        main_comp = FunctionPlot({kwargs_str})")
-        elif comp_name == "VectorArrow":
-            code.append(f"        main_comp = VectorArrow({kwargs_str})")
-        elif comp_name == "MatrixDisplay":
-            code.append(f"        main_comp = MatrixDisplay({kwargs_str})")
-        elif comp_name == "GeometryDiagram":
-            code.append(f"        main_comp = GeometryDiagram({kwargs_str})")
-        elif comp_name == "BarChartDiagram":
-            code.append(f"        main_comp = BarChartDiagram({kwargs_str})")
-        elif comp_name == "BinarySearchDiagram":
-            code.append(f"        main_comp = BinarySearchDiagram({kwargs_str})")
-        elif comp_name == "GradientDescentPlot":
-            code.append(f"        main_comp = GradientDescentPlot({kwargs_str})")
-        elif comp_name == "SurfaceTensionDiagram":
-            code.append(f"        main_comp = SurfaceTensionDiagram({kwargs_str})")
-        elif comp_name == "NeuralNetworkDiagram":
-            code.append(f"        main_comp = NeuralNetworkDiagram({kwargs_str})")
-        else:
-            raise ValueError(f"Unsupported component: '{comp_name}'. Must be one of {list(SUPPORTED_COMPONENTS)}")
+        if "learning_goal" not in curr_state:
+            curr_state["learning_goal"] = scene_spec.get("learning_goal", "Understand the concept")
             
-    code.append("        zones = LayoutZones.arrange_zones(title_zone=title_card, visualization_zone=main_comp)")
-    
-    if prev_scene_spec:
-        prev_comp_names = prev_scene_spec.get("components", [])
-        prev_comp_name = prev_comp_names[0] if prev_comp_names else "SummaryDiagram"
-        prev_comp_name = COMPONENT_ALIASES.get(prev_comp_name, prev_comp_name)
-        if prev_comp_name in COMPONENT_REGISTRY:
-            prev_impl_class_name = COMPONENT_REGISTRY[prev_comp_name]
-            prev_comp_data = prev_scene_spec.get("component_data", {})
-            if prev_comp_data is None: prev_comp_data = {}
-            if "learning_goal" not in prev_comp_data:
-                prev_comp_data["learning_goal"] = prev_scene_spec.get("learning_goal", "Understand the concept")
-            prev_kwargs_str = ", ".join(f"{k}={repr(v)}" for k, v in prev_comp_data.items())
-            code.append(f"        prev_comp = {prev_impl_class_name}({prev_kwargs_str})")
+        impl_class = COMPONENT_REGISTRY.get(comp_name, comp_name)
+        transition = scene_spec.get("transition")
+        
+        # If we have a transition and a previous scene, we reconstruct the old state and transition it
+        if transition and prev_scene_spec:
+            prev_comp_names = prev_scene_spec.get("components", [])
+            prev_comp_name = prev_comp_names[0] if prev_comp_names else "SummaryDiagram"
+            prev_impl_class = COMPONENT_REGISTRY.get(prev_comp_name, prev_comp_name)
+            
+            prev_state = prev_scene_spec.get("visual_state")
+            if prev_state is None:
+                prev_state = prev_scene_spec.get("component_data", {})
+                
+            if "learning_goal" not in prev_state:
+                prev_state["learning_goal"] = prev_scene_spec.get("learning_goal", "Understand the concept")
+                
+            prev_kwargs = ", ".join(f"{k}={repr(v)}" for k, v in prev_state.items())
+            curr_kwargs = ", ".join(f"{k}={repr(v)}" for k, v in curr_state.items())
+            
+            strategy = transition.get("type", "morph")
+            
+            code.append(f"        # Reconstruct previous state for {comp_id}")
+            code.append(f"        prev_comp = {prev_impl_class}({prev_kwargs})")
             code.append("        LayoutZones.arrange_zones(visualization_zone=prev_comp)")
             code.append("        self.add(prev_comp)")
+            code.append(f"        component_registry[{repr(comp_id)}] = {{'instance': prev_comp, 'state': {repr(prev_state)}}}")
+            
+            code.append("        if title_card: self.play(FadeIn(title_card))")
+            
+            code.append(f"        # Transition to new state using TransitionEngine")
+            code.append(f"        trans_result = TransitionEngine.transition(")
+            code.append(f"            component_registry[{repr(comp_id)}]['instance'],")
+            code.append(f"            component_registry[{repr(comp_id)}]['state'],")
+            code.append(f"            {repr(curr_state)},")
+            code.append(f"            strategy={repr(strategy)}")
+            code.append(f"        )")
+            code.append("        if trans_result.animations:")
+            code.append("            self.play(*trans_result.animations)")
+            code.append(f"        component_registry[{repr(comp_id)}]['state'] = trans_result.new_state")
+            code.append(f"        main_comp = component_registry[{repr(comp_id)}]['instance']")
+            code.append("        LayoutZones.arrange_zones(title_zone=title_card, visualization_zone=main_comp)")
+            
+        else:
+            # No transition, just instantiate directly
+            curr_kwargs = ", ".join(f"{k}={repr(v)}" for k, v in curr_state.items())
+            code.append(f"        main_comp = {impl_class}({curr_kwargs})")
+            code.append(f"        component_registry[{repr(comp_id)}] = {{'instance': main_comp, 'state': {repr(curr_state)}}}")
+            code.append("        LayoutZones.arrange_zones(title_zone=title_card, visualization_zone=main_comp)")
+            code.append("        if title_card: self.play(FadeIn(title_card))")
+            code.append("        self.play(FadeIn(main_comp))")
     
     total_duration = max(5, scene_spec.get('duration', 5))
+    animations = scene_spec.get('animation_sequence', [])
     # Distribute wait time across animations
     wait_per_anim = max(1.0, total_duration / max(1, len(animations)))
     
-    code.append("        if title_card: self.play(FadeIn(title_card))")
-    
-    revealing_anims = {"show_diagram", "fade_in_array", "fade_in_flowchart", "fade_in_summary_diagram", "grow_tree", "draw_axes"}
-    if animations and animations[0] not in revealing_anims:
-        code.append("        self.play(FadeIn(main_comp))")
-        
     estimated_anim_time = 0
     for anim in animations:
         anim_code = generate_animation_code(anim, "main_comp")
         code.append(f"        {anim_code}")
         code.append(f"        self.wait({wait_per_anim})")
         
+    code.append("        zones = VGroup(*[m for m in [title_card, main_comp] if m is not None])")
     code.append("        self.play(FadeOut(zones))")
     
     final_code = "\n".join(code)
@@ -353,11 +367,10 @@ async def generate_code(state: AgentState) -> dict:
         logger.info("--- EXITING CODER NODE ---")
         return {
             "generated_codes": generated_codes,
-            "current_scene_index": scene_index + 1,
-            "last_render_error": None,
+            "last_render_error": None
         }
 
     except Exception as e:
-        logger.error(f"Failed to build deterministic scene: {e}")
+        logger.exception(f"Failed to build deterministic scene: {e}")
         logger.info("--- EXITING CODER NODE (ERROR) ---")
         raise e

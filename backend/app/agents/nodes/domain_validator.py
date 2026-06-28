@@ -1,3 +1,4 @@
+from typing import Any
 """
 Domain Validator Node.
 
@@ -29,7 +30,7 @@ def _validate_coordinate_plot(components: list) -> list[str]:
         errors.append("Coordinate plot requires a GraphPlot component.")
     return errors
 
-def _validate_domain_logic(scene: dict, strategy: str) -> list[str]:
+def _validate_domain_logic(scene: Any, strategy: str) -> list[str]:
     components = scene.get("components", [])
     
     if strategy == "hierarchical_structure":
@@ -41,7 +42,7 @@ def _validate_domain_logic(scene: dict, strategy: str) -> list[str]:
         
     return []
 
-def _validate_physical_phenomenon(scene: dict, topic: str, learning_goal: str) -> list[str]:
+def _validate_physical_phenomenon(scene: Any, topic: str, learning_goal: str) -> list[str]:
     errors = []
     text_to_check = (topic + " " + learning_goal).lower()
     
@@ -58,8 +59,8 @@ def _validate_physical_phenomenon(scene: dict, topic: str, learning_goal: str) -
 async def validate_domain(state: AgentState) -> dict:
     logger.info("--- ENTERING DOMAIN_VALIDATOR NODE ---")
     scene_jsons = state.get("scene_jsons", [])
-    strategy = state.get("visualization_strategy", "generic_concept")
-    topic = state.get("video_title", "")
+    strategy = str(state.get("visualization_strategy", "generic_concept"))
+    topic = str(state.get("video_title", ""))
     
     if not scene_jsons:
         logger.info("--- EXITING DOMAIN_VALIDATOR NODE ---")

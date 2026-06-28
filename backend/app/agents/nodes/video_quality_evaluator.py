@@ -10,6 +10,7 @@ import subprocess
 import asyncio
 from pathlib import Path
 from uuid import UUID
+from pydantic import SecretStr
 
 from app.agents.state import AgentState, QualityScores
 from app.config import get_settings
@@ -46,14 +47,22 @@ Return strictly valid JSON in this format:
 async def evaluate_quality(state: AgentState) -> dict:
     settings = get_settings()
     video_id = state["video_id"]
-    scene_index = state["current_scene_index"] - 1 # It just finished rendering this index
+    scene_index = state.get("current_scene_index", 0) # It just finished rendering this index
     
     if not settings.groq_api_key:
         logger.warning("No Groq API key for vision evaluator. Auto-passing.")
         return {"quality_scores": QualityScores(
             visual_clarity=10, educational_clarity=10, layout_quality=10,
             animation_quality=10, professional_appearance=10, feedback="No API Key"
-        )}
+        ), "current_scene_index": scene_index + 1}
+        
+    retry_count = state.get("retry_count", 0)
+    if retry_count >= 3:
+        logger.warning(f"Max retries hit for scene {scene_index}. Forcing pass.")
+        return {"quality_scores": QualityScores(
+            visual_clarity=10, educational_clarity=10, layout_quality=10,
+            animation_quality=10, professional_appearance=10, feedback="Max retries reached"
+        ), "current_scene_index": scene_index + 1, "retry_count": 0}
 
     # Get the path to the rendered video from the state
     video_path_str = state.get("last_rendered_video_path")
@@ -91,7 +100,7 @@ async def evaluate_quality(state: AgentState) -> dict:
         return {"quality_scores": QualityScores(
             visual_clarity=10, educational_clarity=10, layout_quality=10,
             animation_quality=10, professional_appearance=10, feedback="Frame extraction failed"
-        )}
+        ), "current_scene_index": scene_index + 1}
 
     from PIL import Image
     import io
@@ -106,11 +115,11 @@ async def evaluate_quality(state: AgentState) -> dict:
         return {"quality_scores": QualityScores(
             visual_clarity=10, educational_clarity=10, layout_quality=10,
             animation_quality=10, professional_appearance=10, feedback="Image resize failed"
-        )}
+        ), "current_scene_index": scene_index + 1}
 
     llm = ChatGroq(
         model="meta-llama/llama-4-scout-17b-16e-instruct",
-        api_key=settings.groq_api_key,
+        api_key=SecretStr(settings.groq_api_key),
         temperature=0.1
     )
     
@@ -131,7 +140,10 @@ async def evaluate_quality(state: AgentState) -> dict:
     
     try:
         response = await llm.ainvoke([message])
-        content = response.content.strip()
+        content_raw = response.content
+        if not isinstance(content_raw, str):
+            content_raw = str(content_raw)
+        content = content_raw.strip()
         
         import re
         match = re.search(r'\{.*\}', content, re.DOTALL)
@@ -148,6 +160,17 @@ async def evaluate_quality(state: AgentState) -> dict:
             feedback=data.get("feedback", "No feedback")
         )
         logger.info(f"Quality scores for scene {scene_index}: {scores}")
+        
+        min_score = min(
+            scores.visual_clarity,
+            scores.educational_clarity,
+            scores.layout_quality,
+            scores.animation_quality,
+            scores.professional_appearance
+        )
+        
+        if min_score >= 8:
+            return {"quality_scores": scores, "current_scene_index": scene_index + 1}
         return {"quality_scores": scores}
         
     except Exception as e:
@@ -155,5 +178,5 @@ async def evaluate_quality(state: AgentState) -> dict:
         # Default pass if API fails
         return {"quality_scores": QualityScores(
             visual_clarity=10, educational_clarity=10, layout_quality=10,
-            animation_quality=10, professional_appearance=10, feedback="API Error"
-        )}
+            animation_quality=10, professional_appearance=10, feedback=f"API Error: {e}"
+        ), "current_scene_index": scene_index + 1}

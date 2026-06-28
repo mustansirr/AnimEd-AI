@@ -38,8 +38,8 @@ async def write_storyboard(state: AgentState) -> dict:
         return {"storyboards": []}
 
     llm = create_llm("scripter", temperature=0.7)
-    viz_strategy = state.get("visualization_strategy", "generic_concept")
-    metaphor = state.get("visual_metaphor", "A clear educational explanation")
+    viz_strategy = state.get("visualization_strategy") or "generic_concept"
+    metaphor = state.get("visual_metaphor") or "A clear educational explanation"
     
     prompt = create_storyboard_prompt(
         scene_plans=scene_plans,

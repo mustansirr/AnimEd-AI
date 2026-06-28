@@ -43,8 +43,8 @@ Return strictly valid JSON in this format:
 async def validate_diagram(state: AgentState) -> dict:
     settings = get_settings()
     video_id = state["video_id"]
-    scene_index = state["current_scene_index"] - 1
-    category = state.get("concept_category", "other")
+    scene_index = state.get("current_scene_index", 0)
+    category = state.get("concept_topic") or state.get("visualization_strategy", "other")
     topic = state.get("concept_topic", "Unknown")
     
     if not settings.groq_api_key:
@@ -91,9 +91,10 @@ async def validate_diagram(state: AgentState) -> dict:
         logger.error(f"Image resize failed: {e}")
         return {"last_render_error": None}
 
+    from pydantic import SecretStr
     llm = ChatGroq(
         model="meta-llama/llama-4-scout-17b-16e-instruct",
-        api_key=settings.groq_api_key,
+        api_key=SecretStr(settings.groq_api_key),
         temperature=0.1
     )
 
@@ -105,7 +106,7 @@ async def validate_diagram(state: AgentState) -> dict:
         if reqs:
             required_elements_str = "\n".join([f"✓ {r}" for r in reqs])
 
-    formatted_prompt = DIAGRAM_VALIDATOR_PROMPT.replace("{category}", category).replace("{topic}", topic).replace("{required_elements}", required_elements_str)
+    formatted_prompt = DIAGRAM_VALIDATOR_PROMPT.replace("{category}", str(category)).replace("{topic}", str(topic)).replace("{required_elements}", required_elements_str)
 
     message = HumanMessage(
         content=[
@@ -116,7 +117,7 @@ async def validate_diagram(state: AgentState) -> dict:
     
     try:
         response = await llm.ainvoke([message])
-        content = response.content.strip()
+        content = str(response.content).strip()
         
         import re
         match = re.search(r'\{.*\}', content, re.DOTALL)

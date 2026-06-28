@@ -772,7 +772,3 @@ def validate_blueprints_against_registry():
             if comp not in COMPONENT_REGISTRY:
                 raise ValueError(f"Startup Validation Error: Blueprint '{bp.topic}' uses unknown supporting_component: '{comp}'")
 
-# Run all startup validations
-validate_blueprints_against_registry()
-from app.sandbox.shared_animation_registry import validate_component_implementations
-validate_component_implementations()

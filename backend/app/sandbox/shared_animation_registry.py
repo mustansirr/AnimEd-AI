@@ -88,6 +88,7 @@ SUPPORTED_COMPONENTS = {
     # Computer Science
     "ArrayDiagram",
     "TreeDiagram",
+    "HierarchyDiagram",
     "GraphDiagram",
     "NetworkDiagram",
     "NeuralNetworkDiagram",
@@ -121,6 +122,7 @@ SUPPORTED_COMPONENTS = {
     "TimelineDiagram",
     "SummaryDiagram",
     "TitleCard",
+    "ImageLabelCard",
 }
 
 # ---------------------------------------------------------------------------

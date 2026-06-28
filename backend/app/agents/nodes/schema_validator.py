@@ -1,3 +1,4 @@
+from typing import Any
 """
 Schema Validator Node.
 
@@ -16,7 +17,7 @@ from app.services.supabase_client import update_video_status
 
 logger = logging.getLogger(__name__)
 
-def _validate_scene_schema(scene: dict) -> list[str]:
+def _validate_scene_schema(scene: Any) -> list[str]:
     errors = []
     
     # Check for v2 schema version marker if we enforced one, but here we just check fields.

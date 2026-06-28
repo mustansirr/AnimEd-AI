@@ -193,7 +193,6 @@ async def execute_and_check(state: AgentState) -> AgentState:
 
         return {
             **state,
-            "current_scene_index": scene_index + 1 if not all_done else scene_index,
             "all_scenes_done": all_done,
             "last_render_error": None,
             "last_rendered_video_path": result["video_path"],
