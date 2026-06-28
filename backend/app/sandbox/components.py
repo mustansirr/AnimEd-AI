@@ -32,7 +32,7 @@ def filter_manim_kwargs(kwargs):
     manim_keys = {"color", "fill_opacity", "stroke_width", "stroke_color", "fill_color", "z_index", "opacity"}
     return {k: v for k, v in kwargs.items() if k in manim_keys}
 
-from blueprints import STEM_BLUEPRINTS
+from app.sandbox.blueprints import STEM_BLUEPRINTS
 
 class GlobalTransitionEngine:
     """
