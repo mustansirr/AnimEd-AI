@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Library, LayoutDashboard, Brain, PenTool } from "lucide-react";
+import { Library, LayoutDashboard, Brain, PenTool, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Sidebar({ className }: { className?: string }) {
@@ -83,6 +83,20 @@ export function Sidebar({ className }: { className?: string }) {
               >
                 <PenTool className="mr-2 h-4 w-4" />
                 Quizzes
+              </Button>
+            </Link>
+            <Link href="/pomodoro">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start font-medium transition-colors",
+                  pathname === "/pomodoro" || pathname.startsWith("/pomodoro/")
+                    ? "bg-slate-200/80 dark:bg-muted hover:bg-slate-300/80 dark:hover:bg-muted/80 text-slate-900 dark:text-foreground" 
+                    : "text-slate-600 dark:text-muted-foreground hover:bg-slate-200/60 dark:hover:bg-muted/50 hover:text-slate-900 dark:hover:text-foreground"
+                )}
+              >
+                <Timer className="mr-2 h-4 w-4" />
+                Pomodoro
               </Button>
             </Link>
           </div>
