@@ -11,7 +11,7 @@ Lookup order for each role:
 """
 
 import logging
-from typing import Literal
+from typing import Literal, Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 AgentRole = Literal["planner", "scripter", "coder", "reflector"]
 
 
-def create_llm(role: AgentRole, temperature: float = 0.7) -> BaseChatModel:
+def create_llm(role: AgentRole, temperature: float = 0.7) -> Any:
     """
     Create an LLM instance for the given agent role.
 
@@ -111,10 +111,12 @@ def _create_groq_llm(
                     time.sleep(5)
                 raise e
 
+    from pydantic import SecretStr
+
     return RateLimitedChatGroq(
         model=model,
         temperature=temperature,
-        api_key=api_key,
+        api_key=SecretStr(api_key),
         max_tokens=2048,
     )
 
@@ -130,11 +132,12 @@ def _create_openrouter_llm(
         )
 
     from langchain_openai import ChatOpenAI
+    from pydantic import SecretStr
 
     return ChatOpenAI(
         model=model,
         temperature=temperature,
-        api_key=api_key,
+        api_key=SecretStr(api_key),
         base_url="https://openrouter.ai/api/v1",
-        max_tokens=8192,
+        max_completion_tokens=8192,
     )

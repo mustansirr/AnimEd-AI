@@ -35,8 +35,7 @@ Requirements:
 - ACTIVE VARIABLE MORPHING: When equations update, use `ReplacementTransform` or `TransformMatchingTex` conceptually instead of deleting and recreating equations.
 - STRICT DATA STRUCTURES RULE: DO NOT use 'TreeDiagram'. It has been deprecated. If mapping a chained or loop structure like a Linked List or Circular Linked List, you MUST use 'NetworkDiagram' and define the links using layer structures. For hierarchical data, use 'HierarchyDiagram'.
 - STRICT ANIMATION ALLOWLIST: You must use ONLY these specific component animation templates: ["intro", "highlight", "transform", "explain", "focus", "morph", "shift_camera"]. Do NOT use generic fade_in or uncreate.
-- SEMANTIC MORPHING DIRECTIVES: When transitioning scenes, do not use hard cuts. You must output scene transitions using abstract relational actions like `transition_type`: "morph", "transform", or `camera_action`: "shift_camera", "zoom". 
-- Define the `learning_goal` and `visual_metaphor` for the scene.
+- SEMANTIC MORPHING DIRECTIVES: When transitioning scenes, do not use hard cuts. You must output scene transitions using abstract relational actions like `transition_type`: "morph", "transform", or `camera_action`: "shift_camera", "zoom". - Define the `learning_goal` and `visual_metaphor` for the scene.
 - Define `visual_intent` explaining what the visualization is trying to show.
 - Use `component_data` to pass specific semantic data to the component.
 
@@ -74,8 +73,8 @@ Output your response as valid JSON with this exact format:
                 "children_labels": ["30", "70"]
             }},
             "animation_sequence": [
-                "intro",
-                "highlight"
+                {{"action": "intro"}},
+                {{"action": "highlight", "target": "root_node"}}
             ],
             "duration": 10
         }}

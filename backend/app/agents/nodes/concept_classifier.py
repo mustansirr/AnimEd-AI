@@ -10,6 +10,7 @@ from app.agents.prompts.classifier_prompts import (
     create_classifier_prompt,
 )
 from app.sandbox.visual_metaphors import get_visual_metaphor
+from app.sandbox.shared_animation_registry import CONCEPT_TO_COMPONENT
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,6 @@ CONCEPT_TO_COMPONENT = {
     "engineering_civil": "NetworkDiagram",
     "engineering_mechanical": "NetworkDiagram",
 }
-
 async def classify_concept(state: AgentState) -> dict:
     """
     Classifies the user's topic into a predefined STEM category.

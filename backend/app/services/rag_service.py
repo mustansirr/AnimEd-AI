@@ -10,7 +10,7 @@ Embedding strategy:
 - Production: Calls the Supabase Edge Function (gte-small model).
 """
 
-from typing import List, Optional
+from typing import List, Optional, Any
 from uuid import UUID
 import io
 import logging
@@ -176,7 +176,7 @@ def _is_local_supabase() -> bool:
     return "localhost" in url or "127.0.0.1" in url
 
 
-def _get_local_model():
+def _get_local_model() -> Any:
     """
     Get or initialize the local fastembed model.
 
@@ -430,12 +430,13 @@ async def retrieve_context(
         }
     ).execute()
 
-    if not result.data:
+    data = result.data
+    if not isinstance(data, list):
         return ""
 
     # Concatenate chunks with similarity scores as context
     context_parts = []
-    for chunk in result.data:
+    for chunk in data:
         similarity = chunk.get("similarity", 0)
         content = chunk.get("content", "")
         context_parts.append(f"[Relevance: {similarity:.2f}]\n{content}")

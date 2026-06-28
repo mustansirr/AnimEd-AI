@@ -20,87 +20,19 @@ class VisualGrammar:
     title_zone_reserved = True
     subtitle_zone_reserved = True
     colors = {
-        "primary": YELLOW,
-        "secondary": BLUE,
-        "accent": GREEN,
-        "background": "#0F0F0F",
-        "text": WHITE
+        "primary": "#38BDF8",     # Sky Blue
+        "secondary": "#A78BFA",   # Purple
+        "accent": "#FBBF24",      # Amber
+        "background": "#0F172A",  # Dark Navy
+        "text": "#F8FAFC",        # Warm White
+        "muted": "#475569"        # Slate 600
     }
 
 def filter_manim_kwargs(kwargs):
     manim_keys = {"color", "fill_opacity", "stroke_width", "stroke_color", "fill_color", "z_index", "opacity"}
     return {k: v for k, v in kwargs.items() if k in manim_keys}
 
-STEM_BLUEPRINTS = {
-    "mathematics_theorem_law": {
-        "components": ["RightTriangleDiagram"],
-        "required_visual_elements": ["shape", "equation_label", "angle_markers"],
-        "use_mathtex": True
-    },
-    "mathematics_area_proof": {
-        "components": ["AreaProofDiagram"],
-        "required_visual_elements": ["geometric_shape", "area_subdivisions", "area_formula"],
-        "use_mathtex": True
-    },
-    "chemistry_molecule": {
-        "components": ["MoleculeDiagram"],
-        "required_visual_elements": ["atoms", "bonds"],
-        "use_mathtex": False,
-        "disable_axes": True
-    },
-    "physics_particle": {
-        "components": ["ParticleDiagram"],
-        "required_visual_elements": ["particles", "interaction_vectors"],
-        "use_mathtex": False,
-        "disable_axes": True
-    },
-    "physics_forces_multiple": {
-        "components": ["ForceVectorDiagram"],
-        "required_visual_elements": ["center_mass", "force_vectors", "vector_labels"],
-        "use_mathtex": True
-    },
-    "physics_surface_tension": {
-        "components": ["MoleculeDiagram", "ForceVectorDiagram", "LiquidSurfaceDiagram"],
-        "required_visual_elements": ["water_surface", "bulk_molecules", "surface_molecules", "force_vectors"],
-        "use_mathtex": False,
-        "disable_axes": True
-    },
-    "computer_science_graph": {
-        "components": ["GraphDiagram"],
-        "required_visual_elements": ["nodes", "edges", "labels"],
-        "use_mathtex": False
-    },
-    "computer_science_tree": {
-        "components": ["TreeDiagram"],
-        "required_visual_elements": ["root", "children", "hierarchy_edges"],
-        "use_mathtex": False
-    },
-    "mathematics_coordinate_geometry": {
-        "components": ["CoordinateGeometryDiagram"],
-        "required_visual_elements": ["axes", "points", "line_or_shape"],
-        "use_mathtex": True
-    },
-    "physics_electric_field": {
-        "components": ["ElectricFieldDiagram"],
-        "required_visual_elements": ["charges", "field_lines", "force_vectors"],
-        "use_mathtex": True
-    },
-    "physics_wave": {
-        "components": ["WaveDiagram"],
-        "required_visual_elements": ["axes", "sine_wave", "amplitude_marker", "wavelength_marker"],
-        "use_mathtex": True
-    },
-    "chemistry_atom": {
-        "components": ["AtomDiagram"],
-        "required_visual_elements": ["nucleus", "electron_orbits", "electrons"],
-        "use_mathtex": False
-    },
-    "chemistry_reaction": {
-        "components": ["ReactionDiagram"],
-        "required_visual_elements": ["reactants", "products", "yield_arrow"],
-        "use_mathtex": True
-    }
-}
+from blueprints import STEM_BLUEPRINTS
 
 class GlobalTransitionEngine:
     """
@@ -199,12 +131,44 @@ class SmartText(AnimatableComponent):
 class TitleCard(AnimatableComponent):
     def __init__(self, title_text="Title", subtitle_text=None, **kwargs):
         super().__init__(**filter_manim_kwargs(kwargs))
-        self.title = SmartText(str(title_text)[:50], font_size=48, color=VisualGrammar.colors["primary"])
-        self.add(self.title)
+        
+        self.title = SmartText(str(title_text)[:50], font_size=48, color=VisualGrammar.colors["primary"], weight=BOLD)
+        self.content_group = VGroup(self.title)
+        
         if subtitle_text:
             self.subtitle = SmartText(str(subtitle_text)[:80], font_size=32, color=VisualGrammar.colors["text"])
-            self.add(self.subtitle)
-            self.arrange(DOWN, buff=VisualGrammar.min_spacing)
+            self.content_group.add(self.subtitle)
+            
+        self.content_group.arrange(DOWN, buff=0.4)
+        
+        # Divider line
+        self.divider = Line(LEFT, RIGHT, color=VisualGrammar.colors["accent"]).set_width(self.content_group.width + 1)
+        
+        if subtitle_text:
+            self.title.next_to(self.divider, UP, buff=0.3)
+            self.subtitle.next_to(self.divider, DOWN, buff=0.3)
+            self.content_group = VGroup(self.title, self.divider, self.subtitle)
+        else:
+            self.title.next_to(self.divider, UP, buff=0.3)
+            self.content_group = VGroup(self.title, self.divider)
+
+        # Background card
+        padding = 0.6
+        self.bg_card = RoundedRectangle(
+            corner_radius=0.2, 
+            width=self.content_group.width + padding*2, 
+            height=self.content_group.height + padding*2,
+            color=VisualGrammar.colors["muted"]
+        ).set_fill(VisualGrammar.colors["background"], opacity=0.9).set_stroke(opacity=0.3)
+        
+        self.content_group.move_to(self.bg_card.get_center())
+        self.add(self.bg_card, self.content_group)
+        
+    def get_intro_animations(self):
+        anims = [GrowFromCenter(self.bg_card), Write(self.title), Create(self.divider)]
+        if hasattr(self, 'subtitle'):
+            anims.append(FadeIn(self.subtitle, shift=UP*0.2))
+        return [LaggedStart(*anims, lag_ratio=0.3)]
 
 class FlowChart(AnimatableComponent):
     def __init__(self, steps=None, **kwargs):
@@ -212,16 +176,32 @@ class FlowChart(AnimatableComponent):
         if not steps:
             steps = ["Step 1", "Step 2", "Step 3"]
                 
-        self.nodes = VGroup(*[
-            SmartText(str(step)[:30], font_size=24, color=BLACK).add_background_rectangle(color=VisualGrammar.colors["secondary"], opacity=0.8, buff=0.2)
-            for step in steps[:VisualGrammar.max_objects_per_scene]
-        ])
+        self.nodes = VGroup()
+        for step in steps[:VisualGrammar.max_objects_per_scene]:
+            text = SmartText(str(step)[:30], font_size=24, color=VisualGrammar.colors["text"])
+            rect = RoundedRectangle(
+                corner_radius=0.15,
+                width=text.width + 0.6,
+                height=text.height + 0.4,
+                color=VisualGrammar.colors["primary"]
+            ).set_fill(VisualGrammar.colors["background"], opacity=0.9).set_stroke(width=2)
+            node = VGroup(rect, text)
+            self.nodes.add(node)
+            
         self.nodes.arrange(DOWN, buff=0.8)
         self.edges = VGroup()
         for i in range(len(self.nodes)-1):
-            arrow = Arrow(self.nodes[i].get_bottom(), self.nodes[i+1].get_top(), buff=0.1, color=WHITE)
+            arrow = Arrow(self.nodes[i].get_bottom(), self.nodes[i+1].get_top(), buff=0.1, color=VisualGrammar.colors["accent"])
             self.edges.add(arrow)
         self.add(self.nodes, self.edges)
+
+    def get_intro_animations(self):
+        anims = []
+        for i in range(len(self.nodes)):
+            anims.append(FadeIn(self.nodes[i], shift=UP*0.2))
+            if i < len(self.edges):
+                anims.append(GrowArrow(self.edges[i]))
+        return [LaggedStart(*anims, lag_ratio=0.5)]
 
 class GraphPlot(AnimatableComponent):
     def __init__(self, x_range=[0,10,1], y_range=[0,10,1], function=None, **kwargs):
@@ -235,7 +215,7 @@ class GraphPlot(AnimatableComponent):
             except: return x**2
         self.plot = self.axes.plot(safe_eval, color=VisualGrammar.colors["accent"])
         self.add(self.plot)
-        self.points = VGroup()
+        self.data_points = VGroup()
         self.line = VGroup()
 
 class TreeDiagram(AnimatableComponent):
@@ -246,13 +226,25 @@ class TreeDiagram(AnimatableComponent):
         if not children_labels:
             children_labels = ["Child A", "Child B"]
             
-        self.root = SmartText(str(root_label)[:30], font_size=32, color=BLACK).add_background_rectangle(color=VisualGrammar.colors["primary"])
-        self.children_nodes = VGroup(*[SmartText(str(label)[:20], font_size=24, color=BLACK).add_background_rectangle(color=VisualGrammar.colors["secondary"]) for label in children_labels[:VisualGrammar.max_objects_per_scene]])
-        self.children_nodes.arrange(RIGHT, buff=0.5)
+        def create_node(label_text, color):
+            text = SmartText(str(label_text)[:30], font_size=28, color=VisualGrammar.colors["text"])
+            rect = RoundedRectangle(
+                corner_radius=0.2,
+                width=text.width + 0.6,
+                height=text.height + 0.4,
+                color=color
+            ).set_fill(VisualGrammar.colors["background"], opacity=0.9).set_stroke(width=2)
+            return VGroup(rect, text)
+            
+        self.root = create_node(root_label, VisualGrammar.colors["primary"])
+        self.children_nodes = VGroup(*[create_node(label, VisualGrammar.colors["secondary"]) for label in children_labels[:VisualGrammar.max_objects_per_scene]])
+        
+        self.children_nodes.arrange(RIGHT, buff=0.8)
         self.children_nodes.next_to(self.root, DOWN, buff=1.5)
+        
         self.edges = VGroup()
         for child in self.children_nodes:
-            self.edges.add(Line(self.root.get_bottom(), child.get_top(), color=WHITE))
+            self.edges.add(Line(self.root.get_bottom(), child.get_top(), color=VisualGrammar.colors.get("accent", WHITE)))
             
         # Hide children and edges initially for progressive insertion
         for child in self.children_nodes:
@@ -306,8 +298,8 @@ class NetworkDiagram(AnimatableComponent):
         for layer_nodes in layers:
             col = VGroup()
             for node_name in layer_nodes:
-                circ = Circle(radius=0.4, color=VisualGrammar.colors["primary"], fill_opacity=0.8)
-                label = SmartText(str(node_name)[:10], font_size=20, color=BLACK)
+                circ = Circle(radius=0.4, color=VisualGrammar.colors["primary"]).set_fill(VisualGrammar.colors["primary"], opacity=0.9).set_stroke(width=2, color=VisualGrammar.colors["background"])
+                label = SmartText(str(node_name)[:10], font_size=20, color=VisualGrammar.colors["background"], weight=BOLD)
                 col.add(VGroup(circ, label))
             col.arrange(DOWN, buff=0.5)
             self.layer_groups.add(col)
@@ -329,7 +321,7 @@ class NetworkDiagram(AnimatableComponent):
                         weight = weights_data[i][s_idx][t_idx] if weights_data else random.randint(1, 5)
                     except (IndexError, TypeError):
                         weight = random.randint(1, 5)
-                    self.edges.add(Line(src.get_center(), tgt.get_center(), stroke_width=weight, stroke_opacity=0.4, z_index=-1))
+                    self.edges.add(Line(src.get_center(), tgt.get_center(), stroke_width=weight, stroke_opacity=0.4, color=VisualGrammar.colors.get("muted", WHITE), z_index=-1))
                     
         self.add(self.edges, self.layer_groups)
         
@@ -338,14 +330,21 @@ class NetworkDiagram(AnimatableComponent):
             layer_labels.append(f"Layer {len(layer_labels)+1}")
         layer_labels = layer_labels[:len(layers)]
         
-        labels_group = VGroup()
+        self.labels_group = VGroup()
         for i, lab in enumerate(layer_labels):
             t = SmartText(str(lab), font_size=24, color=VisualGrammar.colors["secondary"]).next_to(self.layer_groups[i], DOWN, buff=0.5)
-            labels_group.add(t)
-        self.add(labels_group)
+            self.labels_group.add(t)
+        self.add(self.labels_group)
             
-        print(f"NetworkDiagram created with layers: {layers}")
-        print(f"Total mobjects: {len(self.submobjects)}")
+    def get_intro_animations(self):
+        anims = []
+        for i, layer in enumerate(self.layer_groups):
+            anims.append(FadeIn(layer, shift=UP*0.2))
+            if i < len(self.layer_groups) - 1:
+                # Add edges to the next layer
+                edges_to_show = VGroup(*[e for e in self.edges if e.get_start()[0] < layer.get_right()[0] + 0.1 and e.get_start()[0] > layer.get_left()[0] - 0.1])
+                # We just create all edges together for simplicity in animation since precise matching is tricky
+        return [LaggedStart(FadeIn(self.layer_groups, shift=UP*0.2), Create(self.edges), FadeIn(self.labels_group), lag_ratio=0.5)]
 
     def get_transformation_animations(self, *args, **kwargs):
         # Pulse data signals physically through connections layer by layer
@@ -383,8 +382,8 @@ class GraphDiagram(AnimatableComponent):
             x = radius * math.cos(angle)
             y = radius * math.sin(angle)
             
-            circ = Circle(radius=0.4, color=VisualGrammar.colors["primary"]).set_fill(VisualGrammar.colors["primary"], opacity=0.8).move_to(RIGHT*x + UP*y)
-            label = SmartText(str(node)[:5], font_size=20, color=BLACK, blueprint_context=blueprint).move_to(circ.get_center())
+            circ = Circle(radius=0.4, color=VisualGrammar.colors["primary"]).set_fill(VisualGrammar.colors["primary"], opacity=0.9).move_to(RIGHT*x + UP*y).set_stroke(width=2, color=VisualGrammar.colors["background"])
+            label = SmartText(str(node)[:5], font_size=24, color=VisualGrammar.colors["background"], weight=BOLD).move_to(circ.get_center())
             node_grp = VGroup(circ, label)
             self.node_mobjects[str(node)] = node_grp
             self.nodes_group.add(node_grp)
@@ -392,13 +391,14 @@ class GraphDiagram(AnimatableComponent):
         self.edges_group = VGroup()
         for src, tgt in edges:
             if str(src) in self.node_mobjects and str(tgt) in self.node_mobjects:
-                line = Line(self.node_mobjects[str(src)].get_center(), self.node_mobjects[str(tgt)].get_center(), stroke_width=2, color=WHITE, z_index=-1)
+                line = Line(self.node_mobjects[str(src)].get_center(), self.node_mobjects[str(tgt)].get_center(), stroke_width=3, color=VisualGrammar.colors["muted"], z_index=-1)
                 self.edges_group.add(line)
                 
         self.add(self.edges_group, self.nodes_group)
 
     def get_intro_animations(self, *args, **kwargs):
-        return [FadeIn(self.nodes_group, scale=0.5), Create(self.edges_group)]
+        anims = [FadeIn(self.nodes_group, shift=UP*0.2), Create(self.edges_group)]
+        return [LaggedStart(*anims, lag_ratio=0.5)]
         
     def get_highlight_animations(self, *args, **kwargs):
         return [Indicate(self.nodes_group)]
@@ -437,28 +437,45 @@ class ArrayDiagram(AnimatableComponent):
         self.cells = VGroup()
         self.labels = VGroup()
         for i, el in enumerate(elements[:12]):
-            color = VisualGrammar.colors["secondary"]
+            color = VisualGrammar.colors["muted"]
             if found_index is not None and i == found_index:
                 color = VisualGrammar.colors["accent"]
             elif highlight_index is not None and i == highlight_index:
                 color = VisualGrammar.colors["primary"]
                 
-            rect = Square(side_length=1.0, color=WHITE).set_fill(color, opacity=0.5)
-            text = SmartText(str(el)[:10], font_size=32, color=BLACK)
-            idx = SmartText(str(i), font_size=20, color=GRAY)
+            rect = RoundedRectangle(corner_radius=0.1, width=1.2, height=1.2, color=color).set_fill(color, opacity=0.8).set_stroke(width=2, color=VisualGrammar.colors["background"])
+            text = SmartText(str(el)[:10], font_size=36, color=VisualGrammar.colors["background"], weight=BOLD)
+            idx = SmartText(str(i), font_size=20, color=VisualGrammar.colors["muted"])
             cell = VGroup(rect, text)
             self.cells.add(cell)
             self.labels.add(idx)
-        self.cells.arrange(RIGHT, buff=0)
+        self.cells.arrange(RIGHT, buff=0.1)
         
         # Re-align indices after arrangement
         for i, cell in enumerate(self.cells):
-            self.labels[i].next_to(cell, DOWN, buff=0.1)
+            self.labels[i].next_to(cell, DOWN, buff=0.2)
             
         self.add(self.cells, self.labels)
         if label:
-            lbl_text = SmartText(str(label), font_size=24, color=WHITE).next_to(self, UP, buff=0.5)
+            lbl_text = SmartText(str(label), font_size=24, color=VisualGrammar.colors["text"]).next_to(self, UP, buff=0.5)
             self.add(lbl_text)
+
+    def get_intro_animations(self):
+        anims = [FadeIn(cell, shift=UP*0.2) for cell in self.cells]
+        label_anims = [FadeIn(label) for label in self.labels]
+        return [LaggedStart(*anims, lag_ratio=0.1), LaggedStart(*label_anims, lag_ratio=0.1)]
+
+    def get_highlight_animations(self, target=None):
+        if target is not None:
+            try:
+                idx = int(target)
+                if 0 <= idx < len(self.cells):
+                    return [Indicate(self.cells[idx], color=VisualGrammar.colors["accent"])]
+            except ValueError:
+                for i, cell in enumerate(self.cells):
+                    if str(target).lower() in cell[1].t.original_text.lower():
+                        return [Indicate(self.cells[i], color=VisualGrammar.colors["accent"])]
+        return [Indicate(self.cells, color=VisualGrammar.colors["accent"])]
 
 class SummaryDiagram(AnimatableComponent):
     def __init__(self, points=None, learning_goal=None, **kwargs):
@@ -509,6 +526,9 @@ class FunctionPlot(AnimatableComponent):
                 
         self.plot = self.axes.plot(safe_eval, color=VisualGrammar.colors["accent"])
         self.add(self.axes, self.plot)
+
+    def get_intro_animations(self, target=None):
+        return [Create(self.axes), Create(self.plot)]
 
 class VectorArrow(AnimatableComponent):
     def __init__(self, **kwargs):
@@ -932,16 +952,16 @@ class CoordinateGeometryDiagram(AnimatableComponent):
     def __init__(self, **kwargs):
         super().__init__(**filter_manim_kwargs(kwargs))
         self.axes = Axes(x_range=[-5, 5, 1], y_range=[-5, 5, 1], x_length=6, y_length=6)
-        self.points = VGroup(Dot(self.axes.coords_to_point(-2, -2), color=RED), Dot(self.axes.coords_to_point(3, 4), color=BLUE))
-        self.line_or_shape = Line(self.points[0].get_center(), self.points[1].get_center(), color=YELLOW)
-        self.add(self.axes, self.points, self.line_or_shape)
+        self.data_points = VGroup(Dot(self.axes.coords_to_point(-2, -2), color=RED), Dot(self.axes.coords_to_point(3, 4), color=BLUE))
+        self.line_or_shape = Line(self.data_points[0].get_center(), self.data_points[1].get_center(), color=YELLOW)
+        self.add(self.axes, self.data_points, self.line_or_shape)
 
     def get_intro_animations(self, *args, **kwargs):
-        return [Create(self.axes), FadeIn(self.points), Create(self.line_or_shape)]
+        return [Create(self.axes), FadeIn(self.data_points), Create(self.line_or_shape)]
     def get_highlight_animations(self, *args, **kwargs):
-        return [Indicate(self.points)]
+        return [Indicate(self.data_points)]
     def get_transformation_animations(self, *args, **kwargs):
-        return [self.points[1].animate.move_to(self.axes.coords_to_point(4, 1)), UpdateFromFunc(self.line_or_shape, lambda l: l.put_start_and_end_on(self.points[0].get_center(), self.points[1].get_center()))]
+        return [self.data_points[1].animate.move_to(self.axes.coords_to_point(4, 1)), UpdateFromFunc(self.line_or_shape, lambda l: l.put_start_and_end_on(self.data_points[0].get_center(), self.data_points[1].get_center()))]
     def get_explanation_animations(self, *args, **kwargs):
         return [Indicate(self.line_or_shape)]
     def get_focus_animations(self, *args, **kwargs):

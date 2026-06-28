@@ -216,7 +216,7 @@ async def get_scenes(video_id: UUID) -> list[SceneResponse]:
         .order("scene_order")
         .execute()
     )
-    return [SceneResponse(**scene) for scene in result.data]
+    return [SceneResponse.model_validate(scene) for scene in result.data]
 
 
 async def duplicate_scenes(source_video_id: UUID, target_video_id: UUID) -> bool:
@@ -272,7 +272,7 @@ async def get_scene(scene_id: UUID) -> Optional[SceneResponse]:
 
     if not result.data:
         return None
-    return SceneResponse(**result.data[0])
+    return SceneResponse.model_validate(result.data[0])
 
 
 async def update_scene_code(scene_id: UUID, manim_code: str) -> bool:

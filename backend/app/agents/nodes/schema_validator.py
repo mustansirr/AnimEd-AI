@@ -33,6 +33,8 @@ def _validate_scene_schema(scene: dict) -> list[str]:
     
     if not isinstance(components, list):
         errors.append("'components' must be a list")
+    elif len(components) == 0:
+        errors.append("'components' must not be empty — every scene needs at least one visualization component")
     if not isinstance(animations, list):
         errors.append("'animation_sequence' must be a list")
         

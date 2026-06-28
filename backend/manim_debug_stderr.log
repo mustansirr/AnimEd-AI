@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 Animation 0: FadeIn(TitleCard of 2 submobjects):   0%|          | 0/15 [00:00<?, ?it/s]
 Animation 0: FadeIn(TitleCard of 2 submobjects):  20%|██        | 3/15 [00:00<00:00, 24.24it/s]
@@ -58,6 +59,18 @@ Animation 3: Wiggle(VGroup of 4 submobjects):  93%|█████████�
 Animation 3: Wiggle(VGroup of 4 submobjects):  97%|█████████▋| 29/30 [00:03<00:00,  9.43it/s]
 Animation 3: Wiggle(VGroup of 4 submobjects): 100%|██████████| 30/30 [00:03<00:00,  9.39it/s]
                                                                                              
+=======
+/usr/local/lib/python3.10/site-packages/click/core.py:1223: UserWarning: The parameter -s is used more than once. Remove its duplicate as parameters should be unique.
+  parser = self.make_parser(ctx)
+/usr/local/lib/python3.10/site-packages/click/core.py:1223: UserWarning: The parameter --save_last_frame is used more than once. Remove its duplicate as parameters should be unique.
+  parser = self.make_parser(ctx)
+/usr/local/lib/python3.10/site-packages/cloup/constraints/_support.py:183: UserWarning: The parameter -s is used more than once. Remove its duplicate as parameters should be unique.
+  args = super().parse_args(ctx, args)  # type: ignore
+/usr/local/lib/python3.10/site-packages/cloup/constraints/_support.py:183: UserWarning: The parameter --save_last_frame is used more than once. Remove its duplicate as parameters should be unique.
+  args = super().parse_args(ctx, args)  # type: ignore
+/render/scene.py:142: DeprecationWarning: This method is not guaranteed to stay around. Please prefer setting the attribute normally or with Mobject.set().
+  self.divider = Line(LEFT, RIGHT, color=VisualGrammar.colors["accent"]).set_width(self.content_group.width + 1)
+>>>>>>> a7fd14e42416616890e87ef226f143234d621116
 ╭───────────────────── Traceback (most recent call last) ──────────────────────╮
 │ /usr/local/lib/python3.10/site-packages/manim/cli/render/commands.py:115 in  │
 │ render                                                                       │
@@ -80,6 +93,7 @@ Animation 3: Wiggle(VGroup of 4 submobjects): 100%|█████████�
 │    225 │   │   │   pass                                                      │
 │    226 │   │   except RerunSceneException as e:                              │
 │                                                                              │
+<<<<<<< HEAD
 │ /render/scene.py:1304 in construct                                           │
 │                                                                              │
 │   1301 │   │   except AttributeError:                                        │
@@ -92,3 +106,103 @@ Animation 3: Wiggle(VGroup of 4 submobjects): 100%|█████████�
 ╰──────────────────────────────────────────────────────────────────────────────╯
 TypeError: SurfaceTensionDiagram.get_transformation_animations() takes 1 
 positional argument but 2 were given
+=======
+│ /render/scene.py:1095 in construct                                           │
+│                                                                              │
+│   1092 │   │                                                                 │
+│   1093 │   │   title_card = TitleCard('Pythagoras Theorem Summary', 'A^2 + B │
+│   1094 │   │   main_comp = CoordinateGeometryDiagram(triangle={'side_a': 3,  │
+│ ❱ 1095 │   │   zones = LayoutZones.arrange_zones(title_zone=title_card, visu │
+│   1096 │   │   if title_card: self.play(FadeIn(title_card))                  │
+│   1097 │   │   anim_method = getattr(main_comp, 'get_intro_animations', None │
+│   1098 │   │   if callable(anim_method): self.play(*anim_method())           │
+│                                                                              │
+│ /render/scene.py:968 in arrange_zones                                        │
+│                                                                              │
+│    965 │   │   │   zones.add(caption)                                        │
+│    966 │   │                                                                 │
+│    967 │   │   if len(zones) > 0:                                            │
+│ ❱  968 │   │   │   zones.arrange(DOWN, buff=0.5)                             │
+│    969 │   │   │   zones.move_to(ORIGIN)                                     │
+│    970 │   │   │                                                             │
+│    971 │   │   │   # Dynamically scale to fit within camera bounds           │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:2255 in     │
+│ arrange                                                                      │
+│                                                                              │
+│   2252 │   │   │   │   │   self.add(x)                                       │
+│   2253 │   │   """                                                           │
+│   2254 │   │   for m1, m2 in zip(self.submobjects, self.submobjects[1:]):    │
+│ ❱ 2255 │   │   │   m2.next_to(m1, direction, buff, **kwargs)                 │
+│   2256 │   │   if center:                                                    │
+│   2257 │   │   │   self.center()                                             │
+│   2258 │   │   return self                                                   │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:1478 in     │
+│ next_to                                                                      │
+│                                                                              │
+│   1475 │   │   │   aligner = self[index_of_submobject_to_align]              │
+│   1476 │   │   else:                                                         │
+│   1477 │   │   │   aligner = self                                            │
+│ ❱ 1478 │   │   point_to_align = aligner.get_critical_point(aligned_edge - di │
+│   1479 │   │   self.shift((target_point - point_to_align + buff * direction) │
+│   1480 │   │   return self                                                   │
+│   1481                                                                       │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:1983 in     │
+│ get_critical_point                                                           │
+│                                                                              │
+│   1980 │   │                                                                 │
+│   1981 │   │   """                                                           │
+│   1982 │   │   result = np.zeros(self.dim)                                   │
+│ ❱ 1983 │   │   all_points = self.get_points_defining_boundary()              │
+│   1984 │   │   if len(all_points) == 0:                                      │
+│   1985 │   │   │   return result                                             │
+│   1986 │   │   for dim in range(self.dim):                                   │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/types/vectorized_mobje │
+│ ct.py:1478 in get_points_defining_boundary                                   │
+│                                                                              │
+│   1475 │   def get_points_defining_boundary(self) -> Point3D_Array:          │
+│   1476 │   │   # Probably returns all anchors, but this is weird regarding   │
+│   1477 │   │   return np.array(                                              │
+│ ❱ 1478 │   │   │   tuple(it.chain(*(sm.get_anchors() for sm in self.get_fami │
+│   1479 │   │   )                                                             │
+│   1480 │                                                                     │
+│   1481 │   def get_arc_length(self, sample_points_per_curve: int | None = No │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/types/vectorized_mobje │
+│ ct.py:1478 in <genexpr>                                                      │
+│                                                                              │
+│   1475 │   def get_points_defining_boundary(self) -> Point3D_Array:          │
+│   1476 │   │   # Probably returns all anchors, but this is weird regarding   │
+│   1477 │   │   return np.array(                                              │
+│ ❱ 1478 │   │   │   tuple(it.chain(*(sm.get_anchors() for sm in self.get_fami │
+│   1479 │   │   )                                                             │
+│   1480 │                                                                     │
+│   1481 │   def get_arc_length(self, sample_points_per_curve: int | None = No │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/types/vectorized_mobje │
+│ ct.py:1469 in get_anchors                                                    │
+│                                                                              │
+│   1466 │   │   Point3D_Array                                                 │
+│   1467 │   │   │   The anchors.                                              │
+│   1468 │   │   """                                                           │
+│ ❱ 1469 │   │   if self.points.shape[0] == 1:                                 │
+│   1470 │   │   │   return self.points                                        │
+│   1471 │   │   return np.array(                                              │
+│   1472 │   │   │   tuple(it.chain(*zip(self.get_start_anchors(), self.get_en │
+│                                                                              │
+│ /usr/local/lib/python3.10/site-packages/manim/mobject/mobject.py:672 in      │
+│ __getattr__                                                                  │
+│                                                                              │
+│    669 │   │   │   return types.MethodType(setter, self)                     │
+│    670 │   │                                                                 │
+│    671 │   │   # Unhandled attribute, therefore error                        │
+│ ❱  672 │   │   raise AttributeError(f"{type(self).__name__} object has no at │
+│    673 │                                                                     │
+│    674 │   @property                                                         │
+│    675 │   def width(self) -> float:                                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+AttributeError: VGroup object has no attribute 'shape'
+>>>>>>> a7fd14e42416616890e87ef226f143234d621116

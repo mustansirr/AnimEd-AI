@@ -41,6 +41,6 @@ ENV MANIM_QUALITY=low_quality
 # - Code file mounted at /render/scene.py
 # - Output written to /render/media/
 
-# Default command renders at 480p15 (low quality, fast)
-# -ql = --quality low (480p at 15fps)
-CMD ["manim", "render", "-ql", "scene.py"]
+# Default command renders at 720p30 (medium quality)
+# -qm = --quality medium (720p at 30fps)
+CMD ["manim", "render", "-qm", "scene.py"]
