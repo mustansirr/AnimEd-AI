@@ -9,6 +9,7 @@ import {
   Trash2,
   Loader2,
   VideoOff,
+  Film,
   X,
   AlertTriangle,
   Search,
@@ -117,17 +118,18 @@ function VideoCard({
               preload="metadata"
               muted
             />
+            
             <div 
-              className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center cursor-pointer backdrop-blur-[2px]"
               onClick={(e) => {
                 e.stopPropagation();
                 onPlay(video);
               }}
             >
               <div
-                className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center"
+                className="h-14 w-14 rounded-full bg-pink-500 shadow-lg shadow-pink-500/40 flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform duration-300"
               >
-                <Play className="h-6 w-6 ml-0.5 text-white fill-white" />
+                <Play className="h-6 w-6 ml-1 text-white fill-white" />
               </div>
             </div>
           </>
@@ -326,10 +328,10 @@ export function VideoGrid() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const fetchVideos = useCallback(async () => {
+  const fetchVideos = useCallback(async (showLoader: boolean = true) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (showLoader) setLoading(true);
+      if (showLoader) setError(null);
 
       const supabase = createClient();
       const {
@@ -344,9 +346,9 @@ export function VideoGrid() {
       const data = await listUserVideos(user.id);
       setVideos(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load videos");
+      if (showLoader) setError(err instanceof Error ? err.message : "Failed to load videos");
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, []);
 
@@ -390,7 +392,7 @@ export function VideoGrid() {
           <AlertTriangle className="h-6 w-6 text-red-600" />
         </div>
         <p className="text-sm text-gray-600 mb-4">{error}</p>
-        <Button variant="outline" onClick={fetchVideos}>
+        <Button variant="outline" onClick={() => fetchVideos()}>
           Try Again
         </Button>
       </div>
@@ -508,8 +510,8 @@ export function VideoGrid() {
           videoPrompt={selectedVideo.prompt}
           onClose={() => {
             setSelectedVideo(null);
-            // Refresh the list in case status changed (e.g. approved scripts)
-            fetchVideos();
+            // Refresh the list silently in case status changed (e.g. approved scripts)
+            fetchVideos(false);
           }}
         />
       )}

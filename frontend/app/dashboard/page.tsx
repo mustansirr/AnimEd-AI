@@ -46,9 +46,9 @@ export default async function DashboardPage() {
               {/* Generation Pipeline (appears after Generate is clicked) */}
               <GenerationPipeline />
 
-              {/* Flashcards Quick Link */}
-              <div className="mt-12 w-full max-w-3xl mx-auto">
-                <Link href="/flashcards">
+              {/* Quick Links */}
+              <div className="mt-12 w-full max-w-3xl mx-auto space-y-4">
+                <Link href="/flashcards" className="block">
                   <div className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-xl p-6 hover:shadow-md transition-shadow flex items-center justify-between cursor-pointer group">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-[#FFDFDF] dark:bg-primary/20 flex items-center justify-center">
@@ -57,6 +57,21 @@ export default async function DashboardPage() {
                       <div>
                         <h3 className="font-semibold text-gray-900 dark:text-foreground">Study with Flashcards</h3>
                         <p className="text-sm text-gray-500 dark:text-muted-foreground">Review your AI-generated flashcards using spaced repetition.</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#e8609a] transition-colors" />
+                  </div>
+                </Link>
+
+                <Link href="/quizzes" className="block">
+                  <div className="bg-white dark:bg-card border border-gray-200 dark:border-border rounded-xl p-6 hover:shadow-md transition-shadow flex items-center justify-between cursor-pointer group">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-full bg-[#FFDFDF] dark:bg-primary/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-[#e8609a] dark:text-primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-foreground">Take Quizzes</h3>
+                        <p className="text-sm text-gray-500 dark:text-muted-foreground">Test your knowledge with AI-generated quizzes and track your score.</p>
                       </div>
                     </div>
                     <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#e8609a] transition-colors" />
