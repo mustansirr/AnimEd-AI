@@ -392,7 +392,7 @@ export function VideoGrid() {
           <AlertTriangle className="h-6 w-6 text-red-600" />
         </div>
         <p className="text-sm text-gray-600 mb-4">{error}</p>
-        <Button variant="outline" onClick={fetchVideos}>
+        <Button variant="outline" onClick={() => fetchVideos()}>
           Try Again
         </Button>
       </div>
