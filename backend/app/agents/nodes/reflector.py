@@ -54,6 +54,11 @@ async def reflect_and_fix(state: AgentState) -> dict:
     It takes the broken code and error message, then generates
     a corrected version.
 
+    GUARD: Certain errors are caused by pipeline configuration issues
+    (wrong component, empty scene data) rather than fixable code bugs.
+    The Reflector will refuse to attempt LLM repair for these cases,
+    because the LLM would only hallucinate new component implementations.
+
     Args:
         state: Current agent state with last_render_error and generated_codes.
 
@@ -62,7 +67,30 @@ async def reflect_and_fix(state: AgentState) -> dict:
     """
     video_id = state["video_id"]
     retry_count = state.get("retry_count", 0)
-    
+    error = state.get("last_render_error", "")
+
+    # ---- GUARD: Pipeline configuration errors are NOT code bugs ----
+    # If the error is caused by an unsupported component, empty pipeline
+    # data, or a fatal configuration issue, the Reflector cannot fix it
+    # by rewriting Manim code. Attempting to do so causes hallucinations
+    # (e.g., the Reflector inventing NeuralNetwork([4,3,2]) for a
+    # Pythagoras theorem lesson).
+    NON_FIXABLE_MARKERS = [
+        "Unsupported component",
+        "positioned_jsons is empty",
+        "scene_jsons is empty",
+        "FATAL ERROR",
+        "Aborting workflow",
+    ]
+    if any(marker in str(error) for marker in NON_FIXABLE_MARKERS):
+        logger.error(
+            f"Reflector refusing to fix non-code error for video {video_id}: {error}"
+        )
+        return {
+            "retry_count": retry_count + 1,
+            "last_render_error": error,
+        }
+
     generated_codes = state.get("generated_codes", [])
     if not generated_codes:
         logger.error("No code found to reflect on.")

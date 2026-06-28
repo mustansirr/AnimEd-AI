@@ -9,25 +9,43 @@ undefined attributes, and invalid Manim API calls.
 import ast
 import logging
 from app.agents.state import AgentState
+from app.sandbox.shared_animation_registry import SUPPORTED_COMPONENTS
 
 logger = logging.getLogger(__name__)
 
 import builtins
-from manim import *
+
+try:
+    from manim import *
+    _HAS_MANIM = True
+except ImportError:
+    _HAS_MANIM = False
 
 def get_dynamic_whitelist():
-    symbols = {name for name in globals()} # Pulls in all from manim import *
+    if _HAS_MANIM:
+        symbols = {name for name in globals()} # Pulls in all from manim import *
+    else:
+        # Fallback list of common manim objects
+        symbols = {
+            "Scene", "Text", "MathTex", "Circle", "Square", "Rectangle", "Triangle", "Line", "Arrow", "Vector",
+            "Create", "Write", "Transform", "FadeIn", "FadeOut", "Uncreate", "VGroup", "AnimationGroup",
+            "UP", "DOWN", "LEFT", "RIGHT", "ORIGIN", "UR", "UL", "DR", "DL", "PI", "TAU",
+            "BLUE", "RED", "GREEN", "YELLOW", "WHITE", "BLACK", "GRAY", "Axes", "NumberPlane",
+            "Dot", "Arc", "RegularPolygon", "Animation", "Wait", "ReplacementTransform", "Indicate",
+            "Tex", "TransformFromCopy", "Circumscribe", "ShowCreationThenDestruction", "FadeTransform",
+            "GrowFromCenter", "GrowFromEdge", "GrowArrow", "MoveToTarget", "ApplyMethod", "ApplyPointwiseFunction",
+            "config", "Mobject", "VMobject", "Group", "Brace", "BraceLabel", "DecimalNumber", "Integer",
+            "ValueTracker", "always_redraw", "TracedPath", "TangentLine", "DashedLine", "DoubleArrow"
+        }
     symbols.update({name for name in dir(builtins)})
     
+    # Non-component project symbols (utility classes, scene names, etc.)
     project_symbols = {
         "EducationalBackground", "Scene1", "filter_manim_kwargs",
-        "NumberLineDiagram", "FunctionPlot", "VectorArrow", "MatrixDisplay", "GeometryDiagram", "BarChartDiagram",
         "Matrix", "BarChart", "SmartText", "TitleCard", "LayoutZones",
-        "FlowChart", "GraphPlot", "TreeDiagram", "NetworkDiagram", "TimelineDiagram",
-        "SummaryDiagram", "MoleculeDiagram", "LiquidSurfaceDiagram", "ForceVectorDiagram",
-        "DropletDiagram", "RightTriangleDiagram", "AreaProofDiagram", "ParticleDiagram",
-        "CoordinateGeometryDiagram", "ElectricFieldDiagram", "WaveDiagram", "AtomDiagram", "ReactionDiagram"
     }
+    # Derive component symbols from the canonical registry instead of hardcoding
+    project_symbols.update(SUPPORTED_COMPONENTS)
     symbols.update(project_symbols)
     
     # Common dummy variables

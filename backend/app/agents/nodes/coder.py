@@ -22,37 +22,78 @@ logger = logging.getLogger(__name__)
 # Load our Visual Component Library
 def get_components_lib() -> str:
     try:
-        # Assuming components.py is in backend/app/sandbox/components.py
+        blueprints_path = Path(__file__).parent.parent.parent / "sandbox" / "blueprints.py"
         comp_path = Path(__file__).parent.parent.parent / "sandbox" / "components.py"
+        
+        with open(blueprints_path, "r", encoding="utf-8") as f:
+            blueprints = f.read()
         with open(comp_path, "r", encoding="utf-8") as f:
-            return f.read()
+            components = f.read()
+            
+        components = components.replace("from blueprints import STEM_BLUEPRINTS", "")
+        return blueprints + "\n\n" + components
     except Exception as e:
         logger.error(f"Failed to load components.py: {e}")
         return ""
 
-MANIM_PREAMBLE = """
-class EducationalBackground(VGroup):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        grid = NumberPlane(
-            background_line_style={
-                "stroke_color": TEAL,
-                "stroke_width": 1,
-                "stroke_opacity": 0.2
-            }
-        )
-        self.add(grid)
-"""
+MANIM_PREAMBLE = ""
 
 from app.sandbox.shared_animation_registry import SUPPORTED_COMPONENTS
 
-def generate_animation_code(anim_name: str, comp_var: str) -> str:
+def generate_animation_code(anim_info, comp_var: str, comp_name: str = "") -> str:
     """Map semantic animation intent to deterministic Manim code."""
     
+    if isinstance(anim_info, dict):
+        anim_name = anim_info.get("action", "intro")
+        target = anim_info.get("target", None)
+    else:
+        anim_name = str(anim_info)
+        target = None
+        
+    # Intelligent Fallbacks based on component capabilities
+    intelligent_fallbacks = {
+        "BinarySearchDiagram": {
+            "split_dictionary": "highlight",
+            "compare": "highlight",
+            "move_pointers": "transform",
+            "highlight_middle": "highlight",
+            "split_array": "transform",
+            "binary_search_step": "transform"
+        },
+        "GraphDiagram": {
+            "bfs_step": "highlight",
+            "dfs_step": "highlight",
+            "traverse": "highlight",
+            "visit_node": "highlight"
+        },
+        "TreeDiagram": {
+            "traverse": "highlight",
+            "search": "highlight"
+        },
+        "GeometryDiagram": {
+            "draw_triangle": "intro",
+            "show_squares": "intro",
+            "prove_theorem": "explain"
+        }
+    }
+    
+    # Check if the animation is explicitly mapped for this component
+    if comp_name in intelligent_fallbacks and anim_name in intelligent_fallbacks[comp_name]:
+        fallback = intelligent_fallbacks[comp_name][anim_name]
+        logger.warning(f"Animation '{anim_name}' unsupported by {comp_name}. Using fallback '{fallback}'.")
+        anim_name = fallback
+        
     def safe_anim(method_name, fallback_anim):
-        return (f"anim_method = getattr({comp_var}, '{method_name}', None)\n"
-                f"        if callable(anim_method): self.play(*anim_method())\n"
-                f"        else: self.play({fallback_anim}({comp_var}))")
+        if target:
+            return (f"anim_method = getattr({comp_var}, '{method_name}', None)\n"
+                    f"        if callable(anim_method):\n"
+                    f"            try: self.play(*anim_method(target={repr(target)}))\n"
+                    f"            except TypeError: self.play(*anim_method())\n"
+                    f"        else: self.play({fallback_anim}({comp_var}))")
+        else:
+            return (f"anim_method = getattr({comp_var}, '{method_name}', None)\n"
+                    f"        if callable(anim_method): self.play(*anim_method())\n"
+                    f"        else: self.play({fallback_anim}({comp_var}))")
 
     # Component-driven animation templates
     if anim_name in ["intro", "show_diagram", "fade_in_array", "fade_in_flowchart", "fade_in_summary_diagram", "grow_tree", "draw_axes"]:
@@ -68,12 +109,15 @@ def generate_animation_code(anim_name: str, comp_var: str) -> str:
         
     # Fallbacks for specific legacy edge cases
     mapping = {
-        "show_points": f"self.play(FadeIn(getattr({comp_var}, 'points', {comp_var})))",
+        "show_points": f"self.play(FadeIn(getattr({comp_var}, 'data_points', {comp_var})))",
         "fit_line": f"self.play(Create(getattr({comp_var}, 'line', {comp_var})))",
         "fade_in_title": f"pass # Handled by default FadeIn",
     }
     if anim_name not in mapping:
-        logger.warning(f"Unsupported animation '{anim_name}' requested. Falling back to intro.")
+        fallback = "highlight" if target else "intro"
+        logger.warning(f"Unsupported animation '{anim_name}' requested. Falling back to {fallback}.")
+        if fallback == "highlight":
+            return safe_anim("get_highlight_animations", "Indicate")
         return safe_anim("get_intro_animations", "FadeIn")
     return mapping[anim_name]
 
@@ -87,7 +131,8 @@ def build_deterministic_scene(scene_spec: dict) -> str:
         "",
         "class Scene1(Scene):",
         "    def construct(self):",
-        "        self.add(EducationalBackground())",
+        "        self.camera.background_color = '#0F172A'",
+
         "        title_card = None",
         "        explanation_card = None",
         "        main_comp = VGroup()",
@@ -99,7 +144,9 @@ def build_deterministic_scene(scene_spec: dict) -> str:
         code.append(f"        title_card = TitleCard({repr(scene_spec.get('title'))}, {repr(scene_spec.get('caption'))})")
         
     comp_names = scene_spec.get("components", [])
+    comp_name_val = ""
     if comp_names:
+        comp_name_val = comp_names[0]
         comp_name = comp_names[0]
         comp_data = scene_spec.get("component_data", {})
         visual_intent = scene_spec.get("visual_intent", "")
@@ -118,42 +165,15 @@ def build_deterministic_scene(scene_spec: dict) -> str:
             
         kwargs_str = ", ".join(f"{k}={repr(v)}" for k, v in comp_data.items())
         
-        if comp_name == "GraphPlot":
-            code.append(f"        main_comp = GraphPlot({kwargs_str})")
-        elif comp_name == "FlowChart":
-            code.append(f"        main_comp = FlowChart({kwargs_str})")
-        elif comp_name == "HierarchyDiagram":
-            code.append(f"        main_comp = HierarchyDiagram({kwargs_str})")
-        elif comp_name == "NetworkDiagram":
-            code.append(f"        main_comp = NetworkDiagram({kwargs_str})")
-        elif comp_name == "TimelineDiagram":
-            code.append(f"        main_comp = TimelineDiagram({kwargs_str})")
-        elif comp_name == "ArrayDiagram":
-            code.append(f"        main_comp = ArrayDiagram({kwargs_str})")
-        elif comp_name == "SummaryDiagram":
-            code.append(f"        main_comp = SummaryDiagram({kwargs_str})")
-        elif comp_name == "NumberLineDiagram":
-            code.append(f"        main_comp = NumberLineDiagram({kwargs_str})")
-        elif comp_name == "FunctionPlot":
-            code.append(f"        main_comp = FunctionPlot({kwargs_str})")
-        elif comp_name == "VectorArrow":
-            code.append(f"        main_comp = VectorArrow({kwargs_str})")
-        elif comp_name == "MatrixDisplay":
-            code.append(f"        main_comp = MatrixDisplay({kwargs_str})")
-        elif comp_name == "GeometryDiagram":
-            code.append(f"        main_comp = GeometryDiagram({kwargs_str})")
-        elif comp_name == "BarChartDiagram":
-            code.append(f"        main_comp = BarChartDiagram({kwargs_str})")
-        elif comp_name == "BinarySearchDiagram":
-            code.append(f"        main_comp = BinarySearchDiagram({kwargs_str})")
-        elif comp_name == "GradientDescentPlot":
-            code.append(f"        main_comp = GradientDescentPlot({kwargs_str})")
-        elif comp_name == "SurfaceTensionDiagram":
-            code.append(f"        main_comp = SurfaceTensionDiagram({kwargs_str})")
-        elif comp_name == "NeuralNetworkDiagram":
-            code.append(f"        main_comp = NeuralNetworkDiagram({kwargs_str})")
-        else:
-            raise ValueError(f"Unsupported component: '{comp_name}'. Must be one of {list(SUPPORTED_COMPONENTS)}")
+        # Dynamic dispatch: validate component and generate instantiation line.
+        # Every component in SUPPORTED_COMPONENTS is defined in components.py
+        # (which is embedded above), so a simple f-string is safe and correct.
+        if comp_name not in SUPPORTED_COMPONENTS:
+            raise ValueError(
+                f"Unsupported component: '{comp_name}'. "
+                f"Must be one of {sorted(SUPPORTED_COMPONENTS)}"
+            )
+        code.append(f"        main_comp = {comp_name}({kwargs_str})")
             
     code.append("        zones = LayoutZones.arrange_zones(title_zone=title_card, visualization_zone=main_comp)")
     
@@ -167,17 +187,18 @@ def build_deterministic_scene(scene_spec: dict) -> str:
     
     code.append("        if title_card: self.play(FadeIn(title_card))")
     
-    revealing_anims = {"show_diagram", "fade_in_array", "fade_in_flowchart", "fade_in_summary_diagram", "grow_tree", "draw_axes"}
-    if animations and animations[0] not in revealing_anims:
+    first_anim = animations[0] if animations else None
+    first_anim_name = first_anim.get("action", "intro") if isinstance(first_anim, dict) else str(first_anim)
+    
+    revealing_anims = {"intro", "show_diagram", "fade_in_array", "fade_in_flowchart", "fade_in_summary_diagram", "grow_tree", "draw_axes"}
+    if animations and first_anim_name not in revealing_anims:
         code.append("        self.play(FadeIn(main_comp))")
     
     for anim in animations:
-        anim_code = generate_animation_code(anim, "main_comp")
+        anim_code = generate_animation_code(anim, "main_comp", comp_name_val)
         code.append(f"        {anim_code}")
         code.append(f"        self.wait({wait_per_anim})")
         
-    code.append("        self.play(FadeOut(zones))")
-    
     final_code = "\n".join(code)
     logger.info(f"Generated code: \n{final_code}")
     return final_code

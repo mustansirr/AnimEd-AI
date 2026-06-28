@@ -5,7 +5,7 @@ This module defines the shared state that flows through all nodes
 in the agentic video generation workflow.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Union
 from typing_extensions import TypedDict
 
 
@@ -45,7 +45,7 @@ class SceneJSON(TypedDict):
     visual_metaphor: str
     components: List[str]
     component_data: dict
-    animation_sequence: List[str]
+    animation_sequence: List[Union[str, dict]]
     duration: int
     title: str
     caption: str
@@ -57,7 +57,7 @@ class PositionedJSON(TypedDict):
     learning_goal: str
     visual_metaphor: str
     components: List[str]
-    animation_sequence: List[str]
+    animation_sequence: List[Union[str, dict]]
     duration: int
     title: str
     caption: str

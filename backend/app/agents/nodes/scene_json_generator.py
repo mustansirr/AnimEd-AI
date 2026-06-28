@@ -57,24 +57,29 @@ async def generate_scene_json(state: AgentState) -> dict:
             logger.warning(f"LLM failed to return scene_json list. Raw response: {response.content[:200]}")
             raw_scenes = [{}]
             
-        for s in raw_scenes:
+        for i, s in enumerate(raw_scenes):
             logger.info(f"component_data for scene: {s.get('component_data', {})}")
-            # Validate components
-            components = s.get("components", [])
-            valid_components = [c for c in components if c in allowed_components]
-            
-            # If the LLM hallucinated, raise an error instead of silently falling back
-            if not valid_components:
-                raise ValueError(f"Unsupported component: {components}. Must be one of {allowed_components}")
-                
-            # Enforce the suggested component from the Concept Classifier above all else
+
+            # ------------------------------------------------------------------
+            # Component Selection — the classifier's choice is authoritative.
+            # If we have a suggested_component from the classifier, use it
+            # unconditionally. This prevents the LLM from hallucinating a
+            # different component and triggering an "unsupported" error.
+            # ------------------------------------------------------------------
             if suggested_component:
                 logger.info(f"Enforcing suggested_component from classifier: {suggested_component}")
                 valid_components = [suggested_component]
+            else:
+                # No classifier suggestion — filter LLM output against allowlist
+                components = s.get("components", [])
+                valid_components = [c for c in components if c in allowed_components]
                 
-            # Generic semantic assertion required by the pipeline architect
-            if suggested_component and suggested_component not in valid_components:
-                raise ValueError(f"Semantic blueprint mismatch: Expected {suggested_component}, got {valid_components}")
+                if not valid_components:
+                    logger.warning(
+                        f"LLM suggested {components} but none are in allowlist {allowed_components}. "
+                        f"Falling back to SummaryDiagram."
+                    )
+                    valid_components = ["SummaryDiagram"]
                 
             logger.info(f"SceneJSONGenerator Component Decision: {valid_components}")
             
@@ -90,7 +95,7 @@ async def generate_scene_json(state: AgentState) -> dict:
                 components=valid_components,
                 component_data=s.get("component_data", {}),
                 animation_sequence=s.get("animation_sequence", []),
-                duration=s.get("duration", 5),
+                duration=storyboards[i].get("duration", 5) if i < len(storyboards) else s.get("duration", 5),
                 title=s.get("title", ""),
                 caption=s.get("caption", "")
             ))
@@ -100,20 +105,10 @@ async def generate_scene_json(state: AgentState) -> dict:
         return {"scene_jsons": scene_jsons}
         
     except Exception as e:
+        # FAIL FAST: Do NOT produce a fake "Error" scene that flows through
+        # the pipeline as a poison pill. Return empty scene_jsons — the
+        # schema_validator will detect this and abort the workflow cleanly.
         logger.error(f"Scene JSON Generator failed: {e}")
-        # Always return a default empty scene to avoid breaking the pipeline violently
-        # The schema validator will catch it and properly mark it FAILED
-        fallback_scene = SceneJSON(
-            schema_version="v2",
-            scene_type="error",
-            learning_goal="Error recovery",
-            visual_metaphor="None",
-            components=[],
-            component_data={},
-            animation_sequence=[],
-            duration=5,
-            title="Error",
-            caption="Failed to generate scene"
-        )
-        logger.info("--- EXITING SCENE_JSON_GENERATOR NODE ---")
-        return {"scene_jsons": [fallback_scene]}
+        logger.info("--- EXITING SCENE_JSON_GENERATOR NODE (FAIL-FAST) ---")
+        return {"scene_jsons": []}
+

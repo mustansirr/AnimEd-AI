@@ -74,13 +74,16 @@ async def write_storyboard(state: AgentState) -> dict:
                 # Format visual_plan so the frontend can display it neatly without needing schema changes
                 visual_plan_str = f"Goal: {goal}\nVisual Goal: {visual_goal}\n\nObjects: {', '.join(objects)}\nAnimations: {', '.join(animations)}"
                 
+                # Calculate duration based on narration length (~2.5 words per second)
+                estimated_duration = max(5, int(len(narration.split()) / 2.5) + 1)
+                
                 storyboards.append(StoryboardScene(
                     scene_number=scene_number,
                     goal=goal,
                     narration=narration,
                     visuals=objects,
                     animations=animations,
-                    duration=s.get("duration", 5)
+                    duration=estimated_duration
                 ))
             
             if not valid or not storyboards:

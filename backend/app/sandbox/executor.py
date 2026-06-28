@@ -121,7 +121,7 @@ class ManimExecutor:
         # Build Manim command: render at low quality (480p15) for speed
         # --media_dir ensures output goes to our render directory
         manim_cmd = [
-            "manim", "render", "-ql",
+            "manim", "render", "-qm",
             "--media_dir", str(render_dir / "media"),
             str(code_file),
         ]

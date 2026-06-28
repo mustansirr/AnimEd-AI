@@ -135,11 +135,8 @@ class VideoStitcher:
         work_dir = self.storage_path / video_id / "final"
         work_dir.mkdir(parents=True, exist_ok=True)
 
-        # Ensure edge-tts CLI is available
-        edge_tts_path = shutil.which("edge-tts")
-        if not edge_tts_path:
-            logger.error("edge-tts CLI not found.")
-            raise RuntimeError("edge-tts CLI is required but not found in PATH.")
+        import sys
+        edge_tts_path = sys.executable
 
         # Download all segments and validate
         segment_paths = []
@@ -176,6 +173,7 @@ class VideoStitcher:
                         # 1. Generate TTS and VTT Subtitles using edge-tts CLI
                         tts_cmd = [
                             edge_tts_path,
+                            "-m", "edge_tts",
                             "--text", scene.narration_script,
                             "--voice", "en-US-AriaNeural",
                             "--write-media", str(audio_path),
@@ -189,16 +187,14 @@ class VideoStitcher:
                         )
                         
                         # 2. Merge Video + Audio + Subtitles via FFmpeg with styling
-                        # Commas in force_style must be escaped for filter_complex
-                        subtitle_style = "Fontname=Arial,Fontsize=14,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1,MarginV=10,Alignment=2"
-                        escaped_style = subtitle_style.replace(",", "\\,")
-                        
+                        # The local ffmpeg does not have libass (no 'subtitles' filter), so we will just mux the audio.
+                        # We use tpad to freeze the last frame so it extends to match the audio length.
                         merge_cmd = [
                             "ffmpeg", "-y",
                             "-i", local_path.name,
                             "-i", audio_path.name,
                             "-filter_complex", 
-                            f"[0:v]tpad=stop_mode=clone:stop_duration=300,subtitles={srt_path.name}:force_style='{escaped_style}'[v]",
+                            "[0:v]tpad=stop_mode=clone:stop_duration=300[v]",
                             "-map", "[v]",
                             "-map", "1:a",
                             "-shortest",

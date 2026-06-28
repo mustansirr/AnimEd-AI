@@ -10,42 +10,9 @@ from app.agents.prompts.classifier_prompts import (
     create_classifier_prompt,
 )
 from app.sandbox.visual_metaphors import get_visual_metaphor
+from app.sandbox.shared_animation_registry import CONCEPT_TO_COMPONENT
 
 logger = logging.getLogger(__name__)
-
-CONCEPT_TO_COMPONENT = {
-    # Computer Science
-    "algorithm_search": "ArrayDiagram",
-    "algorithm_sort": "ArrayDiagram",
-    "data_structure_tree": "TreeDiagram",
-    "data_structure_graph": "GraphDiagram",
-    "neural_network": "NeuralNetworkDiagram",
-    # Mathematics
-    "geometry": "CoordinateGeometryDiagram",
-    "mathematics_theorem_law": "RightTriangleDiagram",
-    "mathematics_area_proof": "AreaProofDiagram",
-    "function_plot": "FunctionPlotDiagram",
-    "statistics": "BarChartDiagram",
-    "linear_algebra": "MatrixDisplay",
-    # Physics
-    "physics_motion": "FunctionPlot",
-    "physics_force": "ForceVectorDiagram",
-    "physics_forces_multiple": "ForceVectorDiagram",
-    "physics_surface_tension": "SurfaceTensionDiagram",
-    "physics_droplet": "DropletDiagram",
-    "physics_electric_field": "ElectricFieldDiagram",
-    "physics_particle": "ParticleDiagram",
-    "physics_wave": "WaveDiagram",
-    # Biology/Chemistry
-    "biology_process": "FlowChart",
-    "chemistry_molecule": "MoleculeDiagram",
-    "chemistry_atom": "AtomDiagram",
-    "chemistry_reaction": "ReactionDiagram",
-    # General
-    "process_flow": "FlowChart",
-    "summary": "SummaryDiagram",
-    "definition": "SummaryDiagram",
-}
 
 async def classify_concept(state: AgentState) -> dict:
     """

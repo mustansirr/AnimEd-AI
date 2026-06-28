@@ -17,7 +17,8 @@ Requirements:
 - Instead, you select from a pre-defined Visual Component Library and define the educational intent.
 - Extract 'title' and 'caption' from the storyboard if text should be displayed on screen.
 - {component_enforcement}
-- STRICT ANIMATION ALLOWLIST: You must use ONLY these specific component animation templates: ["intro", "highlight", "transform", "explain", "focus"]. Do NOT use generic fade_in or uncreate.
+- STRICT ANIMATION ALLOWLIST: You must use ONLY these specific component animation actions: ["intro", "highlight", "transform", "explain", "focus"]. Do NOT use generic fade_in or uncreate.
+- ANIMATION FORMAT: Provide animations as a list of dictionaries. You can specify a "target" if the animation applies to a specific part of the component. Example: {{"action": "highlight", "target": "child_node_name"}}.
 - Define the `learning_goal` and `visual_metaphor` for the scene.
 - Define `visual_intent` explaining what the visualization is trying to show.
 - Use `component_data` to pass specific semantic data to the component.
@@ -54,8 +55,8 @@ Output your response as valid JSON with this exact format:
                 "children_labels": ["30", "70"]
             }},
             "animation_sequence": [
-                "intro",
-                "highlight"
+                {{"action": "intro"}},
+                {{"action": "highlight", "target": "root_node"}}
             ],
             "duration": 10
         }}

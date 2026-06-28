@@ -89,7 +89,7 @@ async def validate_diagram(state: AgentState) -> dict:
         temperature=0.1
     )
 
-    from app.sandbox.components import STEM_BLUEPRINTS
+    from app.sandbox.blueprints import STEM_BLUEPRINTS
     
     required_elements_str = "None specified for this category. Rely on general structural correctness."
     if category in STEM_BLUEPRINTS:
