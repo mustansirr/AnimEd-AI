@@ -240,3 +240,194 @@ export async function deleteVideo(videoId: string): Promise<void> {
     throw new ApiError(response.status, error.detail || "Failed to delete video");
   }
 }
+
+// =============================================================================
+// Flashcards API
+// =============================================================================
+
+export interface FlashcardDeck {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  created_at: string;
+}
+
+export interface Flashcard {
+  id: string;
+  deck_id: string;
+  user_id: string;
+  front: string;
+  back: string;
+  next_review_date: string;
+  interval: number;
+  ease_factor: number;
+  repetitions: number;
+}
+
+export async function getDecks(userId: string): Promise<FlashcardDeck[]> {
+  const url = new URL(`${API_BASE_URL}/api/flashcards/decks`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString());
+  if (!response.ok) throw new Error("Failed to fetch decks");
+  return response.json();
+}
+
+export async function createDeck(userId: string, title: string, description?: string): Promise<FlashcardDeck> {
+  const url = new URL(`${API_BASE_URL}/api/flashcards/decks`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, description })
+  });
+  if (!response.ok) throw new Error("Failed to create deck");
+  return response.json();
+}
+
+export async function updateDeck(userId: string, deckId: string, title: string, description?: string): Promise<FlashcardDeck> {
+  const url = new URL(`${API_BASE_URL}/api/flashcards/decks/${deckId}`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, description })
+  });
+  if (!response.ok) throw new Error("Failed to update deck");
+  return response.json();
+}
+
+export async function deleteDeck(userId: string, deckId: string): Promise<void> {
+  const url = new URL(`${API_BASE_URL}/api/flashcards/decks/${deckId}`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "DELETE"
+  });
+  if (!response.ok) throw new Error("Failed to delete deck");
+}
+
+export async function getDeckCards(deckId: string): Promise<Flashcard[]> {
+  const response = await fetch(`${API_BASE_URL}/api/flashcards/decks/${deckId}/cards`);
+  if (!response.ok) throw new Error("Failed to fetch cards");
+  return response.json();
+}
+
+export async function createCard(userId: string, deckId: string, front: string, back: string): Promise<Flashcard> {
+  const url = new URL(`${API_BASE_URL}/api/flashcards/decks/${deckId}/cards`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ front, back })
+  });
+  if (!response.ok) throw new Error("Failed to create card");
+  return response.json();
+}
+
+export async function reviewCard(cardId: string, rating: number): Promise<Flashcard> {
+  const response = await fetch(`${API_BASE_URL}/api/flashcards/${cardId}/review`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rating })
+  });
+  if (!response.ok) throw new Error("Failed to review card");
+  return response.json();
+}
+
+export async function generateCards(userId: string, deckId: string, topic: string, count: number = 5): Promise<Flashcard[]> {
+  const url = new URL(`${API_BASE_URL}/api/flashcards/decks/${deckId}/generate`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic, count })
+  });
+  if (!response.ok) throw new Error("Failed to generate cards");
+  return response.json();
+}
+
+// ============================================================================
+// Quizzes API
+// ============================================================================
+
+export interface QuizQuestion {
+  id: string;
+  quiz_id: string;
+  question_text: string;
+  options: string[];
+  correct_option_index: number;
+  explanation?: string;
+  user_answer_index?: number;
+  created_at: string;
+}
+
+export interface Quiz {
+  id: string;
+  user_id: string;
+  title: string;
+  topic: string;
+  difficulty: string;
+  score: number | null;
+  total_questions: number;
+  created_at: string;
+  questions?: QuizQuestion[];
+}
+
+export async function getQuizzes(userId: string): Promise<Quiz[]> {
+  const url = new URL(`${API_BASE_URL}/api/quizzes`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString());
+  if (!response.ok) throw new Error("Failed to fetch quizzes");
+  return response.json();
+}
+
+export async function generateQuiz(userId: string, topic: string, count: number, difficulty: string): Promise<Quiz> {
+  const url = new URL(`${API_BASE_URL}/api/quizzes/generate`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic, count, difficulty })
+  });
+  if (!response.ok) throw new Error("Failed to generate quiz");
+  return response.json();
+}
+
+export async function getQuizById(userId: string, quizId: string): Promise<Quiz> {
+  const url = new URL(`${API_BASE_URL}/api/quizzes/${quizId}`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString());
+  if (!response.ok) throw new Error("Failed to fetch quiz");
+  return response.json();
+}
+
+export async function submitQuiz(userId: string, quizId: string, answers: Record<string, number>): Promise<Quiz> {
+  const url = new URL(`${API_BASE_URL}/api/quizzes/${quizId}/submit`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers })
+  });
+  if (!response.ok) throw new Error("Failed to submit quiz");
+  return response.json();
+}
+
+export async function deleteQuiz(userId: string, quizId: string): Promise<void> {
+  const url = new URL(`${API_BASE_URL}/api/quizzes/${quizId}`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "DELETE"
+  });
+  if (!response.ok) throw new Error("Failed to delete quiz");
+}
+
+export async function retakeQuiz(userId: string, quizId: string): Promise<Quiz> {
+  const url = new URL(`${API_BASE_URL}/api/quizzes/${quizId}/retake`);
+  url.searchParams.set("user_id", userId);
+  const response = await fetch(url.toString(), {
+    method: "POST"
+  });
+  if (!response.ok) throw new Error("Failed to reset quiz");
+  return response.json();
+}

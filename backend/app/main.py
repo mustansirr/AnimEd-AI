@@ -8,7 +8,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import upload, videos, webhooks
+from app.api.routes import upload, videos, webhooks, flashcards, quizzes
 from app.config import get_settings
 
 from dotenv import load_dotenv
@@ -46,6 +46,8 @@ app.add_middleware(
 app.include_router(upload.router, prefix="/api")
 app.include_router(videos.router, prefix="/api")
 app.include_router(webhooks.router, prefix="/api")
+app.include_router(flashcards.router, prefix="/api")
+app.include_router(quizzes.router, prefix="/api")
 
 @app.on_event("startup")
 async def startup_event():

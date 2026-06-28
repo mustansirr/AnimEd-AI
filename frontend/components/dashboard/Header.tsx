@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Bell, LogOut, User } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +16,13 @@ import { signOut } from "@/app/auth/actions";
 
 export function Header() {
   return (
-    <header className="flex h-16 items-center gap-4 border-b border-slate-200 bg-white/70 backdrop-blur-md px-6 w-full justify-between sticky top-0 z-50">
-      <div className="flex items-center gap-2 font-semibold text-lg text-gray-800">
+    <header className="flex h-16 items-center gap-4 border-b border-border bg-background/70 backdrop-blur-md px-6 w-full justify-between sticky top-0 z-50 transition-colors">
+      <div className="flex items-center gap-2 font-semibold text-lg text-foreground">
         Welcome back, Scholar
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="text-gray-500">
+        <ThemeToggle />
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
           <Bell className="h-5 w-5" />
           <span className="sr-only">Toggle notifications</span>
         </Button>

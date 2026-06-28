@@ -105,10 +105,10 @@ export function GenerationPipeline() {
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-gray-200 dark:border-border bg-white dark:bg-card shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-3 border-b bg-gray-50/60 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+        <div className="px-5 py-3 border-b dark:border-border bg-gray-50/60 dark:bg-transparent flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700 dark:text-card-foreground flex items-center gap-2">
             Generation Progress
             {isPolling && (
               <span className="flex items-center gap-1 text-[10px] font-normal text-muted-foreground">
@@ -160,13 +160,13 @@ export function GenerationPipeline() {
                           ? "bg-green-200"
                           : state === "active"
                           ? "bg-[#F875AA]/30"
-                          : "bg-gray-100"
+                          : "bg-gray-100 dark:bg-muted"
                       )}
                     />
                   )}
 
                   {/* Icon */}
-                  <div className="relative z-10 flex h-8 w-8 items-center justify-center flex-shrink-0 bg-white rounded-full ring-4 ring-white">
+                  <div className="relative z-10 flex h-8 w-8 items-center justify-center flex-shrink-0 bg-white dark:bg-card rounded-full ring-4 ring-white dark:ring-card">
                     {state === "completed" && (
                       <CheckCircle2 className="h-6 w-6 text-green-500" />
                     )}
@@ -174,7 +174,7 @@ export function GenerationPipeline() {
                       <Loader2 className="h-5 w-5 text-[#F875AA] animate-spin" />
                     )}
                     {state === "pending" && (
-                      <Circle className="h-5 w-5 text-gray-200" />
+                      <Circle className="h-5 w-5 text-gray-200 dark:text-muted" />
                     )}
                   </div>
 
@@ -188,8 +188,8 @@ export function GenerationPipeline() {
                           state === "active"
                             ? "text-[#e8609a]"
                             : state === "completed"
-                            ? "text-gray-700"
-                            : "text-gray-400"
+                            ? "text-gray-700 dark:text-card-foreground"
+                            : "text-gray-400 dark:text-muted-foreground"
                         )}
                       >
                         {step.id === 4 && state === "active" && totalScenes > 0

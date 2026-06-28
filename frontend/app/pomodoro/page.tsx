@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
-import { VideoGrid } from "@/components/dashboard/VideoGrid";
 import { DashboardWrapper } from "@/components/dashboard/DashboardWrapper";
+import { PomodoroTimer } from "@/components/pomodoro/PomodoroTimer";
 
-export default async function LibraryPage() {
+export default async function PomodoroPage() {
   const supabase = await createClient();
 
   const {
@@ -28,15 +28,17 @@ export default async function LibraryPage() {
           {/* Header - Fixed Top */}
           <Header />
 
-          <main className="flex-1 overflow-auto p-4 md:p-6">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">My Library</h1>
-              <p className="text-sm text-gray-500 dark:text-muted-foreground mt-1">
-                View, play, and manage your generated videos
+          <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-12">
+            <div className="mb-10 text-center max-w-lg mx-auto">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground mb-2">
+                Pomodoro Focus
+              </h1>
+              <p className="text-gray-500 dark:text-muted-foreground">
+                Stay focused and track your study sessions with the Pomodoro technique.
               </p>
             </div>
 
-            <VideoGrid />
+            <PomodoroTimer />
           </main>
         </div>
       </div>
