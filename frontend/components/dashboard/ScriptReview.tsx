@@ -208,7 +208,7 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
 
   if (scenes.length === 0) {
     return (
-      <Card className="border shadow-sm bg-white">
+      <Card className="border dark:border-border shadow-sm bg-white dark:bg-card">
         <CardContent className="p-6 text-center text-muted-foreground">
           <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">No scripts generated yet.</p>
@@ -220,8 +220,8 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <Card className="border shadow-sm bg-white max-h-[70vh] overflow-hidden flex flex-col">
-      <CardHeader className="pb-3 border-b bg-gray-50/50 flex-shrink-0">
+    <Card className="border dark:border-border shadow-sm bg-white dark:bg-card max-h-[70vh] overflow-hidden flex flex-col">
+      <CardHeader className="pb-3 border-b dark:border-border bg-gray-50/50 dark:bg-transparent flex-shrink-0">
         <CardTitle className="text-base font-semibold flex justify-between items-center">
           <span className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-[#F875AA]" />
@@ -247,8 +247,8 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
               key={scene.id}
               className={`border rounded-lg p-4 space-y-3 transition-colors ${
                 isSuggestMode
-                  ? "bg-amber-50/40 border-amber-200"
-                  : "bg-gray-50/50"
+                  ? "bg-amber-50/40 dark:bg-amber-900/10 border-amber-200 dark:border-amber-900/30"
+                  : "bg-gray-50/50 dark:bg-muted/30 dark:border-border"
               }`}
             >
               <div className="flex items-center justify-between">
@@ -281,11 +281,11 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
                       onChange={(e) =>
                         updateSceneEdit(scene.id, "narration_script", e.target.value)
                       }
-                      className="text-sm min-h-[80px] resize-y border-amber-300 focus-visible:ring-amber-400 bg-white"
+                      className="text-sm min-h-[80px] resize-y border-amber-300 dark:border-amber-700 focus-visible:ring-amber-400 bg-white dark:bg-card dark:text-foreground"
                       placeholder="Edit narration script…"
                     />
                   ) : (
-                    <p className="text-sm text-gray-700 bg-white p-2 rounded border">
+                    <p className="text-sm text-gray-700 dark:text-card-foreground bg-white dark:bg-muted p-2 rounded border dark:border-border">
                       {scene.narration_script}
                     </p>
                   )}
@@ -305,11 +305,11 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
                       onChange={(e) =>
                         updateSceneEdit(scene.id, "visual_plan", e.target.value)
                       }
-                      className="text-sm min-h-[80px] resize-y font-mono border-amber-300 focus-visible:ring-amber-400 bg-white"
+                      className="text-sm min-h-[80px] resize-y font-mono border-amber-300 dark:border-amber-700 focus-visible:ring-amber-400 bg-white dark:bg-card dark:text-foreground"
                       placeholder="Edit visual plan…"
                     />
                   ) : (
-                    <p className="text-sm text-gray-700 bg-white p-2 rounded border font-mono">
+                    <p className="text-sm text-gray-700 dark:text-card-foreground bg-white dark:bg-muted p-2 rounded border dark:border-border font-mono">
                       {scene.visual_plan}
                     </p>
                   )}
@@ -321,7 +321,7 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
 
         {/* Feedback / Notes Section */}
         {isWaitingApproval && (
-          <div className="space-y-2 pt-2 border-t">
+          <div className="space-y-2 pt-2 border-t dark:border-border">
             <label className="text-xs font-medium text-muted-foreground">
               {isSuggestMode
                 ? "Additional notes (optional)"
@@ -335,7 +335,7 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
                   ? "Any extra context for your suggested edits…"
                   : "Provide feedback if you want changes..."
               }
-              className="min-h-[60px] resize-none text-sm"
+              className="min-h-[60px] resize-none text-sm dark:bg-card dark:text-foreground dark:border-border"
             />
           </div>
         )}
@@ -361,7 +361,7 @@ export function ScriptReview({ onClose }: ScriptReviewProps) {
 
       {/* Action Buttons */}
       {isWaitingApproval && (
-        <div className="p-4 border-t bg-gray-50/50 flex gap-2 justify-end flex-shrink-0 flex-wrap">
+        <div className="p-4 border-t dark:border-border bg-gray-50/50 dark:bg-transparent flex gap-2 justify-end flex-shrink-0 flex-wrap">
           {isSuggestMode ? (
             /* ── Suggest-mode actions ── */
             <>

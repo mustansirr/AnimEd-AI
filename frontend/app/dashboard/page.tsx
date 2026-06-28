@@ -19,8 +19,8 @@ export default async function DashboardPage() {
 
   return (
     <DashboardWrapper>
-      <div className="flex min-h-screen bg-[#FFF6F6] font-sans text-gray-900 relative selection:bg-[#FFDFDF] selection:text-[#e8609a]">
-        <div className="fixed inset-0 z-0 bg-[linear-gradient(to_right,#FFDFDF_1px,transparent_1px),linear-gradient(to_bottom,#FFDFDF_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+      <div className="flex min-h-screen bg-[#FFF6F6] dark:bg-background font-sans text-gray-900 dark:text-foreground relative selection:bg-[#FFDFDF] dark:selection:bg-primary/20 selection:text-[#e8609a] dark:selection:text-primary transition-colors">
+        <div className="fixed inset-0 z-0 bg-[linear-gradient(to_right,#FFDFDF_1px,transparent_1px),linear-gradient(to_bottom,#FFDFDF_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
         {/* Sidebar - Fixed Left */}
         <Sidebar className="hidden md:block w-64 flex-shrink-0 z-10" />
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
             <div className="flex flex-col items-center justify-start min-h-full">
               {/* Hero Heading */}
               <div className="text-center mb-8 mt-12">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-foreground mb-3">
                   What&apos;s today&apos;s lesson or concept?
                 </h1>
               </div>

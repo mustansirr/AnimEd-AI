@@ -11,6 +11,8 @@ import {
   VideoOff,
   X,
   AlertTriangle,
+  Search,
+  Filter,
 } from "lucide-react";
 import Link from "next/link";
 import { VideoDetailModal } from "./VideoDetailModal";
@@ -102,7 +104,7 @@ function VideoCard({
   });
 
   return (
-    <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect(video)}>
+    <div className="group bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect(video)}>
       {/* Thumbnail / Preview */}
       <div
         className="relative aspect-video bg-gradient-to-br from-[#F875AA]/20 to-gray-900"
@@ -143,7 +145,7 @@ function VideoCard({
       <div className="p-3">
         <div className="flex items-start justify-between gap-2 mb-2">
           <p
-            className="text-sm font-medium text-gray-800 line-clamp-2 flex-1"
+            className="text-sm font-medium text-gray-800 dark:text-card-foreground line-clamp-2 flex-1"
             title={video.prompt}
           >
             {video.prompt}
@@ -296,7 +298,7 @@ function DeleteConfirmDialog({
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden animate-pulse">
+    <div className="bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border overflow-hidden animate-pulse">
       <div className="aspect-video bg-gray-200" />
       <div className="p-3 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-3/4" />
@@ -321,6 +323,8 @@ export function VideoGrid() {
   const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -413,20 +417,71 @@ export function VideoGrid() {
     );
   }
 
+  const filteredVideos = videos.filter((video) => {
+    const matchesSearch = video.prompt?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
+    const matchesStatus = statusFilter === "all" || video.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {videos.map((video) => (
-          <VideoCard
-            key={video.id}
-            video={video}
-            onPlay={setPlayingVideo}
-            onDelete={setConfirmDeleteId}
-            onSelect={setSelectedVideo}
-            isDeleting={deletingVideoId === video.id}
+    <div className="space-y-6">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 items-center bg-white dark:bg-card p-2 rounded-xl border border-gray-100 dark:border-border shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search your generated videos..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 border-none bg-transparent rounded-lg text-sm text-gray-700 dark:text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F875AA]/20 transition-all"
           />
-        ))}
+        </div>
+        
+        <div className="w-px h-8 bg-gray-100 dark:bg-border hidden sm:block"></div>
+        
+        <div className="relative w-full sm:w-auto min-w-[200px]">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+            <Filter className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full appearance-none pl-9 pr-10 py-3 bg-gray-50 dark:bg-muted hover:bg-gray-100/80 dark:hover:bg-muted/80 border border-gray-100 dark:border-border text-gray-700 dark:text-muted-foreground text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F875AA]/20 transition-colors cursor-pointer"
+          >
+            <option value="all">All Statuses</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+            <option value="waiting_approval">Awaiting Approval</option>
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+        </div>
       </div>
+
+      {filteredVideos.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-card rounded-lg border border-gray-200 dark:border-border shadow-sm">
+          <Search className="h-12 w-12 text-gray-300 dark:text-muted-foreground/30 mb-4" />
+          <p className="text-gray-500 dark:text-muted-foreground font-medium">No videos match your search</p>
+          <Button variant="link" onClick={() => { setSearchQuery(""); setStatusFilter("all"); }} className="text-[#F875AA]">
+            Clear filters
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredVideos.map((video) => (
+            <VideoCard
+              key={video.id}
+              video={video}
+              onPlay={setPlayingVideo}
+              onDelete={setConfirmDeleteId}
+              onSelect={setSelectedVideo}
+              isDeleting={deletingVideoId === video.id}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Video Player Modal */}
       {playingVideo && (
@@ -458,6 +513,6 @@ export function VideoGrid() {
           }}
         />
       )}
-    </>
+    </div>
   );
 }
