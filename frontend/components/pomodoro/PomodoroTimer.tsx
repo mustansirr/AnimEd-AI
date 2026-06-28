@@ -1,169 +1,32 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Play, Pause, RotateCcw, Settings2, X, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-type TimerMode = "work" | "shortBreak" | "longBreak";
-
-interface PomodoroSettings {
-  work: number;
-  shortBreak: number;
-  longBreak: number;
-}
-
-const DEFAULT_SETTINGS: PomodoroSettings = {
-  work: 25,
-  shortBreak: 5,
-  longBreak: 15,
-};
+import { usePomodoro, TimerMode } from "./PomodoroContext";
 
 export function PomodoroTimer() {
   const [isClient, setIsClient] = useState(false);
-  
-  // Settings & State
-  const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
-  const [mode, setMode] = useState<TimerMode>("work");
-  const [timeLeft, setTimeLeft] = useState(DEFAULT_SETTINGS.work * 60);
-  const [isActive, setIsActive] = useState(false);
-  const [sessionsCompleted, setSessionsCompleted] = useState(0);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // UI State
   const [showSettings, setShowSettings] = useState(false);
   
-  // Audio context ref to reuse
-  const audioCtxRef = useRef<AudioContext | null>(null);
+  const {
+    settings,
+    mode,
+    timeLeft,
+    isActive,
+    sessionsCompleted,
+    soundEnabled,
+    updateSetting,
+    toggleSound,
+    toggleTimer,
+    resetTimer,
+    handleModeSwitch
+  } = usePomodoro();
 
-  // Initialize from localStorage
   useEffect(() => {
     setIsClient(true);
-    const saved = localStorage.getItem("pomodoroSettings");
-    const savedSound = localStorage.getItem("pomodoroSound");
-    
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setSettings(parsed);
-        setTimeLeft(parsed.work * 60);
-      } catch (e) {
-        console.error("Failed to parse settings", e);
-      }
-    }
-    
-    if (savedSound) {
-      setSoundEnabled(savedSound === "true");
-    }
   }, []);
-
-  // Update timeLeft when settings change (if not active and currently full time)
-  // Or simply reset the timer if settings change.
-  const updateSetting = (key: keyof PomodoroSettings, value: number) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    localStorage.setItem("pomodoroSettings", JSON.stringify(newSettings));
-    
-    // If the timer is not active, and we just updated the current mode's duration, reset it
-    if (!isActive && mode === key) {
-      setTimeLeft(value * 60);
-    }
-  };
-
-  const toggleSound = () => {
-    const newSound = !soundEnabled;
-    setSoundEnabled(newSound);
-    localStorage.setItem("pomodoroSound", String(newSound));
-  };
-
-  const playBeep = useCallback(() => {
-    if (!soundEnabled) return;
-    
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-      
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
-      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5);
-      
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
-      
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.start();
-      osc.stop(ctx.currentTime + 0.8);
-    } catch (e) {
-      console.error("Audio playback failed", e);
-    }
-  }, [soundEnabled]);
-
-  // Timer interval logic
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (isActive && timeLeft === 0) {
-      // Timer finished
-      playBeep();
-      handleSessionComplete();
-    }
-
-    return () => clearInterval(interval);
-  }, [isActive, timeLeft, playBeep]); // intentionally omitting handleSessionComplete to avoid re-renders resetting interval
-
-  const handleSessionComplete = () => {
-    if (mode === "work") {
-      const newCompleted = sessionsCompleted + 1;
-      setSessionsCompleted(newCompleted);
-      
-      // Every 4th work session triggers a long break
-      if (newCompleted % 4 === 0) {
-        setMode("longBreak");
-        setTimeLeft(settings.longBreak * 60);
-      } else {
-        setMode("shortBreak");
-        setTimeLeft(settings.shortBreak * 60);
-      }
-    } else {
-      // Break is over, back to work
-      setMode("work");
-      setTimeLeft(settings.work * 60);
-    }
-    // Auto-start next session is implicit since isActive remains true
-  };
-
-  const toggleTimer = () => {
-    if (!isActive && audioCtxRef.current?.state === 'suspended') {
-      audioCtxRef.current.resume(); // Safari requires user interaction to start audio context
-    }
-    setIsActive(!isActive);
-  };
-
-  const resetTimer = () => {
-    setIsActive(false);
-    setTimeLeft(settings[mode] * 60);
-  };
-
-  const handleModeSwitch = (newMode: TimerMode) => {
-    setMode(newMode);
-    setTimeLeft(settings[newMode] * 60);
-    setIsActive(false);
-  };
 
   if (!isClient) return null;
 
@@ -179,23 +42,23 @@ export function PomodoroTimer() {
   const strokeDashoffset = strokeDasharray - (strokeDasharray * progress) / 100;
 
   // Theme based on mode
+  // The user requested to "remove that white glow in the 'work' timer."
+  // Previously we used: bg: "bg-[#FFDFDF]", gradient: "from-[#F875AA]/20 to-[#FFDFDF]/5"
+  // Let's remove the background completely or make it transparent so there's no glow.
   const themeConfig = {
     work: {
       color: "text-[#F875AA]",
-      bg: "bg-[#FFDFDF]",
-      gradient: "from-[#F875AA]/20 to-[#FFDFDF]/5",
+      bg: "bg-transparent",
       stroke: "stroke-[#F875AA]"
     },
     shortBreak: {
       color: "text-emerald-500",
       bg: "bg-emerald-100 dark:bg-emerald-900/30",
-      gradient: "from-emerald-500/20 to-emerald-100/5",
       stroke: "stroke-emerald-500"
     },
     longBreak: {
       color: "text-blue-500",
       bg: "bg-blue-100 dark:bg-blue-900/30",
-      gradient: "from-blue-500/20 to-blue-100/5",
       stroke: "stroke-blue-500"
     }
   };
@@ -235,7 +98,7 @@ export function PomodoroTimer() {
         <div className={cn(
           "absolute inset-0 rounded-full blur-3xl opacity-20 transition-all duration-1000",
           theme.bg,
-          isActive && "animate-pulse opacity-40"
+          isActive && mode !== "work" && "animate-pulse opacity-40"
         )} />
         
         {/* SVG Progress Circle */}
@@ -430,7 +293,7 @@ function SettingInput({
         }}
         className={cn(
           "w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg p-3 text-lg font-semibold focus:ring-2 focus:ring-opacity-50 transition-shadow outline-none text-slate-900 dark:text-white",
-          themeColor && `focus:ring-${themeColor.split('-')[1]}-500` // rudimentary tailwind class extraction, but safe fallback is below
+          themeColor && `focus:ring-${themeColor.split('-')[1]}-500`
         )}
         style={{
           boxShadow: 'none'
