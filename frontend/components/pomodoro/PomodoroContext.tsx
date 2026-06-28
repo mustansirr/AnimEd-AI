@@ -128,6 +128,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     }
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, timeLeft, playBeep]);
 
   const handleSessionComplete = () => {

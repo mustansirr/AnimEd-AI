@@ -25,6 +25,7 @@ export function PomodoroTimer() {
   } = usePomodoro();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsClient(true);
   }, []);
 
