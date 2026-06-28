@@ -112,3 +112,18 @@ class ApprovalRequest(BaseModel):
         None,
         description="Optional feedback if scripts are rejected"
     )
+
+
+# =============================================================================
+# Chat Models
+# =============================================================================
+
+class ChatRequest(BaseModel):
+    """Request body for chat message."""
+    message: str
+
+
+class ChatResponse(BaseModel):
+    """Response model for chat."""
+    answer: str
+

@@ -16,8 +16,7 @@ import {
   Filter,
 } from "lucide-react";
 import Link from "next/link";
-import { VideoDetailModal } from "./VideoDetailModal";
-
+import { VideoWorkspace } from "./VideoWorkspace";
 // =============================================================================
 // Types
 // =============================================================================
@@ -425,6 +424,19 @@ export function VideoGrid() {
     return matchesSearch && matchesStatus;
   });
 
+  if (selectedVideo) {
+    return (
+      <VideoWorkspace
+        video={selectedVideo}
+        onBack={() => {
+          setSelectedVideo(null);
+          // Refresh the list silently
+          fetchVideos(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -502,19 +514,7 @@ export function VideoGrid() {
         />
       )}
 
-      {/* Video Detail Modal */}
-      {selectedVideo && (
-        <VideoDetailModal
-          videoId={selectedVideo.id}
-          videoStatus={selectedVideo.status}
-          videoPrompt={selectedVideo.prompt}
-          onClose={() => {
-            setSelectedVideo(null);
-            // Refresh the list silently in case status changed (e.g. approved scripts)
-            fetchVideos(false);
-          }}
-        />
-      )}
+
     </div>
   );
 }
