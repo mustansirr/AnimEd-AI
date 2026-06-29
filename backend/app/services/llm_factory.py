@@ -62,10 +62,14 @@ def create_llm(role: AgentRole, temperature: float = 0.7) -> BaseChatModel:
         return _create_openrouter_llm(
             model, temperature, settings.openrouter_api_key
         )
+    elif provider == "gemini":
+        return _create_gemini_llm(
+            model, temperature, settings.gemini_api_key
+        )
     else:
         raise ValueError(
             f"Unsupported LLM provider '{provider}' for role '{role}'. "
-            f"Supported: groq, openrouter"
+            f"Supported: groq, openrouter, gemini"
         )
 
 
@@ -104,4 +108,23 @@ def _create_openrouter_llm(
         model=model,
         temperature=temperature,
         api_key=api_key,
+    )
+
+
+def _create_gemini_llm(
+    model: str, temperature: float, api_key: str
+) -> BaseChatModel:
+    """Create a ChatGoogleGenerativeAI instance."""
+    if not api_key:
+        raise ValueError(
+            "GEMINI_API_KEY is required when using the 'gemini' "
+            "provider. Set it in your .env file."
+        )
+
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
+    return ChatGoogleGenerativeAI(
+        model=model,
+        temperature=temperature,
+        google_api_key=api_key,
     )
