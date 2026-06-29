@@ -29,17 +29,18 @@ class Settings(BaseSettings):
     # LLM Provider Configuration — Global Defaults
     groq_api_key: str = ""
     openrouter_api_key: str = ""
-    llm_provider: Literal["groq", "openrouter"] = "groq"
+    gemini_api_key: str = ""
+    llm_provider: Literal["groq", "openrouter", "gemini"] = "groq"
     llm_model: str = "llama-3.3-70b-versatile"
 
     # Per-node LLM overrides (None = use global defaults above)
-    planner_llm_provider: Optional[Literal["groq", "openrouter"]] = None
+    planner_llm_provider: Optional[Literal["groq", "openrouter", "gemini"]] = None
     planner_llm_model: Optional[str] = None
-    scripter_llm_provider: Optional[Literal["groq", "openrouter"]] = None
+    scripter_llm_provider: Optional[Literal["groq", "openrouter", "gemini"]] = None
     scripter_llm_model: Optional[str] = None
-    coder_llm_provider: Optional[Literal["groq", "openrouter"]] = None
+    coder_llm_provider: Optional[Literal["groq", "openrouter", "gemini"]] = None
     coder_llm_model: Optional[str] = None
-    reflector_llm_provider: Optional[Literal["groq", "openrouter"]] = None
+    reflector_llm_provider: Optional[Literal["groq", "openrouter", "gemini"]] = None
     reflector_llm_model: Optional[str] = None
 
     # Storage Configuration
@@ -59,6 +60,8 @@ class Settings(BaseSettings):
         """Check if at least one LLM provider is configured."""
         if self.llm_provider == "groq":
             return bool(self.groq_api_key)
+        if self.llm_provider == "gemini":
+            return bool(self.gemini_api_key)
         return bool(self.openrouter_api_key)
 
 
