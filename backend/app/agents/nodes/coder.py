@@ -114,9 +114,19 @@ async def generate_code(state: AgentState) -> dict:
     llm = create_llm("coder", temperature=0.2)
 
     # Create prompt with few-shot examples
+    # Get audio duration for current scene (default to 5.0 if missing)
+    scene_audio_durations = state.get("scene_audio_durations", {})
+    audio_duration = scene_audio_durations.get(scene_index, 5.0)
+
+    # --- TASK 2: VERIFY AUDIO SYNCHRONIZATION ---
+    logger.info(f"=== SYNCHRONIZATION DIAGNOSTIC ===")
+    logger.info(f"Coder read audio_duration={audio_duration:.3f}s from state for scene {scene_index+1}")
+    logger.info(f"==================================")
+    
     prompt = create_coder_prompt(
         visual_description=visual_description,
         narration=narration,
+        audio_duration=audio_duration,
         include_examples=True,
     )
 

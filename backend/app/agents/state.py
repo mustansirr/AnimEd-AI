@@ -65,6 +65,7 @@ class AgentState(TypedDict):
     # Code generation (for Sanika's coder node)
     # =========================================================================
     current_scene_index: int
+    scene_audio_durations: dict[int, float]
     generated_codes: List[str]
 
     # =========================================================================
@@ -107,6 +108,7 @@ def create_initial_state(
         user_feedback=None,
         # Code generation
         current_scene_index=0,
+        scene_audio_durations={},
         generated_codes=[],
         # Execution
         last_render_error=None,

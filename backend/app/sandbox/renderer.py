@@ -11,6 +11,7 @@ This module provides the execute_and_check node function that:
 import logging
 from pathlib import Path
 from uuid import UUID
+import subprocess
 
 from app.agents.state import AgentState
 from app.sandbox.executor import ManimExecutor
@@ -90,6 +91,21 @@ async def upload_to_storage(
     return public_url
 
 
+def _get_video_duration(file_path: Path) -> float:
+    """Get the duration of a video file using ffprobe."""
+    try:
+        probe_cmd = [
+            "ffprobe", "-v", "error", "-show_entries",
+            "format=duration", "-of",
+            "default=noprint_wrappers=1:nokey=1", str(file_path)
+        ]
+        dur = subprocess.check_output(probe_cmd, timeout=10).decode('utf-8').strip()
+        return float(dur)
+    except Exception as e:
+        logger.error(f"Failed to get video duration: {e}")
+        return 0.0
+
+
 async def execute_and_check(state: AgentState) -> AgentState:
     """
     Execute Manim code and check the result.
@@ -135,6 +151,37 @@ async def execute_and_check(state: AgentState) -> AgentState:
         logger.info(
             f"Render successful for video {video_id}, scene {scene_index}"
         )
+        
+        # --- TASK 1: SCENE-LEVEL DIAGNOSTICS LOGGING ---
+        try:
+            scripts = state.get("scripts", [])
+            narration = scripts[scene_index].get("narration", "") if scene_index < len(scripts) else ""
+            
+            audio_dur = state.get("scene_audio_durations", {}).get(scene_index, 0.0)
+            has_audio = audio_dur > 0
+            
+            video_path = Path(result["video_path"])
+            video_dur = _get_video_duration(video_path)
+            
+            diff = abs(audio_dur - video_dur)
+            status = "PASS" if diff <= 0.5 else "WARNING"
+            
+            logger.info("=== SCENE-LEVEL DIAGNOSTICS ===")
+            logger.info(f"Scene number: {scene_index + 1}")
+            logger.info(f"Narration generated: '{narration[:50]}...'")
+            logger.info(f"Audio generated: {'Yes' if has_audio else 'No'}")
+            logger.info(f"Audio duration: {audio_dur:.3f}s")
+            logger.info(f"Subtitle generated: {'Yes' if has_audio else 'No'}")
+            logger.info(f"Code generated: Yes")
+            logger.info(f"Video rendered: Yes")
+            logger.info(f"Render retries: {state.get('retry_count', 0)}")
+            logger.info(f"Video duration: {video_dur:.3f}s")
+            logger.info(f"Absolute difference: {diff:.3f}s")
+            logger.info(f"Final status: {status}")
+            logger.info("===============================")
+        except Exception as e:
+            logger.error(f"Failed to log diagnostics: {e}")
+        # -----------------------------------------------
 
         try:
             # Upload to Supabase Storage
