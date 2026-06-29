@@ -61,6 +61,7 @@ FORBIDDEN — DO NOT USE:
 6. If a scene calls for a complex diagram (e.g., an ant, a human body, a logo),
    approximate it using combinations of Circle, Ellipse, Rectangle, Line,
    Arc, Polygon, Arrow, Dot, CurvedArrow, and other built-in shapes.
+7. DO NOT hallucinate shapes like `DashedCircle` or `DashedSquare`. For dashed borders, wrap a built-in shape in `DashedVMobject`, e.g., `DashedVMobject(Circle())` or `DashedVMobject(Square())`.
 
 COMMON PATTERNS:
 - Text: Text("content", font_size=36)
