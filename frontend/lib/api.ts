@@ -241,6 +241,33 @@ export async function deleteVideo(videoId: string): Promise<void> {
   }
 }
 
+/**
+ * Send a chat message to ask questions about a video.
+ */
+export async function sendChatMessage(
+  videoId: string,
+  userId: string,
+  message: string
+): Promise<{ answer: string }> {
+  const url = new URL(`${API_BASE_URL}/api/videos/${videoId}/chat`);
+  url.searchParams.set("user_id", userId);
+
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: "Unknown error" }));
+    throw new ApiError(response.status, error.detail || "Failed to send message");
+  }
+
+  return response.json();
+}
+
 // =============================================================================
 // Flashcards API
 // =============================================================================

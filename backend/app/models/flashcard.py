@@ -24,7 +24,7 @@ class FlashcardBase(BaseModel):
     back: str
 
 class FlashcardCreate(FlashcardBase):
-    deck_id: UUID
+    pass
 
 class FlashcardResponse(FlashcardBase):
     id: UUID

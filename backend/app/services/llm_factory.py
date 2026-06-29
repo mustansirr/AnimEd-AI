@@ -20,7 +20,7 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 
 # Type alias for supported roles
-AgentRole = Literal["planner", "scripter", "coder", "reflector"]
+AgentRole = Literal["planner", "scripter", "coder", "reflector", "chat"]
 
 
 def create_llm(role: AgentRole, temperature: float = 0.7) -> Any:

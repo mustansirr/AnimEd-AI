@@ -14,6 +14,8 @@ from app.models.schemas import (
     VideoCreate,
     VideoResponse,
     VideoStatus,
+    ChatRequest,
+    ChatResponse,
 )
 from app.services.supabase_client import (
     create_video,
@@ -256,3 +258,68 @@ async def delete_video(video_id: str):
     client.table("videos").delete().eq("id", str(video_uuid)).execute()
 
     return None
+
+
+@router.post(
+    "/{video_id}/chat",
+    response_model=ChatResponse,
+    summary="Chat with a video",
+    description="Ask questions about a video and its uploaded context material.",
+)
+async def chat_with_video(
+    video_id: str,
+    request: ChatRequest,
+    user_id: str = Query(..., description="UUID of the authenticated user"),
+):
+    """Chat about a video using RAG and its script."""
+    from app.services.rag_service import retrieve_context
+    from app.services.llm_factory import create_llm
+    from langchain_core.messages import SystemMessage, HumanMessage
+
+    video_uuid = validate_uuid(video_id, "video_id")
+
+    # Verify video exists
+    video = await get_video_or_404(video_uuid)
+    if str(video.user_id) != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this video")
+
+    # Get video scenes
+    scenes = await get_scenes(video_uuid)
+    
+    # Construct script context
+    script_context = []
+    for s in scenes:
+        if s.narration_script or s.visual_plan:
+            script_context.append(
+                f"Scene {s.scene_order}:\n"
+                f"Narration: {s.narration_script or 'None'}\n"
+                f"Visuals: {s.visual_plan or 'None'}"
+            )
+    script_text = "\n\n".join(script_context)
+
+    # Retrieve RAG context if they uploaded a PDF
+    rag_context = ""
+    if video.syllabus_doc_path:
+        rag_context = await retrieve_context(request.message, video_uuid, top_k=3)
+
+    system_prompt = (
+        "You are an expert tutor answering questions about an educational video.\n"
+        f"The topic of the video is: {video.prompt}\n\n"
+    )
+    if rag_context:
+        system_prompt += f"Here is some reference material the user provided:\n{rag_context}\n\n"
+    
+    if script_text:
+        system_prompt += f"Here is the video's script and visual plan:\n{script_text}\n\n"
+        
+    system_prompt += "Answer the user's question clearly and concisely based on the provided material."
+
+    llm = create_llm("chat", temperature=0.5)
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=request.message)
+    ]
+    
+    response = await llm.ainvoke(messages)
+    
+    return ChatResponse(answer=str(response.content))
