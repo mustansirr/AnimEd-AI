@@ -42,6 +42,16 @@ of length 1.
     WRONG: `self.play(Write(MathTex("...")).next_to(...))`
     CORRECT: `obj = MathTex("...").next_to(...)` then `self.play(Write(obj))`
 
+CRITICAL TEXT AND LAYOUT RULES:
+1. PREVENT TEXT OVERLAP: Texts should NEVER overlap with each other. Use `VGroup(...).arrange(DOWN, buff=0.5)` or `.next_to(...)` to position texts relative to one another.
+2. TEXT INSIDE OBJECTS: If an object (like a Rectangle or Circle) needs to have a title or name inside it, the text MUST appear completely inside it and NOT spill out. Use `text.scale_to_fit_width(object.width - 0.5)` or `text.scale_to_fit_height(object.height - 0.5)` or set an appropriately small `font_size`.
+3. TEXT CONTAINMENT: Same goes with any text that should appear inside an object, it should NOT appear outside the component.
+4. TEXT READABILITY: A solid component/shape should NOT be put on top of text, as the text will not be easily readable. Always render text *after* or *on top of* background objects.
+5. STRICT VISUAL PLAN: All the animations and visualizations MUST make sense and strictly follow the provided visual plan step-by-step. Do not invent unrelated visuals.
+6. MATHTEX INDEXING: To animate parts of an equation separately, you MUST pass them as separate string arguments to `MathTex`.
+   - WRONG: `eq = MathTex("a^2 + b^2 = c^2")` followed by `self.play(Write(eq[1]))` (This causes IndexError because the whole equation is `eq[0]`).
+   - CORRECT: `eq = MathTex("a^2", "+", "b^2", "=", "c^2")` followed by `self.play(Write(eq[1]))` (Now `+` is `eq[1]`).
+
 FORBIDDEN — DO NOT USE:
 1. SVGMobject() — no SVG files exist in the render environment.
 2. ImageMobject() — no image files exist in the render environment.
@@ -51,6 +61,7 @@ FORBIDDEN — DO NOT USE:
 6. If a scene calls for a complex diagram (e.g., an ant, a human body, a logo),
    approximate it using combinations of Circle, Ellipse, Rectangle, Line,
    Arc, Polygon, Arrow, Dot, CurvedArrow, and other built-in shapes.
+7. DO NOT hallucinate shapes like `DashedCircle` or `DashedSquare`. For dashed borders, wrap a built-in shape in `DashedVMobject`, e.g., `DashedVMobject(Circle())` or `DashedVMobject(Square())`.
 
 COMMON PATTERNS:
 - Text: Text("content", font_size=36)
@@ -109,6 +120,7 @@ def get_few_shot_examples(snippets_dir: Optional[Path] = None) -> str:
 def create_coder_prompt(
     visual_description: str,
     narration: str,
+    audio_duration: float,
     include_examples: bool = True
 ) -> str:
     """
@@ -117,6 +129,7 @@ def create_coder_prompt(
     Args:
         visual_description: What should appear on screen (from scripter).
         narration: The narration text (for timing reference).
+        audio_duration: The precise length of the TTS audio in seconds.
         include_examples: Whether to include few-shot examples.
 
     Returns:
@@ -133,7 +146,14 @@ def create_coder_prompt(
 
     prompt_parts.append("SCENE TO ANIMATE:")
     prompt_parts.append(f"Visual Description: {visual_description}")
-    prompt_parts.append(f"Narration (for timing reference): {narration}")
+    prompt_parts.append(f"Narration (for context): {narration}")
+    prompt_parts.append(f"AUDIO DURATION: {audio_duration:.3f} seconds.")
+    prompt_parts.append(
+        "\nCRITICAL TIMING RULE: "
+        f"This scene's audio narration is EXACTLY {audio_duration:.3f} seconds long. "
+        "Ensure all `run_time` for animations and `self.wait()` pauses add up "
+        f"perfectly to exactly {audio_duration:.3f} seconds so the video matches the audio."
+    )
     prompt_parts.append("\nGenerate the Manim code for this scene.")
 
     return "\n".join(prompt_parts)

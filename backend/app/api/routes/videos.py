@@ -7,7 +7,7 @@ Handles video creation, retrieval, and scene listing.
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, BackgroundTasks
 
 from app.models.schemas import (
     SceneResponse,
@@ -103,33 +103,37 @@ async def create_video_request(
     and scripting, then pause for human review.
     """,
 )
-async def start_video_workflow(video_id: str):
+async def start_video_workflow(video_id: str, background_tasks: BackgroundTasks):
     """Start the generation workflow for a video."""
     video_uuid = validate_uuid(video_id, "video_id")
 
     # Verify video exists
     video = await get_video_or_404(video_uuid)
 
-    # Start the LangGraph workflow
-    from app.agents.workflow import start_workflow
-    try:
-        await start_workflow(
-            video_id=str(video_uuid),
-            user_prompt=video.prompt,
-            syllabus_context=""  # retrieve_context_node will fetch from RAG
-        )
-    except Exception as e:
+    async def _run_start_workflow_bg():
+        from app.agents.workflow import start_workflow
         import logging
-        logging.error(f"Workflow error for video {video_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Workflow failed to start: {str(e)}"
-        )
+        try:
+            await start_workflow(
+                video_id=str(video_uuid),
+                user_prompt=video.prompt,
+                syllabus_context=""  # retrieve_context_node will fetch from RAG
+            )
+        except Exception as e:
+            logging.error(f"Workflow error for video {video_id}: {e}")
+            from app.services.supabase_client import update_video_status
+            try:
+                await update_video_status(video_uuid, VideoStatus.FAILED)
+            except Exception as update_err:
+                logging.error(f"Failed to update status to FAILED: {update_err}")
+
+    # Start the LangGraph workflow in the background
+    background_tasks.add_task(_run_start_workflow_bg)
 
     return {
         "video_id": str(video_uuid),
-        "status": VideoStatus.WAITING_APPROVAL.value,
-        "message": "Scripts ready for review"
+        "status": VideoStatus.PLANNING.value,
+        "message": "Workflow started in background"
     }
 
 

@@ -17,6 +17,7 @@ from app.agents.nodes.planner import plan_scenes
 from app.agents.nodes.scripter import write_scripts
 from app.agents.nodes.human_review import wait_for_approval
 from app.agents.nodes.coder import generate_code
+from app.agents.nodes.audio_generator import generate_audio_node
 from app.sandbox.renderer import execute_and_check
 from app.sandbox.stitcher import finalize_video
 
@@ -58,6 +59,7 @@ def create_workflow():
     workflow.add_node("planner", plan_scenes)
     workflow.add_node("scripter", write_scripts)
     workflow.add_node("human_review", wait_for_approval)
+    workflow.add_node("audio_generator", generate_audio_node)
     workflow.add_node("coder", generate_code)
     workflow.add_node("renderer", execute_and_check)
     workflow.add_node("finalize", finalize_video)
@@ -73,10 +75,13 @@ def create_workflow():
         "human_review",
         route_after_review,
         {
-            "approved": "coder",  # Go to code generation
+            "approved": "audio_generator",  # Go to audio generation
             "rejected": END,
         }
     )
+
+    # After audio generation, go to coder
+    workflow.add_edge("audio_generator", "coder")
 
     # After coder, go to renderer
     workflow.add_edge("coder", "renderer")
@@ -86,8 +91,8 @@ def create_workflow():
         "renderer",
         route_after_render,
         {
-            "retry": "coder",      # Error occurred, retry with reflector
-            "next_scene": "coder", # Move to next scene
+            "retry": "coder",      # Error occurred, retry with coder
+            "next_scene": "audio_generator", # Move to next scene
             "finalize": "finalize", # All scenes done
         }
     )
